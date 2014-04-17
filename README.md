@@ -51,5 +51,5 @@ Right now I can read/write to the IBus through a [IOIO](https://github.com/ytai/
 
 * [BNiles \[kryczech\]](https://github.com/kryczech) for posting the code to his Radio App, Schematics and YouTube videos - without him I wouldn't have gotten this off the ground so quickly.
 
-* [Chris \[Terrapin\]](http://www.startercircuits.com) for giving posting his original effort online and showing me that this was possible. Also for his cryptic posts across several forums that guided me in my troubleshooting.
+* [Chris \[Terrapin\]](http://www.startercircuits.com) for posting his original effort online and showing me that this was possible. Also for his cryptic posts across several forums that guided me in my troubleshooting.
 
