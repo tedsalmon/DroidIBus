@@ -1,0 +1,352 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="#0C090A"
+    android:paddingBottom="@dimen/activity_vertical_margin"
+    android:paddingLeft="@dimen/activity_horizontal_margin"
+    android:paddingRight="@dimen/activity_horizontal_margin"
+    android:paddingTop="@dimen/activity_vertical_margin"
+    android:orientation="vertical"
+    tools:context=".MainControlFragment">
+   
+   <LinearLayout
+       android:id="@+id/radioControlLayout"
+       android:layout_width="match_parent"
+       android:layout_height="wrap_content"
+       android:orientation="horizontal" >
+
+       <ImageButton
+           android:id="@+id/btnVolUp"
+           style="@style/mediaBtn"
+           android:contentDescription="@string/mediaBtnDesc"
+           android:src="@android:drawable/arrow_up_float" />
+       
+       <ImageButton
+           android:id="@+id/btnVolDown"
+           style="@style/mediaBtn"
+           android:contentDescription="@string/mediaBtnDesc"
+           android:src="@android:drawable/arrow_down_float" />
+              
+       
+       <LinearLayout
+           android:id="@+id/tabletAudio"
+           android:layout_width="wrap_content"
+           android:layout_height="85dp"
+           android:visibility="visible" >
+           
+	       <ImageView
+	           android:id="@+id/albumArt"
+	           android:layout_width="75dp"
+	           android:layout_height="75dp"
+	           android:contentDescription="@string/mediaBtnDesc"
+	           android:scaleType="center" />
+
+	       <LinearLayout
+	           android:layout_width="560dp"
+	           android:layout_height="wrap_content"
+	           android:orientation="vertical" >
+	
+	           <TextView
+	               android:id="@+id/playerTitleField"
+	               android:textSize="25sp"
+	               android:layout_width="fill_parent"
+	               android:layout_height="wrap_content"
+	               android:gravity="center_horizontal"
+	               android:text="@string/defaultText" />
+	
+	           <LinearLayout
+	               android:layout_width="fill_parent"
+	               android:layout_height="wrap_content"
+	               android:gravity="center_horizontal"
+	               android:orientation="horizontal" >
+	
+	               <TextView
+	                   android:id="@+id/playerArtistField"
+	                   android:textSize="15sp"
+	                   android:layout_width="wrap_content"
+	                   android:layout_height="wrap_content"
+	                   android:text="@string/defaultText" />
+	               
+	               <TextView
+	                   android:id="@+id/playerAlbumArtistSeperator"
+	                   android:textSize="15sp"
+	                   android:layout_width="wrap_content"
+	                   android:layout_height="wrap_content"
+	                   android:layout_marginRight="10dp"
+	                   android:layout_marginLeft="10dp"
+	                   android:text="@string/playerAlbumArtistSeperator" />
+	
+	               <TextView
+	                   android:id="@+id/playerAlbumField"
+	                   android:textSize="15sp"
+	                   android:layout_width="wrap_content"
+	                   android:layout_height="wrap_content"
+	                   android:text="@string/defaultText" />
+	           </LinearLayout>
+
+	           <SeekBar
+	               android:id="@+id/playerTrackBar"
+	               android:layout_width="fill_parent"
+	               android:layout_height="wrap_content" />
+	       </LinearLayout>
+	
+	       <ImageButton
+	           android:id="@+id/playerPrevBtn"
+	           style="@style/mediaBtn"
+	           android:contentDescription="@string/mediaBtnDesc"
+	           android:src="@android:drawable/ic_media_previous" />
+	       
+	       <ImageButton
+	           android:id="@+id/playerPlayPauseBtn"
+	           style="@style/mediaBtn"
+	           android:contentDescription="@string/mediaBtnDesc"
+	           android:src="@android:drawable/ic_media_play" />
+	       
+	       <ImageButton
+	           android:id="@+id/playerNextBtn"
+	           style="@style/mediaBtn"
+	           android:contentDescription="@string/mediaBtnDesc"
+	           android:src="@android:drawable/ic_media_next" />
+	       
+       </LinearLayout>
+
+       <LinearLayout
+           android:id="@+id/radioAudio"
+           android:layout_width="wrap_content"
+           android:layout_height="85dp"
+           android:visibility="gone" >
+           
+	       <Button
+	           android:id="@+id/btnRadioFM"
+	           style="@style/mediaBtn"
+	           android:text="@string/btnRadioAMLbl" />
+
+	       <Button 
+	           android:id="@+id/btnRadioAM"
+	           style="@style/mediaBtn"
+	           android:text="@string/btnRadioFMLbl" />
+
+	       <LinearLayout
+	           android:layout_width="480dp"
+	           android:layout_marginRight="100dp"
+	           android:layout_height="fill_parent"
+	           android:orientation="vertical" >
+	           <TextView
+	               android:id="@+id/stationText"
+	               android:textSize="35sp"
+	               android:layout_width="fill_parent"
+	               android:layout_height="fill_parent"
+	               android:gravity="center_horizontal|center_vertical"
+	               android:text="@string/stationTextLbl" />
+	       </LinearLayout>
+	
+	        <ImageButton
+	            android:id="@+id/btnPrev"
+	            style="@style/mediaBtn"
+	            android:contentDescription="@string/mediaBtnDesc"
+	            android:src="@android:drawable/ic_media_previous" />
+	        
+	        <ImageButton
+	           android:id="@+id/btnNext"
+	           style="@style/mediaBtn"
+	           android:contentDescription="@string/mediaBtnDesc"
+	           android:src="@android:drawable/ic_media_next" />
+	       
+       </LinearLayout>
+   </LinearLayout>
+   <LinearLayout
+       android:id="@+id/assortedControls"
+       android:layout_width="match_parent"
+       android:layout_height="wrap_content"
+       android:layout_below="@+id/radioControlLayout"
+       android:orientation="horizontal">
+       <Switch
+	       android:id="@+id/btnMusicMode"
+	       android:layout_width="wrap_content"
+	       android:layout_height="wrap_content"
+	       android:checked="true"
+	       android:textOn="Tablet"
+	       android:textOff="Radio" />
+   </LinearLayout>
+	<LinearLayout
+	    android:id="@+id/obcLayout"
+	    android:baselineAligned="false"
+	    android:layout_width="match_parent"
+	    android:layout_height="wrap_content"
+	    android:layout_below="@+id/assortedControls"
+	    android:layout_marginTop="@dimen/activity_vertical_margin"
+	    android:orientation="horizontal" >
+
+	    <RelativeLayout
+	        android:layout_width="100dp"
+	        android:layout_marginLeft="5dp"
+	        android:layout_height="wrap_content" >
+	        
+	        <TextView
+	            android:id="@+id/vehicleStatLbl"
+	            style="?android:listSeparatorTextViewStyle"
+	            android:text="@string/vehicleStatLbl" />
+	        <TextView
+	            android:id="@+id/speedFieldLbl"
+	            style="@style/majorStatItemLabelText"
+	            android:layout_below="@+id/vehicleStatLbl"
+	            android:text="@string/speedFieldLbl" />
+
+	        <TextView
+	            android:id="@+id/speedField"
+	            style="@style/majorStatItemValueText"
+	            android:layout_below="@+id/speedFieldLbl"
+	            android:text="@string/defaultText" />
+
+	        <TextView
+	            android:id="@+id/rpmFieldLbl"
+	            style="@style/majorStatItemLabelText"
+	            android:layout_below="@+id/speedField"
+	            android:text="@string/rpmFieldLbl" />
+
+	        <TextView
+	            android:id="@+id/rpmField"
+	            style="@style/majorStatItemValueText"
+	            android:layout_below="@+id/rpmFieldLbl"
+	            android:text="@string/defaultText" />
+
+	        <TextView
+	            android:id="@+id/rangeFieldLbl"
+	            style="@style/majorStatItemLabelText"
+	            android:layout_below="@+id/rpmField"
+	            android:text="@string/rangeFieldLbl" />
+
+	        <TextView
+	            android:id="@+id/rangeField"
+	            style="@style/majorStatItemValueText"
+	            android:layout_below="@+id/rangeFieldLbl"
+	            android:text="@string/defaultText" />
+	    </RelativeLayout>
+
+	    <RelativeLayout
+	        android:layout_width="200dp"
+	        android:layout_height="wrap_content"
+	        android:layout_marginLeft="80dp" >
+
+	        <TextView
+	            android:id="@+id/currentObcStatsLbl"
+	            style="?android:listSeparatorTextViewStyle"
+	            android:text="@string/currentObcStatsLbl" />
+
+	        <RelativeLayout
+	            android:id="@+id/fuel1Layout"
+	            style="@style/statItemLayout"
+	            android:layout_below="@+id/currentObcStatsLbl" >
+
+	            <TextView
+	                android:id="@+id/consumption1Lbl"
+	                style="@style/statItemLabelText"
+	                android:text="@string/consumptionLbl" />
+
+	            <TextView
+	                android:id="@+id/consumption1"
+	                style="@style/statItemValueText"
+	                android:layout_below="@+id/consumption1Lbl"
+	                android:text="@string/defaultText" />
+	        </RelativeLayout>
+
+	        <RelativeLayout
+	            android:id="@+id/avgSpeedLayout"
+	            style="@style/statItemLayout"
+	            android:layout_below="@+id/fuel1Layout" >
+
+	            <TextView
+	                android:id="@+id/avgSpeedLbl"
+	                style="@style/statItemLabelText"
+	                android:text="@string/avgSpeedLbl" />
+
+	            <TextView
+	                android:id="@+id/avgSpeed"
+	                style="@style/statItemValueText"
+	                android:layout_below="@+id/avgSpeedLbl"
+	                android:text="@string/defaultText" />
+	        </RelativeLayout>
+	    </RelativeLayout>
+
+	    <RelativeLayout
+	        android:layout_width="200dp"
+	        android:layout_height="wrap_content"
+	        android:layout_marginLeft="145dp" >
+
+	        <TextView
+	            android:id="@+id/historicalObcStatsLbl"
+	            style="?android:listSeparatorTextViewStyle"
+	            android:text="@string/historicalObcStatsLbl" />
+
+	        <RelativeLayout
+	            android:id="@+id/fuel2Layout"
+	            style="@style/statItemLayout"
+	            android:layout_below="@+id/historicalObcStatsLbl" >
+
+	            <TextView
+	                android:id="@+id/consumption2Lbl"
+	                style="@style/statItemLabelText"
+	                android:text="@string/consumptionLbl" />
+
+	            <TextView
+	                android:id="@+id/consumption2"
+	                style="@style/statItemValueText"
+	                android:layout_below="@+id/consumption2Lbl"
+	                android:text="@string/defaultText" />
+	        </RelativeLayout>
+
+	        <RelativeLayout
+	            android:id="@+id/historicalAvgSpeedLayout"
+	            style="@style/statItemLayout"
+	            android:layout_below="@+id/fuel2Layout" >
+
+	            <TextView
+	                android:id="@+id/historicalAvgSpeedLbl"
+	                style="@style/statItemLabelText"
+	                android:text="@string/avgSpeedLbl" />
+
+	            <TextView
+	                android:id="@+id/historicalAvgSpeed"
+	                style="@style/statItemValueText"
+	                android:layout_below="@+id/historicalAvgSpeedLbl"
+	                android:text="@string/defaultText" />
+	        </RelativeLayout>
+	    </RelativeLayout>
+
+	    <RelativeLayout
+	        android:layout_width="100dp"
+	        android:layout_height="wrap_content"
+	        android:layout_marginLeft="90dp" >
+	        <TextView
+	            android:id="@+id/temperatureStatLbl"
+	            style="?android:listSeparatorTextViewStyle"
+	            android:text="@string/temperatureStatLbl" />
+	        
+	        <TextView
+	            android:id="@+id/outdoorTempFieldLbl"
+	            style="@style/majorStatItemLabelText"
+	            android:layout_below="@+id/temperatureStatLbl"
+	            android:text="@string/outdoorTempFieldLbl" />
+
+	        <TextView
+	            android:id="@+id/outdoorTempField"
+	            style="@style/majorStatItemValueText"
+	            android:layout_below="@+id/outdoorTempFieldLbl"
+	            android:text="@string/defaultText" />
+
+	        <TextView
+	            android:id="@+id/coolantTempFieldLbl"
+	            style="@style/majorStatItemLabelText"
+	            android:layout_below="@+id/outdoorTempField"
+	            android:text="@string/coolantTempFieldLbl" />
+
+	        <TextView
+	            android:id="@+id/coolantTempField"
+	            style="@style/majorStatItemValueText"
+	            android:layout_below="@+id/coolantTempFieldLbl"
+	            android:text="@string/defaultText" />
+	    </RelativeLayout>
+	</LinearLayout>
+</RelativeLayout>

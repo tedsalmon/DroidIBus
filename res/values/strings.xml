@@ -1,0 +1,22 @@
+<resources>
+    <string name="app_name">Droid IBus</string>
+    <string name="stationTextLbl">Station</string>
+    <string name="speedFieldLbl">Speed:</string>
+    <string name="rpmFieldLbl">RPM:</string>
+    <string name="rangeFieldLbl">Range:</string>
+    <string name="locationFieldLbl">Location: </string>
+    <string name="currentObcStatsLbl">Current Stats:</string>
+    <string name="historicalObcStatsLbl">Historical Stats:</string>
+    <string name="consumptionLbl">Fuel Consumption:</string>
+    <string name="avgSpeedLbl">Avg. Speed</string>
+    <string name="topSpeedLbl">Top Speed</string>
+    <string name="outdoorTempFieldLbl">Outdoor:</string>
+    <string name="coolantTempFieldLbl">Coolant:</string>
+    <string name="defaultText">--</string>
+    <string name="playerAlbumArtistSeperator">-</string>
+    <string name="vehicleStatLbl">Vehicle</string>
+    <string name="temperatureStatLbl">Temps</string>
+    <string name="btnRadioAMLbl">AM</string>
+    <string name="btnRadioFMLbl">FM</string>
+    <string name="mediaBtnDesc">Media Button</string>
+</resources>
