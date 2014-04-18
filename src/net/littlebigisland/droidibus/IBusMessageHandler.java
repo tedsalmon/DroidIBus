@@ -9,6 +9,13 @@ import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 import android.util.Log;
 
+abstract interface IBusSystem{
+	//void receive();
+	
+	//void send();
+}
+
+
 /**
  * @author Ted S
  *
@@ -60,6 +67,23 @@ public class IBusMessageHandler {
 	public final byte IBUS_Unset = (byte) 0x100;
 	public final byte IBUS_Unknown = (byte) 0x101;
 	
+	class IKESubsystem implements IBusSystem{
+		public class OBC implements IBusSystem{
+			// Hash map here
+		}
+		
+		public void receive(){
+			
+		}
+		
+		public void send(){
+			
+		}
+	}
+	
+	public void __contruct__(){
+		
+	}
 	/**
 	 * Verify that the IBus Message is legitimate 
 	 * by XORing all bytes if correct, the product 
@@ -279,6 +303,7 @@ public class IBusMessageHandler {
 				break;
 		}
 	}
+
 	
 	/**
 	 * Register a callback listener
@@ -351,7 +376,7 @@ private byte[] fuel2Rqst = new byte[] {0x3B, 0x05, (byte)0x80, 0x41, 0x05, 0x01,
 					strData.add(bcdToStr(coordData[i]));
 				}
 				return String.format(
-						"Lat: %s¼ %s' %s.%s\" Long: %s¼ %s' %s\"", 
+						"Lat: %sÂ¼ %s' %s.%s\" Long: %sÂ¼ %s' %s\"", 
 						strData.get(0), strData.get(1), strData.get(2),
 						strData.get(3), strData.get(4) + strData.get(5),
 						strData.get(6), strData.get(7), strData.get(8)
