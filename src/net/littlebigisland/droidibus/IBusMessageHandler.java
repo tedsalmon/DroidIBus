@@ -15,7 +15,7 @@ import android.util.Log;
  */
 public class IBusMessageHandler {
 	// User Provided Callback interface implementation
-	private IBusMessageListener mCallbackInterface = null;
+	private IBusMessageReceiver mDataReceiver = null;
 	// System constants
 	public final byte IBUS_BodyModule = 0x00;
 	public final byte IBUS_SunroofControl = 0x08;
@@ -165,7 +165,7 @@ public class IBusMessageHandler {
 				if(msg.get(3) == 0x23 && msg.get(4) == 0x62 && msg.get(5) == 0x10){
 					String str = decodeMessage(msg, 6, msg.size() - 1, (byte)0x20);
 					Log.d("DroidIBus", String.format("Handling Station Text - Got '%s'", str));
-					if(mCallbackInterface != null) mCallbackInterface.onUpdateStation(str);
+					if(mDataReceiver != null) mDataReceiver.onUpdateStation(str);
 				}
 				break;
 		}
@@ -182,19 +182,19 @@ public class IBusMessageHandler {
 			
 			case 0x18:
 				// Speed and RPM
-				if(mCallbackInterface != null)
-					mCallbackInterface.onUpdateSpeed(
+				if(mDataReceiver != null)
+					mDataReceiver.onUpdateSpeed(
 						String.format("%s mph", ((int) msg.get(4) * 2) * 0.621371)
 					);
-					mCallbackInterface.onUpdateRPM(
+					mDataReceiver.onUpdateRPM(
 						String.format("%s", (int) msg.get(5) * 100)
 					);		
 				break;
 			
 			case 0x19:
 				// Coolant Temperature
-				if(mCallbackInterface != null)
-					mCallbackInterface.onUpdateCoolantTemp(
+				if(mDataReceiver != null)
+					mDataReceiver.onUpdateCoolantTemp(
 						String.format("%s C", (int) msg.get(5))
 					);
 				break;
@@ -204,43 +204,43 @@ public class IBusMessageHandler {
 				switch(msg.get(4)){
 					case 0x01:
 						// Time
-						if(mCallbackInterface != null)
-							mCallbackInterface.onUpdateTime(
+						if(mDataReceiver != null)
+							mDataReceiver.onUpdateTime(
 								decodeMessage(msg, 6, msg.size() -1)
 							);
 						break;
 					case 0x02:
 						// Date
-						if(mCallbackInterface != null)
-							mCallbackInterface.onUpdateDate(
+						if(mDataReceiver != null)
+							mDataReceiver.onUpdateDate(
 								decodeMessage(msg, 6, msg.size() -1)
 							);
 						break;
 					case 0x03:
 						// Outdoor Temperature
-						if(mCallbackInterface != null)
-							mCallbackInterface.onUpdateOutdoorTemp(
+						if(mDataReceiver != null)
+							mDataReceiver.onUpdateOutdoorTemp(
 								decodeMessage(msg, 7, msg.size() -1)
 							);
 						break;
 					case 0x04:
 						// Fuel 1
-						if(mCallbackInterface != null)
-							mCallbackInterface.onUpdateFuel1(
+						if(mDataReceiver != null)
+							mDataReceiver.onUpdateFuel1(
 								decodeMessage(msg, 6, msg.size() -1)
 							);
 						break;
 					case 0x05:
 						// Fuel 2
-						if(mCallbackInterface != null)
-							mCallbackInterface.onUpdateFuel2(
+						if(mDataReceiver != null)
+							mDataReceiver.onUpdateFuel2(
 								decodeMessage(msg, 6, msg.size() -1)
 							);
 						break;
 					case 0x06:
 						// Range
-						if(mCallbackInterface != null)
-							mCallbackInterface.onUpdateRange(
+						if(mDataReceiver != null)
+							mDataReceiver.onUpdateRange(
 								decodeMessage(msg, 6, msg.size() -1)
 							);
 						break;
@@ -258,8 +258,8 @@ public class IBusMessageHandler {
 						break;
 					case 0x0A:
 						// AVG Speed
-						if(mCallbackInterface != null)
-							mCallbackInterface.onUpdateAvgSpeed(
+						if(mDataReceiver != null)
+							mDataReceiver.onUpdateAvgSpeed(
 								decodeMessage(msg, 6, msg.size() -1)
 							);
 						break;
@@ -284,9 +284,8 @@ public class IBusMessageHandler {
 	 * Register a callback listener
 	 * @param cb
 	 */
-	public void registerCallbackListener(IBusMessageListener cb){
-		Log.d("DroidIBus", "Registering Callback Listener");
-		mCallbackInterface = cb;
+	public void registerCallbackListener(IBusMessageReceiver cb){
+		mDataReceiver = cb;
 	}
 }
 

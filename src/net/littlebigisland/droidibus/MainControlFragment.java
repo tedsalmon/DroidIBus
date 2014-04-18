@@ -142,7 +142,7 @@ public class MainControlFragment extends Fragment {
 	/**
 	 * IBusCallback Functions
 	 */
-	private IBusMessageListener mIBusUpdateListener =  new IBusMessageListener() {
+	private IBusMessageReceiver mIBusUpdateListener =  new IBusMessageReceiver() {
 		
 		/**
 		 * Send shit back to the UI Context

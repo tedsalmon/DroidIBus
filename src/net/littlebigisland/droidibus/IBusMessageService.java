@@ -173,7 +173,7 @@ public class IBusMessageService extends IOIOService {
 		actionQueue.add(act);
 	}
 	
-	public void setCallbackListener(IBusMessageListener listener){
+	public void setCallbackListener(IBusMessageReceiver listener){
 		mIBusMessenger.registerCallbackListener(listener);
 	}
 	

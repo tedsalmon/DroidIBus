@@ -10,7 +10,7 @@ package net.littlebigisland.droidibus;
 /**
  * Interface to build call backs off of
  */
-public interface IBusMessageListener{
+public interface IBusMessageReceiver{
 
 	public void onUpdateStation(final String text);
 
