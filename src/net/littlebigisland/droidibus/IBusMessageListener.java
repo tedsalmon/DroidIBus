@@ -20,7 +20,7 @@ public interface IBusMessageListener{
 
 	public void onUpdateRange(final String range);
 		
-	public void onUpdateOutTemp(final String temp);
+	public void onUpdateOutdoorTemp(final String temp);
 
 	public void onUpdateCoolantTemp(final String temp);
 
@@ -29,5 +29,9 @@ public interface IBusMessageListener{
 	public void onUpdateFuel2(final String mpg);
 
 	public void onUpdateAvgSpeed(final String speed);
+	
+	public void onUpdateTime(final String time);
+	
+	public void onUpdateDate(final String date);
 	
 }

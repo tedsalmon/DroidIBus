@@ -204,7 +204,7 @@ public class MainControlFragment extends Fragment {
 		}
 		
 		@Override
-		public void onUpdateOutTemp(final String temp){
+		public void onUpdateOutdoorTemp(final String temp){
 			Log.d(TAG, "Setting Outdoor Temp in Callback!");
 			postToUI(new Runnable() {
 			    public void run() {
@@ -251,6 +251,16 @@ public class MainControlFragment extends Fragment {
 			    	avgSpeedField.setText(speed);
 			    }
 			});
+		}
+		
+		@Override
+		public void onUpdateTime(final String time){
+			// Nothing to do yet
+		}
+		
+		@Override
+		public void onUpdateDate(final String date){
+			// Nothing to do yet
 		}
 		
 	};
