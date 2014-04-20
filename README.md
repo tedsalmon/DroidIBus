@@ -3,9 +3,9 @@ DroidIBus
 
 Android App that uses a IOIO board to interface with the BMW IBus.
 
-Currently the app is not complete and the only message it pushes to the Activity is the Station Text. The ground work is done to support more messages but I haven't integrated it yet.
+Currently the app is not complete and not all messages that I would like are being decoded. This will soon change.
 
-[Here's a picture taken with a potato of the app in action.](http://i.imgur.com/rDUXYbr.jpg)
+[Here's a picture of the app in action.](http://i.imgur.com/MUHq5Pq.jpg)
 
 # Goals
 
