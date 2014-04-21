@@ -268,41 +268,6 @@ public class IBusMessageHandler {
 		IBusSysMap.get(msg.get(0)).map(msg);
 	}
 	
-	
-	/**
-	 * This method extracts bytes from an IBus Message and returns them as a UTF-8 String
-	 * Helpful for most IKE/Location messages
-	 * @TODO - Integrate with the above method. Method overloading is really ghetto for this use case
-	 * 
-	 * @param msg
-	 * @param startByte
-	 * @param endByte
-	 * @return String	Decoded Bytes
-	 */
-	@SuppressWarnings("unused")
-	private String decodeMessage(ArrayList<Byte> msg, int startByte, int endByte, byte lastValidByte){
-		Log.d("DroidIBus", "Decoding message");
-		ArrayList<Byte> tempBytes = new ArrayList<Byte>();
-		while(startByte <= endByte){
-			byte tempByte = msg.get(startByte);
-			if(tempByte != lastValidByte){
-				tempBytes.add(msg.get(startByte));
-			}
-			startByte++;
-		}
-		byte[] strByte = new byte[tempBytes.size()];
-		for(int i = 0; i < tempBytes.size(); i++){
-			strByte[i] = tempBytes.get(i);
-		}
-		try {
-			return new String(strByte, "UTF-8");
-		} catch (UnsupportedEncodingException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-			return "";
-		}
-	}
-	
 	private String decodeMessage(ArrayList<Byte> msg, int startByte, int endByte){
 		Log.d("DroidIBus", "Decoding message");
 		ArrayList<Byte> tempBytes = new ArrayList<Byte>();
