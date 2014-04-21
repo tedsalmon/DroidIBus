@@ -7,12 +7,18 @@ package net.littlebigisland.droidibus;
 
 import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map;
+
 import android.util.Log;
 
+/**
+ * This class provides an interface that we can use to handle messages from specific sources
+ * 
+ * Subsequent subclasses implement message handlers for destination systems
+ */
 abstract interface IBusSystem{
-	//void receive();
-	
-	//void send();
+	void map(ArrayList<Byte> msg);
 }
 
 
@@ -67,23 +73,170 @@ public class IBusMessageHandler {
 	public final byte IBUS_Unset = (byte) 0x100;
 	public final byte IBUS_Unknown = (byte) 0x101;
 	
-	class IKESubsystem implements IBusSystem{
-		public class OBC implements IBusSystem{
-			// Hash map here
+	private Map<Byte, IBusSystem> IBusSysMap = new HashMap<Byte, IBusSystem>();
+	
+	/**
+	 * Handle messages emitted by the IKE sub system
+	 */
+	class IBusIKESubsystem implements IBusSystem{
+		private Map<Byte, IBusSystem> IBusIKEMap = new HashMap<Byte, IBusSystem>();
+		private final byte IKEGlobalBroadcast = 0x11;
+		
+		class IKEGlobalBroadcast implements IBusSystem{
+			private ArrayList<Byte> currentMessage;
+			
+			public void map(ArrayList<Byte> msg){
+				currentMessage = msg;
+				/*
+				case 0x11:
+					// Ignition State
+					break;
+				
+				case 0x18:
+					// Speed and RPM
+					if(mDataReceiver != null)
+						mDataReceiver.onUpdateSpeed(
+							String.format("%s mph", (int) ((int) msg.get(4) * 2) * 0.621371)
+						);
+						mDataReceiver.onUpdateRPM(
+							String.format("%s", (int) msg.get(5) * 100)
+						);		
+					break;
+				
+				case 0x19:
+					// Coolant Temperature
+					if(mDataReceiver != null)
+						mDataReceiver.onUpdateCoolantTemp(
+							String.format("%s C", (int) msg.get(5))
+						);
+					break;*/
+			}
 		}
 		
-		public void receive(){
+		class IKEBroadcast implements IBusSystem{
+			private ArrayList<Byte> currentMessage;
+			private final byte OBCData = 0x24;
 			
+			private void OBCData(){
+				switch(currentMessage.get(4)){
+					case 0x01: //Time
+						if(mDataReceiver != null)
+							mDataReceiver.onUpdateTime(
+								decodeMessage(currentMessage, 6, currentMessage.size() - 1)
+							);
+						break;
+					case 0x02: //Date
+						if(mDataReceiver != null)
+							mDataReceiver.onUpdateDate(
+								decodeMessage(currentMessage, 6, currentMessage.size() - 1)
+							);
+						break;
+					case 0x03: //Outdoor Temperature
+						if(mDataReceiver != null)
+							mDataReceiver.onUpdateOutdoorTemp(
+								decodeMessage(currentMessage, 7, currentMessage.size() - 1)
+							);
+						break;
+					case 0x04: // Fuel 1
+						if(mDataReceiver != null)
+							mDataReceiver.onUpdateFuel1(
+								decodeMessage(currentMessage, 6, currentMessage.size() - 1)
+							);
+						break;
+					case 0x05: // Fuel 2
+						if(mDataReceiver != null)
+							mDataReceiver.onUpdateFuel2(
+								decodeMessage(currentMessage, 6, currentMessage.size() - 1)
+							);
+						break;
+					case 0x06: // Range
+						if(mDataReceiver != null)
+							mDataReceiver.onUpdateRange(
+								decodeMessage(currentMessage, 6, currentMessage.size() - 1)
+							);
+						break;
+					case 0x0A: // AVG Speed
+						if(mDataReceiver != null)
+							mDataReceiver.onUpdateAvgSpeed(
+								decodeMessage(currentMessage, 6, currentMessage.size() - 1)
+							);
+						break;
+					case 0x07: // Distance
+					case 0x08: // Unknown
+					case 0x09: // Limit
+					case 0x0E: // Timer
+					case 0x0F: // AUX Heater 1
+					case 0x10: // AUX Heater 2
+						// Not implementing
+						break;
+				}
+			}
+			
+			public void map(ArrayList<Byte> msg){
+				currentMessage = msg;
+				byte operation = msg.get(3);
+				if(operation == OBCData){
+					OBCData();
+				}
+			}
 		}
 		
-		public void send(){
-			
+		public void map(ArrayList<Byte> msg){
+			if(IBusIKEMap.isEmpty()){
+				IBusIKEMap.put(IBUS_Broadcast, new IKEBroadcast());
+				IBusIKEMap.put(IKEGlobalBroadcast, new IKEGlobalBroadcast());
+			}
+			IBusIKEMap.get(msg.get(2)).map(msg);
 		}
 	}
 	
-	public void __contruct__(){
+	/**
+	 * Handle messages emitted by the Radio unit
+	 */
+	class IBusRadioSubsystem implements IBusSystem{
+		private Map<Byte, IBusSystem> IBusRadioMap = new HashMap<Byte, IBusSystem>();
 		
+		/**
+		 * Handle messages bound for the BoardMonitor from the Radio in the trunk
+		 */
+		class GFXNavigationSystem implements IBusSystem{
+			private ArrayList<Byte> currentMessage;
+			
+			public void map(ArrayList<Byte> msg){
+				currentMessage = msg;
+				// This is the AM/FM text - Data starts after 0x41, which appears to be the
+				// Index of the box to fill with this text on the BoardMonitor
+				// 0x68 0x0B 0x3B 0xA5 0x62 0x01 0x41 0x20 0x46 0x4D 0x31 0x20 0xE5
+				if(msg.get(3) == 0x23 && msg.get(4) == 0x62 && msg.get(5) == 0x10){
+					stationText();
+				}
+			}
+			
+			private void stationText(){
+				int msgSize = currentMessage.size() - 2;
+				while (currentMessage.get(msgSize) == 0x20)
+					msgSize--;
+				byte[] displayBytes = new byte[msgSize - 5];
+				for (int i = 0; i < displayBytes.length; i++)
+					displayBytes[i] = currentMessage.get(i + 6);
+				String str = "";
+				try{
+					str = new String(displayBytes, "UTF-8");
+				} catch (UnsupportedEncodingException e) {
+					e.printStackTrace();
+				}
+				Log.d("DroidIBus", String.format("Handling Station Text - Got '%s'", str));
+				if(mDataReceiver != null) mDataReceiver.onUpdateStation(str);
+			}
+		}
+		
+		public void map(ArrayList<Byte> msg){
+			if(IBusRadioMap.isEmpty()){
+				IBusRadioMap.put(IBUS_GraphicsNavigationDriver, new GFXNavigationSystem());
+			}
+		}
 	}
+	
 	/**
 	 * Verify that the IBus Message is legitimate 
 	 * by XORing all bytes if correct, the product 
@@ -101,26 +254,18 @@ public class IBusMessageHandler {
 	}
 	
 	/**
-	 * @todo Implement correctly
 	 * Temp 
 	 * @param msg
 	 */
 	public void handleMessage(ArrayList<Byte> msg){
-		// The first item in the IBus message indicates the source system
-		switch(msg.get(0)){
-			case IBUS_Radio:
-				handleRadio(msg);
-				break;
-			case IBUS_InstrumentClusterElectronics:
-				handleIKE(msg);
-				break;
-			case IBUS_GraphicsNavigationDriver:
-				// 'Get' OBC Requests come from here
-				break;
-			default:
-				Log.d("DroidIBus", "Handling Unknown Message");
-				break;
+		// This may be repeatedly executed but in the interest of readability
+		// I'm not going to move it back into the class construct
+		if(IBusSysMap.isEmpty()){
+			IBusSysMap.put(IBUS_Radio, new IBusRadioSubsystem());
+			IBusSysMap.put(IBUS_InstrumentClusterElectronics, new IBusIKESubsystem());
 		}
+		// The first item in the IBus message indicates the source system
+		IBusSysMap.get(msg.get(0)).map(msg);
 	}
 	
 	
@@ -134,6 +279,7 @@ public class IBusMessageHandler {
 	 * @param endByte
 	 * @return String	Decoded Bytes
 	 */
+	@SuppressWarnings("unused")
 	private String decodeMessage(ArrayList<Byte> msg, int startByte, int endByte, byte lastValidByte){
 		Log.d("DroidIBus", "Decoding message");
 		ArrayList<Byte> tempBytes = new ArrayList<Byte>();
@@ -176,134 +322,6 @@ public class IBusMessageHandler {
 			return "";
 		}
 	}
-	
-	/**
-	 * Handle messages received from the Radio subsystem
-	 * 
-	 */	
-	private void handleRadio(ArrayList<Byte> msg){
-		switch(msg.get(2)){
-		
-			case IBUS_GraphicsNavigationDriver:
-				// Station Text
-				if(msg.get(3) == 0x23 && msg.get(4) == 0x62 && msg.get(5) == 0x10){
-					String str = decodeMessage(msg, 6, msg.size() - 1, (byte)0x20);
-					Log.d("DroidIBus", String.format("Handling Station Text - Got '%s'", str));
-					if(mDataReceiver != null) mDataReceiver.onUpdateStation(str);
-				}
-				break;
-		}
-	}
-	
-	/**
-	 *  Handle messages received from IKE
-	 */
-	private void handleIKE(ArrayList<Byte> msg){
-		switch(msg.get(3)){
-			case 0x11:
-				// Ignition State
-				break;
-			
-			case 0x18:
-				// Speed and RPM
-				if(mDataReceiver != null)
-					mDataReceiver.onUpdateSpeed(
-						String.format("%s mph", ((int) msg.get(4) * 2) * 0.621371)
-					);
-					mDataReceiver.onUpdateRPM(
-						String.format("%s", (int) msg.get(5) * 100)
-					);		
-				break;
-			
-			case 0x19:
-				// Coolant Temperature
-				if(mDataReceiver != null)
-					mDataReceiver.onUpdateCoolantTemp(
-						String.format("%s C", (int) msg.get(5))
-					);
-				break;
-			
-			case 0x24:
-				// OBC 'Set' Data
-				switch(msg.get(4)){
-					case 0x01:
-						// Time
-						if(mDataReceiver != null)
-							mDataReceiver.onUpdateTime(
-								decodeMessage(msg, 6, msg.size() -1)
-							);
-						break;
-					case 0x02:
-						// Date
-						if(mDataReceiver != null)
-							mDataReceiver.onUpdateDate(
-								decodeMessage(msg, 6, msg.size() -1)
-							);
-						break;
-					case 0x03:
-						// Outdoor Temperature
-						if(mDataReceiver != null)
-							mDataReceiver.onUpdateOutdoorTemp(
-								decodeMessage(msg, 7, msg.size() -1)
-							);
-						break;
-					case 0x04:
-						// Fuel 1
-						if(mDataReceiver != null)
-							mDataReceiver.onUpdateFuel1(
-								decodeMessage(msg, 6, msg.size() -1)
-							);
-						break;
-					case 0x05:
-						// Fuel 2
-						if(mDataReceiver != null)
-							mDataReceiver.onUpdateFuel2(
-								decodeMessage(msg, 6, msg.size() -1)
-							);
-						break;
-					case 0x06:
-						// Range
-						if(mDataReceiver != null)
-							mDataReceiver.onUpdateRange(
-								decodeMessage(msg, 6, msg.size() -1)
-							);
-						break;
-					case 0x07:
-						// Distance
-						// Not currently working on implementing since we don't use on-board GPS maps
-						break;
-					case 0x08:
-						// Unknown
-						// Not implementing
-						break;
-					case 0x09:
-						// Limit
-						// Not implementing						
-						break;
-					case 0x0A:
-						// AVG Speed
-						if(mDataReceiver != null)
-							mDataReceiver.onUpdateAvgSpeed(
-								decodeMessage(msg, 6, msg.size() -1)
-							);
-						break;
-					case 0x0E:
-						// Timer
-						// Not implementing
-						break;
-					case 0x0F:
-						// AUX Heater 1
-						// Not implementing
-						break;
-					case 0x10:
-						// AUX Heater 2
-						// Not implementing
-						break;
-				}
-				break;
-		}
-	}
-
 	
 	/**
 	 * Register a callback listener
