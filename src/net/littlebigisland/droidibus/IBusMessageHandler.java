@@ -83,33 +83,31 @@ public class IBusMessageHandler {
 		private final byte IKEGlobalBroadcast = 0x11;
 		
 		class IKEGlobalBroadcast implements IBusSystem{
-			private ArrayList<Byte> currentMessage;
 			
+			/**
+			 * Handle globally broadcast messages
+			 */
 			public void map(ArrayList<Byte> msg){
-				currentMessage = msg;
-				/*
-				case 0x11:
-					// Ignition State
-					break;
-				
-				case 0x18:
-					// Speed and RPM
-					if(mDataReceiver != null)
-						mDataReceiver.onUpdateSpeed(
-							String.format("%s mph", (int) ((int) msg.get(4) * 2) * 0.621371)
-						);
-						mDataReceiver.onUpdateRPM(
-							String.format("%s", (int) msg.get(5) * 100)
-						);		
-					break;
-				
-				case 0x19:
-					// Coolant Temperature
-					if(mDataReceiver != null)
-						mDataReceiver.onUpdateCoolantTemp(
-							String.format("%s C", (int) msg.get(5))
-						);
-					break;*/
+				switch(msg.get(3)){
+					case 0x11: // Ignition State
+						break;
+					case 0x18: // Speed and RPM
+						int speedInMPH = ((int) ((msg.get(4) * 2) * 0.621371));
+						if(mDataReceiver != null)
+							mDataReceiver.onUpdateSpeed(
+								String.format("%s mph", speedInMPH)
+							);
+							mDataReceiver.onUpdateRPM(
+								String.format("%s", (int) msg.get(5) * 100)
+							);		
+						break;
+					case 0x19: // Coolant Temperature
+						if(mDataReceiver != null)
+							mDataReceiver.onUpdateCoolantTemp(
+								String.format("%s C", (int) msg.get(5))
+							);
+						break;
+				}
 			}
 		}
 		
@@ -117,48 +115,53 @@ public class IBusMessageHandler {
 			private ArrayList<Byte> currentMessage;
 			private final byte OBCData = 0x24;
 			
+			/**
+			 * Handle OBC messages sent from IKE
+			 */
 			private void OBCData(){
+				// Minus two because the array starts at zero and we need to ignore the last byte (XOR Checksum)
+				int endByte = currentMessage.size() - 2;
 				switch(currentMessage.get(4)){
 					case 0x01: //Time
 						if(mDataReceiver != null)
 							mDataReceiver.onUpdateTime(
-								decodeMessage(currentMessage, 6, currentMessage.size() - 1)
+								decodeMessage(currentMessage, 6, endByte)
 							);
 						break;
 					case 0x02: //Date
 						if(mDataReceiver != null)
 							mDataReceiver.onUpdateDate(
-								decodeMessage(currentMessage, 6, currentMessage.size() - 1)
+								decodeMessage(currentMessage, 6, endByte)
 							);
 						break;
 					case 0x03: //Outdoor Temperature
 						if(mDataReceiver != null)
 							mDataReceiver.onUpdateOutdoorTemp(
-								decodeMessage(currentMessage, 7, currentMessage.size() - 1)
+								decodeMessage(currentMessage, 7, endByte)
 							);
 						break;
 					case 0x04: // Fuel 1
 						if(mDataReceiver != null)
 							mDataReceiver.onUpdateFuel1(
-								decodeMessage(currentMessage, 6, currentMessage.size() - 1)
+								decodeMessage(currentMessage, 6, endByte)
 							);
 						break;
 					case 0x05: // Fuel 2
 						if(mDataReceiver != null)
 							mDataReceiver.onUpdateFuel2(
-								decodeMessage(currentMessage, 6, currentMessage.size() - 1)
+								decodeMessage(currentMessage, 6, endByte)
 							);
 						break;
 					case 0x06: // Range
 						if(mDataReceiver != null)
 							mDataReceiver.onUpdateRange(
-								decodeMessage(currentMessage, 6, currentMessage.size() - 1)
+								decodeMessage(currentMessage, 6, endByte)
 							);
 						break;
 					case 0x0A: // AVG Speed
 						if(mDataReceiver != null)
 							mDataReceiver.onUpdateAvgSpeed(
-								decodeMessage(currentMessage, 6, currentMessage.size() - 1)
+								decodeMessage(currentMessage, 6, endByte)
 							);
 						break;
 					case 0x07: // Distance
