@@ -262,6 +262,12 @@ public class MainControlFragment extends Fragment {
 		public void onUpdateDate(final String date){
 			// Nothing to do yet
 		}
+
+		@Override
+		public void onUpdateIgnitionSate(int state) {
+			// TODO Auto-generated method stub
+			
+		}
 		
 	};
 	
@@ -468,11 +474,11 @@ public class MainControlFragment extends Fragment {
 		coolantTempField = (TextView) v.findViewById(R.id.coolantTempField);
 
 		// Set the action of each button
-		btnVolUp.setTag(IBusEnums.Actions.VOL_UP.name());
+		/*btnVolUp.setTag(IBusEnums.Actions.VOL_UP.name());
 		btnVolDown.setTag(IBusEnums.Actions.VOL_DOWN.name());
 		btnMusicMode.setTag(IBusEnums.Actions.MODE_CHG.name());
 		btnPrev.setTag(IBusEnums.Actions.PREV_BTN.name());
-		btnNext.setTag(IBusEnums.Actions.NEXT_BTN.name());
+		btnNext.setTag(IBusEnums.Actions.NEXT_BTN.name());*/
 		
 		// Change Audio Modes
 		btnMusicMode.setOnCheckedChangeListener(new OnCheckedChangeListener(){

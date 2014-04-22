@@ -14,15 +14,9 @@ public interface IBusMessageReceiver{
 
 	public void onUpdateStation(final String text);
 
-	public void onUpdateSpeed(final String speed);
-
-	public void onUpdateRPM(final String rpm);
-
 	public void onUpdateRange(final String range);
 		
 	public void onUpdateOutdoorTemp(final String temp);
-
-	public void onUpdateCoolantTemp(final String temp);
 
 	public void onUpdateFuel1(final String mpg);
 
@@ -33,5 +27,13 @@ public interface IBusMessageReceiver{
 	public void onUpdateTime(final String time);
 	
 	public void onUpdateDate(final String date);
+	
+	public void onUpdateSpeed(final String speed);
+
+	public void onUpdateRPM(final String rpm);
+	
+	public void onUpdateCoolantTemp(final String temp);
+	
+	public void onUpdateIgnitionSate(final int state);
 	
 }
