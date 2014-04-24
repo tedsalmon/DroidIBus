@@ -276,7 +276,7 @@ public class MainControlFragment extends Fragment {
     	@Override
     	public void onServiceConnected(ComponentName className, IBinder service) {
     		// Getting the binder and activating RemoteController instantly
-    		Log.d(TAG, "Getting Binder object");
+    		Log.d(TAG, "Getting Music Player Binder object");
     		MusicControllerService.PlayerBinder binder = (MusicControllerService.PlayerBinder) service;
     		mPlayerService = binder.getService();
     		mPlayerService.enableController();
@@ -298,7 +298,7 @@ public class MainControlFragment extends Fragment {
             IOIOBinder binder = (IOIOBinder) service;
             mIBusService = binder.getService();
     		if(mIBusService != null) {
-    			Log.d("DroidIBus", "mService is NOT NULL");
+    			Log.d("DroidIBus", "mIBusService is NOT NULL");
     			mIBusService.setCallbackListener(mIBusUpdateListener);
     		}
             mIBusBound = true;
@@ -306,7 +306,7 @@ public class MainControlFragment extends Fragment {
 
         @Override
         public void onServiceDisconnected(ComponentName name) {
-        	Log.e("DroidIBus", "mService is disconnected");
+        	Log.e("DroidIBus", "mIBusService is disconnected");
             mIBusBound = false;
         }
     };
