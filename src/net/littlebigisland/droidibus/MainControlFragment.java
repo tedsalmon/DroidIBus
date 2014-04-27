@@ -174,7 +174,7 @@ public class MainControlFragment extends Fragment {
 		 */
 		@Override
 		public void onUpdateSpeed(final String speed){
-			Log.d(TAG, "Setting speed in Callback!");
+			Log.d(TAG, "Setting Speed in Callback!");
 			postToUI(new Runnable() {
 			    public void run() {
 			    	speedField.setText(speed);
@@ -215,7 +215,7 @@ public class MainControlFragment extends Fragment {
 		
 		@Override
 		public void onUpdateCoolantTemp(final String temp){
-			Log.d(TAG, "Setting Gas Range in Callback!");
+			Log.d(TAG, "Setting Coolant Temp in Callback!");
 			postToUI(new Runnable() {
 			    public void run() {
 			    	coolantTempField.setText(temp);
@@ -245,7 +245,7 @@ public class MainControlFragment extends Fragment {
 		
 		@Override
 		public void onUpdateAvgSpeed(final String speed){
-			Log.d(TAG, "Setting MPG1 in Callback!");
+			Log.d(TAG, "Setting AVG Speed in Callback!");
 			postToUI(new Runnable() {
 			    public void run() {
 			    	avgSpeedField.setText(speed);
@@ -255,17 +255,17 @@ public class MainControlFragment extends Fragment {
 		
 		@Override
 		public void onUpdateTime(final String time){
-			// Nothing to do yet
+			Log.d(TAG, "The time is " + time);
 		}
 		
 		@Override
 		public void onUpdateDate(final String date){
-			// Nothing to do yet
+			Log.d(TAG, "The date is " + date);
 		}
 
 		@Override
 		public void onUpdateIgnitionSate(int state) {
-			// TODO Auto-generated method stub
+			Log.d(TAG, "Ignition state is " + state);
 			
 		}
 		
@@ -351,29 +351,33 @@ public class MainControlFragment extends Fragment {
 	
 	private void unbindServices(boolean doServiceStop) {
 		Context applicationContext = getActivity();
-		
-    	if(mPlayerBound) {
-    		mPlayerService.disableController();
-    	}    	
-		try {
-			Log.d(TAG, "Unbinding from IBus service");
-			applicationContext.unbindService(mIBusConnection);
-			if(doServiceStop){
-				applicationContext.stopService(
-						new Intent(applicationContext, IBusMessageService.class)
-				);
+		if(mIBusBound){
+			try {
+				Log.d(TAG, "Unbinding from IBus service");
+				mIBusService.disable();
+				applicationContext.unbindService(mIBusConnection);
+				if(doServiceStop){
+					applicationContext.stopService(
+							new Intent(applicationContext, IBusMessageService.class)
+					);
+				}
+				mIBusBound = false;
+			}
+			catch(Exception ex) {
+				Log.e(TAG, String.format("Unable to unbind the IBusService - '%s'!", ex.getMessage()));
 			}
 		}
-		catch(Exception ex) {
-			Log.e(TAG, "Unable to unbind the IBusService!");
-		}
 		
-		try{
-			Log.d(TAG, "Unbinding from Music Player service");
-			applicationContext.unbindService(mPlayerConnection);
-		}
-		catch(Exception ex){
-			Log.e(TAG, "Unable to unbind the Music Player service!");
+		if(mPlayerBound){
+			mPlayerService.disableController();
+			try{
+				Log.d(TAG, "Unbinding from Music Player service");
+				applicationContext.unbindService(mPlayerConnection);
+				mPlayerBound = false;
+			}
+			catch(Exception ex){
+				Log.e(TAG, "Unable to unbind the Music Player service!");
+			}
 		}
 	}
     
@@ -525,18 +529,21 @@ public class MainControlFragment extends Fragment {
     @Override
     public void onDestroy() {
     	super.onDestroy();
+    	Log.d(TAG, "onDestroy called");
     	unbindServices(true);
     }
     
     @Override
     public void onPause() {
     	super.onPause();
+    	Log.d(TAG, "onPause called");
     	unbindServices(false);
     }
     
     @Override
     public void onResume() {
     	super.onResume();
+    	Log.d(TAG, "onResume called");
     	bindServices(false);
     }
 }
