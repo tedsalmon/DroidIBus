@@ -80,7 +80,6 @@ public class IBusMessageHandler {
 	 */
 	class IBusIKESubsystem implements IBusSystem{
 		private Map<Byte, IBusSystem> IBusIKEMap = new HashMap<Byte, IBusSystem>();
-		private final byte IKEGlobalBroadcast = 0x11;
 		
 		class IKEGlobalBroadcast implements IBusSystem{
 			
@@ -90,6 +89,8 @@ public class IBusMessageHandler {
 			public void map(ArrayList<Byte> msg){
 				switch(msg.get(3)){
 					case 0x11: // Ignition State
+						int state = (msg.get(3) < 3) ? msg.get(3) : (0x02 & msg.get(3));
+						mDataReceiver.onUpdateIgnitionSate(state);
 						break;
 					case 0x18: // Speed and RPM
 						int speedInMPH = ((int) ((msg.get(4) * 2) * 0.621371));
@@ -121,6 +122,7 @@ public class IBusMessageHandler {
 			private void OBCData(){
 				// Minus two because the array starts at zero and we need to ignore the last byte (XOR Checksum)
 				int endByte = currentMessage.size() - 2;
+				Log.d("DroidIBus", String.format("IKE OBC Type is 0x%02X", currentMessage.get(4)));
 				switch(currentMessage.get(4)){
 					case 0x01: //Time
 						if(mDataReceiver != null)
@@ -187,9 +189,13 @@ public class IBusMessageHandler {
 		public void map(ArrayList<Byte> msg){
 			if(IBusIKEMap.isEmpty()){
 				IBusIKEMap.put(IBUS_Broadcast, new IKEBroadcast());
-				IBusIKEMap.put(IKEGlobalBroadcast, new IKEGlobalBroadcast());
+				IBusIKEMap.put(IBUS_GlobalBroadcastAddress, new IKEGlobalBroadcast());
 			}
-			IBusIKEMap.get(msg.get(2)).map(msg);
+			try{
+				IBusIKEMap.get((byte) msg.get(2)).map(msg);
+			}catch(NullPointerException npe){
+				// Things not in the map throw a NullPointerException
+			}
 		}
 	}
 	
@@ -237,6 +243,12 @@ public class IBusMessageHandler {
 			if(IBusRadioMap.isEmpty()){
 				IBusRadioMap.put(IBUS_GraphicsNavigationDriver, new GFXNavigationSystem());
 			}
+			// The first item in the IBus message indicates the source system
+			try{
+				IBusRadioMap.get((byte) msg.get(2)).map(msg);
+			}catch(NullPointerException npe){
+				// Things not in the map throw a NullPointerException
+			}
 		}
 	}
 	
@@ -268,7 +280,11 @@ public class IBusMessageHandler {
 			IBusSysMap.put(IBUS_InstrumentClusterElectronics, new IBusIKESubsystem());
 		}
 		// The first item in the IBus message indicates the source system
-		IBusSysMap.get(msg.get(0)).map(msg);
+		try{
+			IBusSysMap.get(msg.get(0)).map(msg);
+		}catch(NullPointerException npe){
+			// Things not in the map throw a NullPointerException
+		}
 	}
 	
 	private String decodeMessage(ArrayList<Byte> msg, int startByte, int endByte){
@@ -285,7 +301,6 @@ public class IBusMessageHandler {
 		try {
 			return new String(strByte, "UTF-8");
 		} catch (UnsupportedEncodingException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 			return "";
 		}
