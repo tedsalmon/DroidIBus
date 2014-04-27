@@ -177,6 +177,9 @@ public class IBusMessageService extends IOIOService {
 		mIBusMessenger.registerCallbackListener(listener);
 	}
 	
+	public void disable(){
+		stopSelf();
+	}
 	
 	@Override
 	public int onStartCommand(Intent intent, int flags, int startId) {
