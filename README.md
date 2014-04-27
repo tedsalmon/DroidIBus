@@ -5,7 +5,7 @@ Android App that uses a IOIO board to interface with the BMW IBus.
 
 Currently the app is not complete and not all messages that I would like are being decoded. This will soon change.
 
-[Here's a picture of the app in action.](http://i.imgur.com/MUHq5Pq.jpg)
+[Here's a picture of the app in action.](http://i.imgur.com/2Ba9bh5.png)
 
 # Goals
 
