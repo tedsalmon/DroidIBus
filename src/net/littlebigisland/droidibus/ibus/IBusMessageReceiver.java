@@ -5,7 +5,7 @@
  * @package net.littlebigisland.droidibus
  *
  */
-package net.littlebigisland.droidibus;
+package net.littlebigisland.droidibus.ibus;
 
 /**
  * Interface to build call backs off of

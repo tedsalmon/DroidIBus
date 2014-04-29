@@ -1,4 +1,4 @@
-package net.littlebigisland.droidibus;
+package net.littlebigisland.droidibus.ibus;
 /**
  * IBusService
  * Communicate with the IBus using the IOIO
@@ -204,7 +204,7 @@ public class IBusMessageService extends IOIOService {
 	 * A class to create our IOIO service.
 	 */
     public class IOIOBinder extends Binder {
-    	IBusMessageService getService() {
+    	public IBusMessageService getService() {
             return IBusMessageService.this;
         }
     }

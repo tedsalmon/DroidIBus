@@ -1,4 +1,4 @@
-package net.littlebigisland.droidibus;
+package net.littlebigisland.droidibus.music;
  
 /**
  * @author Ted S <tass2001@gmail.com>

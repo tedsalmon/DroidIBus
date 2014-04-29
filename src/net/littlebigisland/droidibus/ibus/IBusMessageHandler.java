@@ -1,4 +1,4 @@
-package net.littlebigisland.droidibus;
+package net.littlebigisland.droidibus.ibus;
 /**
  * Message Parsing/Sending to IBus
  * @author Ted S <tass2001@gmail.com>

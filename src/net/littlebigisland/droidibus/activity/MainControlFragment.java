@@ -1,11 +1,14 @@
-package net.littlebigisland.droidibus;
+package net.littlebigisland.droidibus.activity;
 /**
  * Control Fragment for IBus UI 
  * @author Ted S <tass2001@gmail.com>
  * @package net.littlebigisland.droidibus
  */
 
-import net.littlebigisland.droidibus.IBusMessageService.IOIOBinder;
+import net.littlebigisland.droidibus.ibus.IBusMessageReceiver;
+import net.littlebigisland.droidibus.ibus.IBusMessageService;
+import net.littlebigisland.droidibus.ibus.IBusMessageService.IOIOBinder;
+import net.littlebigisland.droidibus.music.MusicControllerService;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
