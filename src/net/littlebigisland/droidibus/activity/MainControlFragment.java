@@ -4,7 +4,7 @@ package net.littlebigisland.droidibus.activity;
  * @author Ted S <tass2001@gmail.com>
  * @package net.littlebigisland.droidibus
  */
-
+import net.littlebigisland.droidibus.R;
 import net.littlebigisland.droidibus.ibus.IBusMessageReceiver;
 import net.littlebigisland.droidibus.ibus.IBusMessageService;
 import net.littlebigisland.droidibus.ibus.IBusMessageService.IOIOBinder;
