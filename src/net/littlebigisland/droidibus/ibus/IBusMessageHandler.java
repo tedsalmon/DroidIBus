@@ -12,206 +12,28 @@ import java.util.Map;
 
 import android.util.Log;
 
-/**
- * This class provides an interface that we can use to handle messages from specific sources
- * 
- * Subsequent subclasses implement message handlers for destination systems
- */
-abstract interface IBusSystem{
-	void map(ArrayList<Byte> msg);
-}
 
-
-/**
- * @author Ted S
- *
- */
 public class IBusMessageHandler {
 	// User Provided Callback interface implementation
 	private IBusMessageReceiver mDataReceiver = null;
-	// System constants
-	public final byte IBUS_BodyModule = 0x00;
-	public final byte IBUS_SunroofControl = 0x08;
-	public final byte IBUS_CDChanger = 0x18;
-	public final byte IBUS_RadioControlledClock = 0x28;
-	public final byte IBUS_CheckControlModule = 0x30;
-	public final byte IBUS_GraphicsNavigationDriver = 0x3B;
-	public final byte IBUS_Diagnostic = 0x3F;
-	public final byte IBUS_RemoteControlCentralLocking = 0x40;
-	public final byte IBUS_GraphicsDriverRearScreen = 0x43;
-	public final byte IBUS_Immobiliser = 0x44;
-	public final byte IBUS_CentralInformationDisplay = 0x46;
-	public final byte IBUS_MultiFunctionSteeringWheel = 0x50;
-	public final byte IBUS_MirrorMemory = 0x51;
-	public final byte IBUS_IntegratedHeatingAndAirConditioning = 0x5B;
-	public final byte IBUS_ParkDistanceControl = 0x60;
-	public final byte IBUS_Radio = 0x68;
-	public final byte IBUS_DigitalSignalProcessingAudioAmplifier = 0x6A;
-	public final byte IBUS_SeatMemory = 0x72;
-	public final byte IBUS_SiriusRadio = 0x73;
-	public final byte IBUS_CDChangerDINsize = 0x76;
-	public final byte IBUS_NavigationEurope = 0x7F;
-	public final byte IBUS_InstrumentClusterElectronics = (byte) 0x80;
-	public final byte IBUS_MirrorMemorySecond = (byte) 0x9B;
-	public final byte IBUS_MirrorMemoryThird = (byte) 0x9C;
-	public final byte IBUS_RearMultiInfoDisplay = (byte) 0xA0;
-	public final byte IBUS_AirBagModule = (byte) 0xA4;
-	public final byte IBUS_SpeedRecognitionSystem = (byte) 0xB0;
-	public final byte IBUS_NavigationJapan = (byte) 0xBB;
-	public final byte IBUS_GlobalBroadcastAddress = (byte) 0xBF;
-	public final byte IBUS_MultiInfoDisplay = (byte) 0xC0;
-	public final byte IBUS_Telephone = (byte) 0xC8;
-	public final byte IBUS_Assist = (byte) 0xCA;
-	public final byte IBUS_LightControlModule = (byte) 0xD0;
-	public final byte IBUS_SeatMemorySecond = (byte) 0xDA;
-	public final byte IBUS_IntegratedRadioInformationSystem = (byte) 0xE0;
-	public final byte IBUS_FrontDisplay = (byte) 0xE7;
-	public final byte IBUS_RainLightSensor = (byte) 0xE8;
-	public final byte IBUS_Television = (byte) 0xED;
-	public final byte IBUS_OnBoardMonitor = (byte) 0xF0;
-	public final byte IBUS_Broadcast = (byte) 0xFF;
-	public final byte IBUS_Unset = (byte) 0x100;
-	public final byte IBUS_Unknown = (byte) 0x101;
+
 	
-	private Map<Byte, IBusSystem> IBusSysMap = new HashMap<Byte, IBusSystem>();
+	private Map<Byte, IBusSystemCommand> IBusSysMap = new HashMap<Byte, IBusSystemCommand>();
 	
-	/**
-	 * Handle messages emitted by the IKE sub system
-	 */
-	class IBusIKESubsystem implements IBusSystem{
-		private Map<Byte, IBusSystem> IBusIKEMap = new HashMap<Byte, IBusSystem>();
-		
-		class IKEGlobalBroadcast implements IBusSystem{
-			
-			/**
-			 * Handle globally broadcast messages
-			 */
-			public void map(ArrayList<Byte> msg){
-				switch(msg.get(3)){
-					case 0x11: // Ignition State
-						int state = (msg.get(3) < 3) ? msg.get(3) : (0x02 & msg.get(3));
-						mDataReceiver.onUpdateIgnitionSate(state);
-						break;
-					case 0x18: // Speed and RPM
-						int speedInMPH = ((int) ((msg.get(4) * 2) * 0.621371));
-						if(mDataReceiver != null)
-							mDataReceiver.onUpdateSpeed(
-								String.format("%s mph", speedInMPH)
-							);
-							mDataReceiver.onUpdateRPM(
-								String.format("%s", (int) msg.get(5) * 100)
-							);		
-						break;
-					case 0x19: // Coolant Temperature
-						if(mDataReceiver != null)
-							mDataReceiver.onUpdateCoolantTemp(
-								String.format("%s C", (int) msg.get(5))
-							);
-						break;
-				}
-			}
-		}
-		
-		class IKEBroadcast implements IBusSystem{
-			private ArrayList<Byte> currentMessage;
-			private final byte OBCData = 0x24;
-			
-			/**
-			 * Handle OBC messages sent from IKE
-			 */
-			private void OBCData(){
-				// Minus two because the array starts at zero and we need to ignore the last byte (XOR Checksum)
-				int endByte = currentMessage.size() - 2;
-				Log.d("DroidIBus", String.format("IKE OBC Type is 0x%02X", currentMessage.get(4)));
-				switch(currentMessage.get(4)){
-					case 0x01: //Time
-						if(mDataReceiver != null)
-							mDataReceiver.onUpdateTime(
-								decodeMessage(currentMessage, 6, endByte)
-							);
-						break;
-					case 0x02: //Date
-						if(mDataReceiver != null)
-							mDataReceiver.onUpdateDate(
-								decodeMessage(currentMessage, 6, endByte)
-							);
-						break;
-					case 0x03: //Outdoor Temperature
-						if(mDataReceiver != null)
-							mDataReceiver.onUpdateOutdoorTemp(
-								decodeMessage(currentMessage, 7, endByte)
-							);
-						break;
-					case 0x04: // Fuel 1
-						if(mDataReceiver != null)
-							mDataReceiver.onUpdateFuel1(
-								decodeMessage(currentMessage, 6, endByte)
-							);
-						break;
-					case 0x05: // Fuel 2
-						if(mDataReceiver != null)
-							mDataReceiver.onUpdateFuel2(
-								decodeMessage(currentMessage, 6, endByte)
-							);
-						break;
-					case 0x06: // Range
-						if(mDataReceiver != null)
-							mDataReceiver.onUpdateRange(
-								decodeMessage(currentMessage, 6, endByte)
-							);
-						break;
-					case 0x0A: // AVG Speed
-						if(mDataReceiver != null)
-							mDataReceiver.onUpdateAvgSpeed(
-								decodeMessage(currentMessage, 6, endByte)
-							);
-						break;
-					case 0x07: // Distance
-					case 0x08: // Unknown
-					case 0x09: // Limit
-					case 0x0E: // Timer
-					case 0x0F: // AUX Heater 1
-					case 0x10: // AUX Heater 2
-						// Not implementing
-						break;
-				}
-			}
-			
-			public void map(ArrayList<Byte> msg){
-				currentMessage = msg;
-				byte operation = msg.get(3);
-				if(operation == OBCData){
-					OBCData();
-				}
-			}
-		}
-		
-		public void map(ArrayList<Byte> msg){
-			if(IBusIKEMap.isEmpty()){
-				IBusIKEMap.put(IBUS_Broadcast, new IKEBroadcast());
-				IBusIKEMap.put(IBUS_GlobalBroadcastAddress, new IKEGlobalBroadcast());
-			}
-			try{
-				IBusIKEMap.get((byte) msg.get(2)).map(msg);
-			}catch(NullPointerException npe){
-				// Things not in the map throw a NullPointerException
-			}
-		}
-	}
 	
 	/**
 	 * Handle messages emitted by the Radio unit
 	 */
-	class IBusRadioSubsystem implements IBusSystem{
-		private Map<Byte, IBusSystem> IBusRadioMap = new HashMap<Byte, IBusSystem>();
+	class IBusRadioSubsystem implements IBusSystemCommand{
+		private Map<Byte, IBusSystemCommand> IBusRadioMap = new HashMap<Byte, IBusSystemCommand>();
 		
 		/**
 		 * Handle messages bound for the BoardMonitor from the Radio in the trunk
 		 */
-		class GFXNavigationSystem implements IBusSystem{
+		class GFXNavigationSystem implements IBusSystemCommand{
 			private ArrayList<Byte> currentMessage;
 			
-			public void map(ArrayList<Byte> msg){
+			public void mapReceived(ArrayList<Byte> msg){
 				currentMessage = msg;
 				// This is the AM/FM text - Data starts after 0x41, which appears to be the
 				// Index of the box to fill with this text on the BoardMonitor
@@ -239,13 +61,13 @@ public class IBusMessageHandler {
 			}
 		}
 		
-		public void map(ArrayList<Byte> msg){
+		public void mapReceived(ArrayList<Byte> msg){
 			if(IBusRadioMap.isEmpty()){
-				IBusRadioMap.put(IBUS_GraphicsNavigationDriver, new GFXNavigationSystem());
+				IBusRadioMap.put(GraphicsNavigationDriver, new GFXNavigationSystem());
 			}
 			// The first item in the IBus message indicates the source system
 			try{
-				IBusRadioMap.get((byte) msg.get(2)).map(msg);
+				IBusRadioMap.get((byte) msg.get(2)).mapReceived(msg);
 			}catch(NullPointerException npe){
 				// Things not in the map throw a NullPointerException
 			}
@@ -276,8 +98,8 @@ public class IBusMessageHandler {
 		// This may be repeatedly executed but in the interest of readability
 		// I'm not going to move it back into the class construct
 		if(IBusSysMap.isEmpty()){
-			IBusSysMap.put(IBUS_Radio, new IBusRadioSubsystem());
-			IBusSysMap.put(IBUS_InstrumentClusterElectronics, new IBusIKESubsystem());
+			IBusSysMap.put(IBUS_Radio, new mapReceived());
+			IBusSysMap.put(IBUS_InstrumentClusterElectronics, new IKESystemCommand());
 		}
 		// The first item in the IBus message indicates the source system
 		try{
