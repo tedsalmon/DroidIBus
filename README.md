@@ -7,9 +7,13 @@ Currently the app is not complete and not all messages that I would like are bei
 
 [Here's a picture of the app in action.](http://i.imgur.com/2Ba9bh5.png)
 
+# Pre Reqs
+* Android 4.4.2 - Required to interface with Android Music Player
+* IOIO App-IOIO0503
+
 # Goals
 
-* Replace aging BM54 Nav unit in my E46 M3 with a Nexus 7 (2013).
+* Replace aging BM53 Nav unit in my E46 M3 with a Nexus 7 (2013).
 * Retain all features of existing nav unit
 * Interface with the car without modifying the wiring harness.
 
@@ -33,7 +37,7 @@ Disclaimer: I'm a pythonista and this is my first Android app and the first time
 
 # About the Hardware
 
-Right now I can read/write to the IBus through a [IOIO](https://github.com/ytai/ioio) board and an MCP2004 LIN Tranciever but the end goal is to replace the BM54 with the tablet altogether so I will be integrating a Preamp and 3.5mm jack to the board.
+Right now I can read/write to the IBus through a [IOIO](https://github.com/ytai/ioio) board and an MCP2004 LIN Tranciever but the end goal is to replace the BM53 with the tablet altogether so I will be integrating a Preamp and 3.5mm jack to the board.
 
 [Here's a picture of my breadboard - Schematic coming soon](http://i.imgur.com/GgRS2Hj.jpg)
 ## Parts List
