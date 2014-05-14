@@ -116,7 +116,7 @@ public class IKESystemCommand implements IBusSystemCommand {
 	
 	public void mapReceived(ArrayList<Byte> msg){
 		if(IBusIKEMap.isEmpty()){
-			IBusIKEMap.put(IBUS_Broadcast, new IKEBroadcast());
+			IBusIKEMap.put(DeviceAddress.Broadcast, new IKEBroadcast());
 			IBusIKEMap.put(IBUS_GlobalBroadcastAddress, new IKEGlobalBroadcast());
 		}
 		try{

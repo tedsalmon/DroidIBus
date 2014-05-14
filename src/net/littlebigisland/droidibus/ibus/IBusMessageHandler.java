@@ -63,7 +63,7 @@ public class IBusMessageHandler {
 		
 		public void mapReceived(ArrayList<Byte> msg){
 			if(IBusRadioMap.isEmpty()){
-				IBusRadioMap.put(GraphicsNavigationDriver, new GFXNavigationSystem());
+				IBusRadioMap.put(DeviceAddress().GraphicsNavigationDriver, new GFXNavigationSystem());
 			}
 			// The first item in the IBus message indicates the source system
 			try{
@@ -98,7 +98,7 @@ public class IBusMessageHandler {
 		// This may be repeatedly executed but in the interest of readability
 		// I'm not going to move it back into the class construct
 		if(IBusSysMap.isEmpty()){
-			IBusSysMap.put(IBUS_Radio, new mapReceived());
+			IBusSysMap.put(IBUS_Radio, new RadioSystem());
 			IBusSysMap.put(IBUS_InstrumentClusterElectronics, new IKESystemCommand());
 		}
 		// The first item in the IBus message indicates the source system
