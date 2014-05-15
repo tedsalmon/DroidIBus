@@ -5,14 +5,14 @@ import java.util.HashMap;
 import java.util.Map;
 import android.util.Log;
 
-public class IKESystemCommand implements IBusSystemCommand {
+public class IKESystemCommand extends IBusSystemCommand {
 	
 	private Map<Byte, IBusSystemCommand> IBusIKEMap = new HashMap<Byte, IBusSystemCommand>();
 	
 	/**
 	 * Handle globally broadcast messages from IKE
 	 */
-	class IKEGlobalBroadcast implements IBusSystemCommand{
+	class IKEGlobalBroadcast extends IBusSystemCommand{
 		
 		public void mapReceived(ArrayList<Byte> msg){
 			switch(msg.get(3)){
@@ -29,7 +29,7 @@ public class IKESystemCommand implements IBusSystemCommand {
 						);
 					mCallbackReceiver.onUpdateRPM(
 							String.format("%s", (int) msg.get(5) * 100)
-						);		
+						);
 					break;
 				case 0x19: // Coolant Temperature
 					if(mCallbackReceiver != null)
@@ -41,7 +41,7 @@ public class IKESystemCommand implements IBusSystemCommand {
 		}
 	}
 	
-	class IKEBroadcast implements IBusSystemCommand{
+	class IKEBroadcast extends IBusSystemCommand{
 		private ArrayList<Byte> currentMessage;
 		private final byte OBCData = 0x24;
 		

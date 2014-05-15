@@ -10,9 +10,13 @@ import java.util.ArrayList;
  * using this same class. I.e. Source system IKE Extends IBusSystemCommand
  * it's child class, say GlobalBroadcastSystem also implements IBusSystemCommand
  */
-public abstract interface IBusSystemCommand {
+public abstract class IBusSystemCommand {
 	public IBusMessageReceiver mCallbackReceiver = null;
-	public IBusMessageHandler.MessageDecoder decodeMessage = null;  
+	public IBusMessageHandler.MessageDecoder decodeMessage = null;
 	
-	void mapReceived(ArrayList<Byte> msg);
+	public String decodeMessage(){
+		return "";
+	}
+	
+	abstract void mapReceived(ArrayList<Byte> msg);
 }

@@ -9,13 +9,13 @@ import android.util.Log;
 /**
  * Handle messages emitted by the Radio unit
  */
-class RadioSystemCommand implements IBusSystemCommand{
+class RadioSystemCommand extends IBusSystemCommand{
 	private Map<DeviceAddress, IBusSystemCommand> IBusRadioMap = new HashMap<DeviceAddress, IBusSystemCommand>();
 	
 	/**
 	 * Handle messages bound for the BoardMonitor from the Radio in the trunk
 	 */
-	class GFXNavigationSystem implements IBusSystemCommand{
+	class GFXNavigationSystem extends IBusSystemCommand{
 		private ArrayList<Byte> currentMessage;
 		
 		public void mapReceived(ArrayList<Byte> msg){
