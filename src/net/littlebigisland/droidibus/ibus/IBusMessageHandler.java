@@ -10,6 +10,12 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 
+/**
+ * @TODO: Move all of this BS back to the service. It doesn't make sense for this to exist any longer on its own
+ * 
+ * @author tsalmon
+ *
+ */
 
 public class IBusMessageHandler {
 	// User Provided Callback interface implementation
