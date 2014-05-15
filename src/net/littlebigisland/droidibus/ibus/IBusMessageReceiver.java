@@ -36,4 +36,10 @@ public interface IBusMessageReceiver{
 	
 	public void onUpdateIgnitionSate(final int state);
 	
+	/**
+	 * onTrackFwd()
+	 * onTrackPrev()
+	 * 
+	 */
+	
 }

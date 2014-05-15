@@ -10,66 +10,33 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 
-import android.util.Log;
-
 
 public class IBusMessageHandler {
 	// User Provided Callback interface implementation
-	private IBusMessageReceiver mDataReceiver = null;
-
+	public IBusMessageReceiver mDataReceiver = null;
 	
 	private Map<Byte, IBusSystemCommand> IBusSysMap = new HashMap<Byte, IBusSystemCommand>();
 	
-	
 	/**
-	 * Handle messages emitted by the Radio unit
+	 * Don't argue, this belongs here.
+	 *
 	 */
-	class IBusRadioSubsystem implements IBusSystemCommand{
-		private Map<Byte, IBusSystemCommand> IBusRadioMap = new HashMap<Byte, IBusSystemCommand>();
-		
-		/**
-		 * Handle messages bound for the BoardMonitor from the Radio in the trunk
-		 */
-		class GFXNavigationSystem implements IBusSystemCommand{
-			private ArrayList<Byte> currentMessage;
-			
-			public void mapReceived(ArrayList<Byte> msg){
-				currentMessage = msg;
-				// This is the AM/FM text - Data starts after 0x41, which appears to be the
-				// Index of the box to fill with this text on the BoardMonitor
-				// 0x68 0x0B 0x3B 0xA5 0x62 0x01 0x41 0x20 0x46 0x4D 0x31 0x20 0xE5
-				if(msg.get(3) == 0x23 && msg.get(4) == 0x62 && msg.get(5) == 0x10){
-					stationText();
-				}
+	public class MessageDecoder{
+		public String decode(ArrayList<Byte> msg, int startByte, int endByte){
+			ArrayList<Byte> tempBytes = new ArrayList<Byte>();
+			while(startByte <= endByte){
+				tempBytes.add(msg.get(startByte));
+				startByte++;
 			}
-			
-			private void stationText(){
-				int msgSize = currentMessage.size() - 2;
-				while (currentMessage.get(msgSize) == 0x20)
-					msgSize--;
-				byte[] displayBytes = new byte[msgSize - 5];
-				for (int i = 0; i < displayBytes.length; i++)
-					displayBytes[i] = currentMessage.get(i + 6);
-				String str = "";
-				try{
-					str = new String(displayBytes, "UTF-8");
-				} catch (UnsupportedEncodingException e) {
-					e.printStackTrace();
-				}
-				Log.d("DroidIBus", String.format("Handling Station Text - Got '%s'", str));
-				if(mDataReceiver != null) mDataReceiver.onUpdateStation(str);
+			byte[] strByte = new byte[tempBytes.size()];
+			for(int i = 0; i < tempBytes.size(); i++){
+				strByte[i] = tempBytes.get(i);
 			}
-		}
-		
-		public void mapReceived(ArrayList<Byte> msg){
-			if(IBusRadioMap.isEmpty()){
-				IBusRadioMap.put(DeviceAddress().GraphicsNavigationDriver, new GFXNavigationSystem());
-			}
-			// The first item in the IBus message indicates the source system
-			try{
-				IBusRadioMap.get((byte) msg.get(2)).mapReceived(msg);
-			}catch(NullPointerException npe){
-				// Things not in the map throw a NullPointerException
+			try {
+				return new String(strByte, "UTF-8");
+			} catch (UnsupportedEncodingException e) {
+				e.printStackTrace();
+				return "";
 			}
 		}
 	}
@@ -98,33 +65,14 @@ public class IBusMessageHandler {
 		// This may be repeatedly executed but in the interest of readability
 		// I'm not going to move it back into the class construct
 		if(IBusSysMap.isEmpty()){
-			IBusSysMap.put(IBUS_Radio, new RadioSystem());
-			IBusSysMap.put(IBUS_InstrumentClusterElectronics, new IKESystemCommand());
+			IBusSysMap.put(DeviceAddress.Radio.toByte(), new RadioSystemCommand());
+			IBusSysMap.put(DeviceAddress.InstrumentClusterElectronics.toByte(), new IKESystemCommand());
 		}
 		// The first item in the IBus message indicates the source system
 		try{
-			IBusSysMap.get(msg.get(0)).map(msg);
+			IBusSysMap.get(msg.get(0)).mapReceived(msg);
 		}catch(NullPointerException npe){
 			// Things not in the map throw a NullPointerException
-		}
-	}
-	
-	private String decodeMessage(ArrayList<Byte> msg, int startByte, int endByte){
-		Log.d("DroidIBus", "Decoding message");
-		ArrayList<Byte> tempBytes = new ArrayList<Byte>();
-		while(startByte <= endByte){
-			tempBytes.add(msg.get(startByte));
-			startByte++;
-		}
-		byte[] strByte = new byte[tempBytes.size()];
-		for(int i = 0; i < tempBytes.size(); i++){
-			strByte[i] = tempBytes.get(i);
-		}
-		try {
-			return new String(strByte, "UTF-8");
-		} catch (UnsupportedEncodingException e) {
-			e.printStackTrace();
-			return "";
 		}
 	}
 	

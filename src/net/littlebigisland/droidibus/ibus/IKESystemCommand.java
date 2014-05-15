@@ -18,7 +18,8 @@ public class IKESystemCommand implements IBusSystemCommand {
 			switch(msg.get(3)){
 				case 0x11: // Ignition State
 					int state = (msg.get(3) < 3) ? msg.get(3) : (0x02 & msg.get(3));
-					mCallbackReceiver.onUpdateIgnitionSate(state);
+					if(mCallbackReceiver != null)
+						mCallbackReceiver.onUpdateIgnitionSate(state);
 					break;
 				case 0x18: // Speed and RPM
 					int speedInMPH = ((int) ((msg.get(4) * 2) * 0.621371));
@@ -55,43 +56,43 @@ public class IKESystemCommand implements IBusSystemCommand {
 				case 0x01: //Time
 					if(mCallbackReceiver != null)
 						mCallbackReceiver.onUpdateTime(
-							decodeMessage(currentMessage, 6, endByte)
+								decodeMessage.decode(currentMessage, 6, endByte)
 						);
 					break;
 				case 0x02: //Date
 					if(mCallbackReceiver != null)
 						mCallbackReceiver.onUpdateDate(
-							decodeMessage(currentMessage, 6, endByte)
+								decodeMessage.decode(currentMessage, 6, endByte)
 						);
 					break;
 				case 0x03: //Outdoor Temperature
 					if(mCallbackReceiver != null)
 						mCallbackReceiver.onUpdateOutdoorTemp(
-							decodeMessage(currentMessage, 7, endByte)
+							decodeMessage.decode(currentMessage, 7, endByte)
 						);
 					break;
 				case 0x04: // Fuel 1
 					if(mCallbackReceiver != null)
 						mCallbackReceiver.onUpdateFuel1(
-							decodeMessage(currentMessage, 6, endByte)
+							decodeMessage.decode(currentMessage, 6, endByte)
 						);
 					break;
 				case 0x05: // Fuel 2
 					if(mCallbackReceiver != null)
 						mCallbackReceiver.onUpdateFuel2(
-							decodeMessage(currentMessage, 6, endByte)
+							decodeMessage.decode(currentMessage, 6, endByte)
 						);
 					break;
 				case 0x06: // Range
 					if(mCallbackReceiver != null)
 						mCallbackReceiver.onUpdateRange(
-							decodeMessage(currentMessage, 6, endByte)
+							decodeMessage.decode(currentMessage, 6, endByte)
 						);
 					break;
 				case 0x0A: // AVG Speed
 					if(mCallbackReceiver != null)
 						mCallbackReceiver.onUpdateAvgSpeed(
-							decodeMessage(currentMessage, 6, endByte)
+							decodeMessage.decode(currentMessage, 6, endByte)
 						);
 					break;
 				case 0x07: // Distance
@@ -116,8 +117,8 @@ public class IKESystemCommand implements IBusSystemCommand {
 	
 	public void mapReceived(ArrayList<Byte> msg){
 		if(IBusIKEMap.isEmpty()){
-			IBusIKEMap.put(DeviceAddress.Broadcast, new IKEBroadcast());
-			IBusIKEMap.put(IBUS_GlobalBroadcastAddress, new IKEGlobalBroadcast());
+			IBusIKEMap.put(DeviceAddress.Broadcast.toByte(), new IKEBroadcast());
+			IBusIKEMap.put(DeviceAddress.GlobalBroadcastAddress.toByte(), new IKEGlobalBroadcast());
 		}
 		try{
 			IBusIKEMap.get((byte) msg.get(2)).mapReceived(msg);

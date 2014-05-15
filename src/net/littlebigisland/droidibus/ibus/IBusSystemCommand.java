@@ -12,6 +12,7 @@ import java.util.ArrayList;
  */
 public abstract interface IBusSystemCommand {
 	public IBusMessageReceiver mCallbackReceiver = null;
+	public IBusMessageHandler.MessageDecoder decodeMessage = null;  
 	
 	void mapReceived(ArrayList<Byte> msg);
 }
