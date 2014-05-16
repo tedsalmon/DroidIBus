@@ -13,9 +13,8 @@ import java.util.ArrayList;
  */
 public abstract class IBusSystemCommand {
 	public IBusMessageReceiver mCallbackReceiver = null;
-	public IBusMessageHandler.MessageDecoder decodeMessage = null;
 	
-	public String decode(ArrayList<Byte> msg, int startByte, int endByte){
+	public String decodeMessage(ArrayList<Byte> msg, int startByte, int endByte){
 		ArrayList<Byte> tempBytes = new ArrayList<Byte>();
 		while(startByte <= endByte){
 			tempBytes.add(msg.get(startByte));

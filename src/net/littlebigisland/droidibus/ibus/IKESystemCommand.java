@@ -56,43 +56,43 @@ public class IKESystemCommand extends IBusSystemCommand {
 				case 0x01: //Time
 					if(mCallbackReceiver != null)
 						mCallbackReceiver.onUpdateTime(
-								decodeMessage.decode(currentMessage, 6, endByte)
+							decodeMessage(currentMessage, 6, endByte)
 						);
 					break;
 				case 0x02: //Date
 					if(mCallbackReceiver != null)
 						mCallbackReceiver.onUpdateDate(
-								decodeMessage.decode(currentMessage, 6, endByte)
+							decodeMessage(currentMessage, 6, endByte)
 						);
 					break;
 				case 0x03: //Outdoor Temperature
 					if(mCallbackReceiver != null)
 						mCallbackReceiver.onUpdateOutdoorTemp(
-							decodeMessage.decode(currentMessage, 7, endByte)
+							decodeMessage(currentMessage, 7, endByte)
 						);
 					break;
 				case 0x04: // Fuel 1
 					if(mCallbackReceiver != null)
 						mCallbackReceiver.onUpdateFuel1(
-							decodeMessage.decode(currentMessage, 6, endByte)
+							decodeMessage(currentMessage, 6, endByte)
 						);
 					break;
 				case 0x05: // Fuel 2
 					if(mCallbackReceiver != null)
 						mCallbackReceiver.onUpdateFuel2(
-							decodeMessage.decode(currentMessage, 6, endByte)
+							decodeMessage(currentMessage, 6, endByte)
 						);
 					break;
 				case 0x06: // Range
 					if(mCallbackReceiver != null)
 						mCallbackReceiver.onUpdateRange(
-							decodeMessage.decode(currentMessage, 6, endByte)
+							decodeMessage(currentMessage, 6, endByte)
 						);
 					break;
 				case 0x0A: // AVG Speed
 					if(mCallbackReceiver != null)
 						mCallbackReceiver.onUpdateAvgSpeed(
-							decodeMessage.decode(currentMessage, 6, endByte)
+							decodeMessage(currentMessage, 6, endByte)
 						);
 					break;
 				case 0x07: // Distance

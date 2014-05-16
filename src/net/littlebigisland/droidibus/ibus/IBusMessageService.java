@@ -38,9 +38,7 @@ public class IBusMessageService extends IOIOService {
 	private Handler mHandler;
 	private ArrayList<String> actionQueue = new ArrayList<String>();
 	private String TAG = "DroidIBus";
-
-	public IBusMessageHandler mIBusMessenger = new IBusMessageHandler();
-	
+	private IBusMessageReceiver mIBusCbListener = null;
 	
 	/**
 	 * This is the thread on which all the IOIO activity happens. It will be run
@@ -289,7 +287,7 @@ public class IBusMessageService extends IOIOService {
 	}
 	
 	public void setCallbackListener(IBusMessageReceiver listener){
-		mIBusMessenger.registerCallbackListener(listener);
+		mIBusCbListener = listener;
 	}
 	
 	public void disable(){
