@@ -192,6 +192,12 @@ public class IBusMessageService extends IOIOService {
 				if(IBusSysMap.isEmpty()){
 					IBusSysMap.put(DeviceAddress.Radio.toByte(), new RadioSystemCommand());
 					IBusSysMap.put(DeviceAddress.InstrumentClusterElectronics.toByte(), new IKESystemCommand());
+					IBusSysMap.put(DeviceAddress.NavigationEurope.toByte(), new NavigationSystemCommand());
+					IBusSysMap.put(DeviceAddress.MultiFunctionSteeringWheel.toByte(), new SteeringWheelSystemCommand());
+					// Register the callback listener here ;)
+					for (Object key : IBusSysMap.keySet()) {
+						IBusSysMap.get(key).registerCallbacks(mIBusCbListener);
+					}
 				}
 				// The first item in the IBus message indicates the source system
 				try{
@@ -213,61 +219,6 @@ public class IBusMessageService extends IOIOService {
 			private byte[] fuel2Rqst = new byte[] {0x3B, 0x05, (byte)0x80, 0x41, 0x05, 0x01, (byte)0xFB};
 			*/
 			/*
-						public void handleMessage(byte[] msg) throws IOException{
-								case 0x7F:
-									if(msg[3] == (byte)0xA4){
-										String locationInfo = "";
-										int lastData = 0;
-										switch(msg[5]){
-											case 0x00:
-												locationInfo = "GPS: Coordinates: " + getGPSCoords(Arrays.copyOfRange(msg, 6, 15));
-												break;
-											case 0x01:
-												lastData = 6;
-												while(msg[lastData] != (byte) 0x00){
-													lastData++;
-												}
-												locationInfo = String.format("GPS: Locale: %s", new String(Arrays.copyOfRange(msg, 6, lastData), "UTF-8"));
-												break;
-											case 0x02:
-												lastData = 6;
-												while(msg[lastData] != (byte) 0x3B){
-													lastData++;
-												}
-												locationInfo = String.format("GPS: Street: %s", new String(Arrays.copyOfRange(msg, 6, lastData), "UTF-8"));
-												break;
-										}
-									}
-									break;
-							}
-						}
-						
-						public String bcdToStr(byte bcd) {
-							StringBuffer strBuff = new StringBuffer();
-							
-							byte high = (byte) (bcd & 0xf0);
-							high >>>= (byte) 4;	
-							high = (byte) (high & 0x0f);
-							byte low = (byte) (bcd & 0x0f);
-							
-							strBuff.append(high);
-							strBuff.append(low);
-							
-							return sb.toString();
-						}
-						
-						private String getGPSCoords(byte[] coordData){
-							List<String> strData = new ArrayList<String>();
-							for (int i = 0; i < coordData.length; i++) {
-								strData.add(bcdToStr(coordData[i]));
-							}
-							return String.format(
-									"Lat: %s¼ %s' %s.%s\" Long: %s¼ %s' %s\"", 
-									strData.get(0), strData.get(1), strData.get(2),
-									strData.get(3), strData.get(4) + strData.get(5),
-									strData.get(6), strData.get(7), strData.get(8)
-							);
-						}
 						
 						private void sendMessage(byte[] msg) throws IOException{
 							for(int i = 0; i < msg.length; i++){

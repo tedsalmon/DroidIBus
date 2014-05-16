@@ -12,7 +12,22 @@ import java.util.ArrayList;
  * it's child class, say GlobalBroadcastSystem also implements IBusSystemCommand
  */
 public abstract class IBusSystemCommand {
+	
 	public IBusMessageReceiver mCallbackReceiver = null;
+	
+	public String bcdToStr(byte bcd) {
+		StringBuffer strBuff = new StringBuffer();
+		
+		byte high = (byte) (bcd & 0xf0);
+		high >>>= (byte) 4;	
+		high = (byte) (high & 0x0f);
+		byte low = (byte) (bcd & 0x0f);
+		
+		strBuff.append(high);
+		strBuff.append(low);
+		
+		return strBuff.toString();
+	}
 	
 	public String decodeMessage(ArrayList<Byte> msg, int startByte, int endByte){
 		ArrayList<Byte> tempBytes = new ArrayList<Byte>();
@@ -31,6 +46,10 @@ public abstract class IBusSystemCommand {
 			return "";
 		}
 	}
+	
+	public void registerCallbacks(IBusMessageReceiver cb){
+		mCallbackReceiver = cb;
+	}	
 	
 	abstract void mapReceived(ArrayList<Byte> msg);
 }
