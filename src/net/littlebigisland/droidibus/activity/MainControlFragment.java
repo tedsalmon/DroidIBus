@@ -37,6 +37,7 @@ import android.widget.SeekBar;
 import android.widget.SeekBar.OnSeekBarChangeListener;
 import android.widget.Switch;
 import android.widget.TextView;
+import android.widget.Toast;
 
 public class MainControlFragment extends Fragment {
 	private String TAG = "DroidIBus";
@@ -553,9 +554,29 @@ public class MainControlFragment extends Fragment {
 		    }
 		});
 		// Set the long press of values (for reset)
-		/*
-		fuel1Field.setOnLongClickListener();
-		fuel2Field.setOnLongClickListener();
+		
+		fuel1Field.setOnClickListener(new OnClickListener() {
+			@Override
+			public void onClick(View v) {
+				Log.d(TAG, "FUEL 1 Reset Triggered");
+				Toast.makeText(getActivity(), "Fuel 1 Reset Triggered", Toast.LENGTH_LONG).show();
+				if(mIBusBound){
+					Log.d(TAG, "RESETTING FUEL 1");
+					mIBusService.sendCommand(IBusCommands.IKEResetFuel1);
+				}
+			}
+		});
+		avgSpeedField.setOnClickListener(new OnClickListener() {
+			@Override
+			public void onClick(View v) {
+				Log.d(TAG, "AVG Speed Reset Triggered");
+				Toast.makeText(getActivity(), "AVG Speed Reset Triggered", Toast.LENGTH_LONG).show();
+				if(mIBusBound){
+					mIBusService.sendCommand(IBusCommands.IKEResetAvgSpeed);
+				}
+			}
+		});
+		/*fuel2Field.setOnLongClickListener();
 		avgSpeedField.setOnLongClickListener();
 		historicalAvgSpeedField.setOnLongClickListener();
 		maxgSpeedField.setOnLongClickListener();

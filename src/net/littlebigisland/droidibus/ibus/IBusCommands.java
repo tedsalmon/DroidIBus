@@ -4,5 +4,6 @@ public enum IBusCommands {
 	IKEGetFuel1,
 	IKEResetFuel1,
 	IKEGetFuel2,
-	IKEResetFuel2;
+	IKEResetFuel2,
+	IKEResetAvgSpeed;
 }
