@@ -5,6 +5,7 @@ package net.littlebigisland.droidibus.activity;
  * @package net.littlebigisland.droidibus
  */
 import net.littlebigisland.droidibus.R;
+import net.littlebigisland.droidibus.ibus.IBusCommands;
 import net.littlebigisland.droidibus.ibus.IBusMessageReceiver;
 import net.littlebigisland.droidibus.ibus.IBusMessageService;
 import net.littlebigisland.droidibus.ibus.IBusMessageService.IOIOBinder;
@@ -547,7 +548,11 @@ public class MainControlFragment extends Fragment {
 			@Override
 			public void onClick(View v) {
 				if(mIBusBound){
-					mIBusService.addAction(v.getTag().toString());
+					mIBusService.sendCommand(
+						IBusCommands.valueOf(
+							v.getTag().toString()
+						)
+					);
 				}
 			}
 		};
@@ -556,6 +561,11 @@ public class MainControlFragment extends Fragment {
 		btnVolDown.setOnClickListener(clickSingleAction);
 		btnPrev.setOnClickListener(clickSingleAction);
 		btnNext.setOnClickListener(clickSingleAction);
+		
+		// Send a "get" request to populate the values on screen
+		if(mIBusBound){
+			mIBusService.sendCommand(IBusCommands.IKEGetFuel1);
+		}
 		return v;
 	}
 	
