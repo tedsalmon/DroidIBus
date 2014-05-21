@@ -14,6 +14,7 @@ import java.util.ArrayList;
 public abstract class IBusSystemCommand {
 	
 	public IBusMessageReceiver mCallbackReceiver = null;
+	public ArrayList<Byte> currentMessage = null;
 	
 	public String bcdToStr(byte bcd) {
 		StringBuffer strBuff = new StringBuffer();
