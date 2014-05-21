@@ -10,13 +10,12 @@ import android.util.Log;
  * Handle messages emitted by the Radio unit
  */
 class RadioSystemCommand extends IBusSystemCommand{
-	private Map<DeviceAddress, IBusSystemCommand> IBusRadioMap = new HashMap<DeviceAddress, IBusSystemCommand>();
+	private Map<Byte, IBusSystemCommand> IBusRadioMap = new HashMap<Byte, IBusSystemCommand>();
 	
 	/**
 	 * Handle messages bound for the BoardMonitor from the Radio in the trunk
 	 */
 	class GFXNavigationSystem extends IBusSystemCommand{
-		private ArrayList<Byte> currentMessage;
 		
 		public void mapReceived(ArrayList<Byte> msg){
 			currentMessage = msg;
@@ -44,11 +43,14 @@ class RadioSystemCommand extends IBusSystemCommand{
 			Log.d("DroidIBus", String.format("Handling Station Text - Got '%s'", str));
 			if(mCallbackReceiver != null) mCallbackReceiver.onUpdateStation(str);
 		}
+		
 	}
 	
 	public void mapReceived(ArrayList<Byte> msg){
+		// private byte[] modeBtnPress = new byte[] {(byte)0xF0, 0x04, 0x68, 0x48, 0x23,(byte) 0xF7};
+		// private byte[] modeBtnRls = new byte[] {(byte)0xF0, 0x04, 0x68, 0x48, 0x23,(byte) 0x77};
 		if(IBusRadioMap.isEmpty()){
-			IBusRadioMap.put(DeviceAddress.GraphicsNavigationDriver, new GFXNavigationSystem());
+			IBusRadioMap.put(DeviceAddress.GraphicsNavigationDriver.toByte(), new GFXNavigationSystem());
 		}
 		// The first item in the IBus message indicates the source system
 		try{
