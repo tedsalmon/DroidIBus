@@ -293,14 +293,26 @@ public class MainControlFragment extends Fragment {
 
 		@Override
 		public void onTrackFwd() {
-			// TODO Auto-generated method stub
-			
+			Log.d(TAG, "Changing the track fwd in callback due to steering input!");
+			postToUI(new Runnable() {
+			    public void run() {
+					if(mPlayerBound){
+						mPlayerService.sendNextKey();
+					}
+			    }
+			});
 		}
 
 		@Override
 		public void onTrackPrev() {
-			// TODO Auto-generated method stub
-			
+			Log.d(TAG, "Changing the track fwd in callback due to steering input!");
+			postToUI(new Runnable() {
+			    public void run() {
+					if(mPlayerBound){
+						mPlayerService.sendPreviousKey();
+					}
+			    }
+			});
 		}
 		
 	};
@@ -334,6 +346,11 @@ public class MainControlFragment extends Fragment {
     		if(mIBusService != null) {
     			Log.d("DroidIBus", "mIBusService is NOT NULL");
     			mIBusService.setCallbackListener(mIBusUpdateListener);
+    			// Send a "get" request to populate the values on screen
+    			// Do it here because this is when the service methods come into scope
+    			if(mIBusBound){
+    				mIBusService.sendCommand(IBusCommands.IKEGetFuel1);
+    			}
     		}
             mIBusBound = true;
         }
@@ -561,11 +578,7 @@ public class MainControlFragment extends Fragment {
 		btnVolDown.setOnClickListener(clickSingleAction);
 		btnPrev.setOnClickListener(clickSingleAction);
 		btnNext.setOnClickListener(clickSingleAction);
-		
-		// Send a "get" request to populate the values on screen
-		if(mIBusBound){
-			mIBusService.sendCommand(IBusCommands.IKEGetFuel1);
-		}
+
 		return v;
 	}
 	
