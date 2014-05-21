@@ -4,6 +4,7 @@ import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
+
 import android.util.Log;
 
 /**
@@ -51,6 +52,9 @@ class RadioSystemCommand extends IBusSystemCommand{
 		// private byte[] modeBtnRls = new byte[] {(byte)0xF0, 0x04, 0x68, 0x48, 0x23,(byte) 0x77};
 		if(IBusRadioMap.isEmpty()){
 			IBusRadioMap.put(DeviceAddress.GraphicsNavigationDriver.toByte(), new GFXNavigationSystem());
+			// Register the callback listener here ;)
+			for (Object key : IBusRadioMap.keySet())
+				IBusRadioMap.get(key).registerCallbacks(mCallbackReceiver);
 		}
 		// The first item in the IBus message indicates the source system
 		try{

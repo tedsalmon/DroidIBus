@@ -77,6 +77,9 @@ public class NavigationSystemCommand extends IBusSystemCommand {
 	public void mapReceived(ArrayList<Byte> msg) {
 		if(IBusNavMap.isEmpty()){
 			IBusNavMap.put(DeviceAddress.Telephone.toByte(), new Telephone());
+			// Register the callback listener here ;)
+			for (Object key : IBusNavMap.keySet())
+				IBusNavMap.get(key).registerCallbacks(mCallbackReceiver);
 		}
 		try{
 			IBusNavMap.get((byte) msg.get(2)).mapReceived(msg);

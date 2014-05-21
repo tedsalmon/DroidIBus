@@ -118,9 +118,8 @@ public class IBusMessageService extends IOIOService {
 				IBusSysMap.put(DeviceAddress.MultiFunctionSteeringWheel.toByte(), new SteeringWheelSystemCommand());
 				IBusSysMap.put(DeviceAddress.GraphicsNavigationDriver.toByte(), new BoardMonitorSystemCommand());
 				// Register the callback listener here ;)
-				for (Object key : IBusSysMap.keySet()) {
+				for (Object key : IBusSysMap.keySet())
 					IBusSysMap.get(key).registerCallbacks(mIBusCbListener);
-				}
 				// Register functions
 				IBusCommandMap.put(
 						IBusCommands.IKEGetFuel1,

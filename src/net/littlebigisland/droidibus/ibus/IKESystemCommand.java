@@ -3,6 +3,7 @@ package net.littlebigisland.droidibus.ibus;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
+
 import android.util.Log;
 
 public class IKESystemCommand extends IBusSystemCommand {
@@ -118,6 +119,9 @@ public class IKESystemCommand extends IBusSystemCommand {
 		if(IBusIKEMap.isEmpty()){
 			IBusIKEMap.put(DeviceAddress.Broadcast.toByte(), new IKEBroadcast());
 			IBusIKEMap.put(DeviceAddress.GlobalBroadcastAddress.toByte(), new IKEGlobalBroadcast());
+			// Register the callback listener here ;)
+			for (Object key : IBusIKEMap.keySet())
+				IBusIKEMap.get(key).registerCallbacks(mCallbackReceiver);
 		}
 		try{
 			IBusIKEMap.get((byte) msg.get(2)).mapReceived(msg);

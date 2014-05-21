@@ -31,6 +31,9 @@ public class SteeringWheelSystemCommand extends IBusSystemCommand{
 	public void mapReceived(ArrayList<Byte> msg) {
 		if(IBusMFSWMap.isEmpty()){
 			IBusMFSWMap.put(DeviceAddress.Radio.toByte(), new Radio());
+			// Register the callback listener here ;)
+			for (Object key : IBusMFSWMap.keySet())
+				IBusMFSWMap.get(key).registerCallbacks(mCallbackReceiver);
 		}
 		try{
 			IBusMFSWMap.get((byte) msg.get(2)).mapReceived(msg);
