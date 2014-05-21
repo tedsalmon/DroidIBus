@@ -12,8 +12,10 @@ package net.littlebigisland.droidibus.ibus;
  */
 public interface IBusMessageReceiver{
 
+	// Radio System
 	public void onUpdateStation(final String text);
-
+	
+	// IKE System
 	public void onUpdateRange(final String range);
 		
 	public void onUpdateOutdoorTemp(final String temp);
@@ -36,10 +38,16 @@ public interface IBusMessageReceiver{
 	
 	public void onUpdateIgnitionSate(final int state);
 	
-	/**
-	 * onTrackFwd()
-	 * onTrackPrev()
-	 * 
-	 */
+	// Navigation System
+	public void onUpdateStreetLocation(final String streetName);
+	
+	public void onUpdateGPSCoordinates(final String gpsCoordinates);
+	
+	public void onUpdateLocale(final String cityName);
+	
+	// Steering Wheel System	
+	public void onTrackFwd();
+	
+	public void onTrackPrev();
 	
 }

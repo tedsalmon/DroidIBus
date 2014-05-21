@@ -36,7 +36,7 @@ public class IBusMessageService extends IOIOService {
 	private final IBinder mBinder = new IOIOBinder();
 	@SuppressWarnings("unused")
 	private Handler mHandler;
-	private ArrayList<String> actionQueue = new ArrayList<String>();
+	private ArrayList<IBusCommands> actionQueue = new ArrayList<IBusCommands>();
 	private String TAG = "DroidIBus";
 	private IBusMessageReceiver mIBusCbListener = null;
 	
@@ -53,7 +53,6 @@ public class IBusMessageService extends IOIOService {
 		return new BaseIOIOLooper() {
 			private Uart IBusConn;
 			private InputStream busIn;
-			@SuppressWarnings("unused")
 			private OutputStream busOut;
 			
 			private DigitalOutput statusLED;
@@ -157,13 +156,36 @@ public class IBusMessageService extends IOIOService {
 							readBuffer.clear();
 						}
 					}else if(actionQueue.size() > 0){
-						lastSend = Calendar.getInstance().getTimeInMillis();
+						// You should probably wait at least 4 ms between writes if not more
+						// We don't to turn the M3 into a heaping mess of lights and windshield wipers again
+						IBusCommands function = actionQueue.get(0);
+						actionQueue.remove(0);
+						//IBusSysMap.get(function.getTargetSystem()).getCommand(function.getFunctionID());
+						byte[] msg = {};
+						// Write the message out to the bus byte by byte
+						for(int i = 0; i < msg.length; i++){
+							busOut.write(msg[i]);
+						}
 					}
 				} catch (IOException e) {
 					Log.e(TAG, String.format("IOIO IOException [%s] in IBusService.loop()", e.getMessage()));
 				}
 				statusLED.write(false);
 				Thread.sleep(2);
+			}
+			
+			/**
+			 * Populate the IBusSysMap with instances of each class
+			 */
+			private void mapIBusSystems(){
+				IBusSysMap.put(DeviceAddress.Radio.toByte(), new RadioSystemCommand());
+				IBusSysMap.put(DeviceAddress.InstrumentClusterElectronics.toByte(), new IKESystemCommand());
+				IBusSysMap.put(DeviceAddress.NavigationEurope.toByte(), new NavigationSystemCommand());
+				IBusSysMap.put(DeviceAddress.MultiFunctionSteeringWheel.toByte(), new SteeringWheelSystemCommand());
+				// Register the callback listener here ;)
+				for (Object key : IBusSysMap.keySet()) {
+					IBusSysMap.get(key).registerCallbacks(mIBusCbListener);
+				}
 			}
 				
 			/**
@@ -190,14 +212,7 @@ public class IBusMessageService extends IOIOService {
 				// This may be repeatedly executed but in the interest of readability
 				// I'm not going to move it back into the class construct
 				if(IBusSysMap.isEmpty()){
-					IBusSysMap.put(DeviceAddress.Radio.toByte(), new RadioSystemCommand());
-					IBusSysMap.put(DeviceAddress.InstrumentClusterElectronics.toByte(), new IKESystemCommand());
-					IBusSysMap.put(DeviceAddress.NavigationEurope.toByte(), new NavigationSystemCommand());
-					IBusSysMap.put(DeviceAddress.MultiFunctionSteeringWheel.toByte(), new SteeringWheelSystemCommand());
-					// Register the callback listener here ;)
-					for (Object key : IBusSysMap.keySet()) {
-						IBusSysMap.get(key).registerCallbacks(mIBusCbListener);
-					}
+					mapIBusSystems();
 				}
 				// The first item in the IBus message indicates the source system
 				try{
@@ -206,26 +221,24 @@ public class IBusMessageService extends IOIOService {
 					// Things not in the map throw a NullPointerException
 				}
 			}
+			
+			/**
+			 * **This isn't supposed to mean anything to anyone but me.**
+			 * SomeKindOfMap = MapOfMap with function references
+			 * 
+			 */
+			
 			//Messages
 			/*
-			private byte[] volUp = new byte[] {0x50, 0x04, 0x68, 0x32, 0x11, 0x1F};
-			private byte[] volDown = new byte[] {0x50, 0x04, 0x68, 0x32, 0x10, 0x1E};
-			private byte[] nextBtnPress = new byte[] {0x50, 0x04, 0x68, 0x3B, 0x01, 0x06};
-			private byte[] nextBtnRls = new byte[] {0x50, 0x04, 0x68, 0x3B, 0x21, 0x26};
-			private byte[] prevBtnPress = new byte[] {0x50, 0x04, 0x68, 0x3B, 0x08, 0x0F};
-			private byte[] prevBtnRls = new byte[] {0x50, 0x04, 0x68, 0x3B, 0x28, 0x2f};
-			private byte[] modeBtnPress = new byte[] {(byte)0xF0, 0x04, 0x68, 0x48, 0x23,(byte) 0xF7};
-			private byte[] modeBtnRls = new byte[] {(byte)0xF0, 0x04, 0x68, 0x48, 0x23,(byte) 0x77};
-			private byte[] fuel2Rqst = new byte[] {0x3B, 0x05, (byte)0x80, 0x41, 0x05, 0x01, (byte)0xFB};
-			*/
-			/*
-						
-						private void sendMessage(byte[] msg) throws IOException{
-							for(int i = 0; i < msg.length; i++){
-								busOut.write(msg[i]);
-								byte_str =  String.format("%s 0x%02X", byte_str, msg[i]);
-							}
-						}
+				private byte[] volUp = new byte[] {0x50, 0x04, 0x68, 0x32, 0x11, 0x1F};
+				private byte[] volDown = new byte[] {0x50, 0x04, 0x68, 0x32, 0x10, 0x1E};
+				private byte[] nextBtnPress = new byte[] {0x50, 0x04, 0x68, 0x3B, 0x01, 0x06};
+				private byte[] nextBtnRls = new byte[] {0x50, 0x04, 0x68, 0x3B, 0x21, 0x26};
+				private byte[] prevBtnPress = new byte[] {0x50, 0x04, 0x68, 0x3B, 0x08, 0x0F};
+				private byte[] prevBtnRls = new byte[] {0x50, 0x04, 0x68, 0x3B, 0x28, 0x2f};
+				private byte[] modeBtnPress = new byte[] {(byte)0xF0, 0x04, 0x68, 0x48, 0x23,(byte) 0xF7};
+				private byte[] modeBtnRls = new byte[] {(byte)0xF0, 0x04, 0x68, 0x48, 0x23,(byte) 0x77};
+				private byte[] fuel2Rqst = new byte[] {0x3B, 0x05, (byte)0x80, 0x41, 0x05, 0x01, (byte)0xFB};
 			*/
 		};
 	}
@@ -234,7 +247,7 @@ public class IBusMessageService extends IOIOService {
 	 * @param act	ENUM String of action to be performed
 	 */
 	public void addAction(String act){
-		actionQueue.add(act);
+		//actionQueue.add(act);
 	}
 	
 	public void setCallbackListener(IBusMessageReceiver listener){

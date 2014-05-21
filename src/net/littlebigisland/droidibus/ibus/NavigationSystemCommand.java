@@ -6,13 +6,14 @@ import java.util.List;
 public class NavigationSystemCommand extends IBusSystemCommand {
 	
 	class Telephone extends IBusSystemCommand{
+		
 		public void mapReceived(ArrayList<Byte> msg) {
 			// TODO Auto-generated method stub
 			
 		}
 		
 	}
-	//class GPSSystemCommand
+
 	/*
 	case 0x7F:
 		if(msg[3] == (byte)0xA4){
@@ -46,7 +47,7 @@ public class NavigationSystemCommand extends IBusSystemCommand {
 			strData.add(bcdToStr(coordData[i]));
 		}
 		return String.format(
-				"Lat: %s¼ %s' %s.%s\" Long: %s¼ %s' %s\"", 
+				"Lat: %s %s' %s.%s\" Long: %s %s' %s\"", 
 				strData.get(0), strData.get(1), strData.get(2),
 				strData.get(3), strData.get(4) + strData.get(5),
 				strData.get(6), strData.get(7), strData.get(8)

@@ -271,6 +271,36 @@ public class MainControlFragment extends Fragment {
 			Log.d(TAG, "Ignition state is " + state);
 			
 		}
+
+		@Override
+		public void onUpdateStreetLocation(String streetName) {
+			// TODO Auto-generated method stub
+			
+		}
+
+		@Override
+		public void onUpdateGPSCoordinates(String gpsCoordinates) {
+			// TODO Auto-generated method stub
+			
+		}
+
+		@Override
+		public void onUpdateLocale(String cityName) {
+			// TODO Auto-generated method stub
+			
+		}
+
+		@Override
+		public void onTrackFwd() {
+			// TODO Auto-generated method stub
+			
+		}
+
+		@Override
+		public void onTrackPrev() {
+			// TODO Auto-generated method stub
+			
+		}
 		
 	};
 	
