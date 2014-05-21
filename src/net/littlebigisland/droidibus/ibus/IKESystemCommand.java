@@ -42,7 +42,6 @@ public class IKESystemCommand extends IBusSystemCommand {
 	}
 	
 	class IKEBroadcast extends IBusSystemCommand{
-		private ArrayList<Byte> currentMessage;
 		private final byte OBCData = 0x24;
 		
 		/**
