@@ -51,6 +51,8 @@ public class IBusMessageService extends IOIOService {
 	@Override
 	protected IOIOLooper createIOIOLooper() {
 		return new BaseIOIOLooper() {
+			private boolean callbackRegistered = false;
+			
 			private Uart IBusConn;
 			private InputStream busIn;
 			private OutputStream busOut;
@@ -110,25 +112,6 @@ public class IBusMessageService extends IOIOService {
 				time = Calendar.getInstance();
 				lastRead = time.getTimeInMillis();
 				lastSend = time.getTimeInMillis();
-				
-				// Map Device src Addresses with the respective handler class
-				IBusSysMap.put(DeviceAddress.Radio.toByte(), new RadioSystemCommand());
-				IBusSysMap.put(DeviceAddress.InstrumentClusterElectronics.toByte(), new IKESystemCommand());
-				IBusSysMap.put(DeviceAddress.NavigationEurope.toByte(), new NavigationSystemCommand());
-				IBusSysMap.put(DeviceAddress.MultiFunctionSteeringWheel.toByte(), new SteeringWheelSystemCommand());
-				IBusSysMap.put(DeviceAddress.GraphicsNavigationDriver.toByte(), new BoardMonitorSystemCommand());
-				// Register the callback listener here ;)
-				for (Object key : IBusSysMap.keySet())
-					IBusSysMap.get(key).registerCallbacks(mIBusCbListener);
-				// Register functions
-				IBusCommandMap.put(
-						IBusCommands.IKEGetFuel1,
-						((BoardMonitorSystemCommand) IBusSysMap.get(DeviceAddress.GraphicsNavigationDriver.toByte())).getFuel1()
-				);
-				IBusCommandMap.put(
-						IBusCommands.IKEResetFuel1,
-						((BoardMonitorSystemCommand) IBusSysMap.get(DeviceAddress.GraphicsNavigationDriver.toByte())).resetFuel1()
-				);
 			}
 			
 			/**
@@ -149,6 +132,9 @@ public class IBusMessageService extends IOIOService {
 				if ((Calendar.getInstance().getTimeInMillis() - lastRead) > 30) {
 					readBuffer.clear();
 				}
+				// If we have callbacks setup we can start handling messages
+				if(!callbackRegistered && mIBusCbListener != null)
+					initiateHandlers();
 				try {
 					/* Handle incoming IBus data.
 					 * Read incoming bytes into readBuffer.
@@ -177,13 +163,18 @@ public class IBusMessageService extends IOIOService {
 					}else if(actionQueue.size() > 0){
 						// Wait at least 4ms between messages and then write out to the bus
 						if ((Calendar.getInstance().getTimeInMillis() - lastSend) > 4) {
+							Log.d(TAG, String.format("Sending %s Command out", actionQueue.get(0).toString()));
 							byte[] outboundMsg = IBusCommandMap.get(actionQueue.get(0));
 							actionQueue.remove(0);
 							// Write the message out to the bus byte by byte
+							String out = "Sending: ";
 							for(int i = 0; i < outboundMsg.length; i++){
+								out = String.format("%s 0x%02X", out, outboundMsg[i]);
 								busOut.write(outboundMsg[i]);
 							}
+							Log.d(TAG, out);
 							lastSend = Calendar.getInstance().getTimeInMillis();
+							
 						}
 					}
 				} catch (IOException e) {
@@ -191,6 +182,32 @@ public class IBusMessageService extends IOIOService {
 				}
 				statusLED.write(false);
 				Thread.sleep(2);
+			}
+			
+			private void initiateHandlers(){
+				// Map Device src Addresses with the respective handler class
+				IBusSysMap.put(DeviceAddress.Radio.toByte(), new RadioSystemCommand());
+				IBusSysMap.put(DeviceAddress.InstrumentClusterElectronics.toByte(), new IKESystemCommand());
+				IBusSysMap.put(DeviceAddress.NavigationEurope.toByte(), new NavigationSystemCommand());
+				IBusSysMap.put(DeviceAddress.MultiFunctionSteeringWheel.toByte(), new SteeringWheelSystemCommand());
+				IBusSysMap.put(DeviceAddress.GraphicsNavigationDriver.toByte(), new BoardMonitorSystemCommand());
+				// Register the callback listener here ;)
+				for (Object key : IBusSysMap.keySet())
+					IBusSysMap.get(key).registerCallbacks(mIBusCbListener);
+				// Register functions
+				IBusCommandMap.put(
+					IBusCommands.IKEGetFuel1,
+					((BoardMonitorSystemCommand) IBusSysMap.get(DeviceAddress.GraphicsNavigationDriver.toByte())).getFuel1()
+				);
+				IBusCommandMap.put(
+					IBusCommands.IKEResetFuel1,
+					((BoardMonitorSystemCommand) IBusSysMap.get(DeviceAddress.GraphicsNavigationDriver.toByte())).resetFuel1()
+				);
+				IBusCommandMap.put(
+					IBusCommands.IKEResetAvgSpeed,
+					((BoardMonitorSystemCommand) IBusSysMap.get(DeviceAddress.GraphicsNavigationDriver.toByte())).resetAvgSpeed()
+				);
+				callbackRegistered = true;
 			}
 				
 			/**

@@ -49,6 +49,8 @@ public abstract class IBusSystemCommand {
 	}
 	
 	public void registerCallbacks(IBusMessageReceiver cb){
+		// We should introspectively find all children 
+		// extending our type and register the CB there too
 		mCallbackReceiver = cb;
 	}	
 	

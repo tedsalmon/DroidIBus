@@ -42,7 +42,8 @@ class RadioSystemCommand extends IBusSystemCommand{
 				e.printStackTrace();
 			}
 			Log.d("DroidIBus", String.format("Handling Station Text - Got '%s'", str));
-			if(mCallbackReceiver != null) mCallbackReceiver.onUpdateStation(str);
+			if(mCallbackReceiver != null)
+				mCallbackReceiver.onUpdateStation(str);
 		}
 		
 	}
