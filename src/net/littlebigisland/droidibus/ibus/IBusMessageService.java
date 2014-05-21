@@ -68,12 +68,13 @@ public class IBusMessageService extends IOIOService {
 			
 			private Calendar time;
 			private long lastRead;
-			@SuppressWarnings("unused")
 			private long lastSend;
 
 			private ArrayList<Byte> readBuffer;
 			
 			private Map<Byte, IBusSystemCommand> IBusSysMap = new HashMap<Byte, IBusSystemCommand>();
+			
+			private Map<IBusCommands, byte[]> IBusCommandMap = new HashMap<IBusCommands, byte[]>();
 			
 			/**
 			 * Called every time a connection with IOIO has been established.
@@ -90,7 +91,6 @@ public class IBusMessageService extends IOIOService {
 				IBusConn = ioio_.openUart(
 					IBusRXPinId, IBusTXPinId, 9600, Uart.Parity.EVEN, Uart.StopBits.ONE
 				);
-				
 				statusLED = ioio_.openDigitalOutput(IOIO.LED_PIN, true);
 				/* Set these HIGH per the MCP2004 data sheet. 
 				 * Not required so long as you put a 270ohm resistor from 5V to pin 2 */
@@ -110,6 +110,26 @@ public class IBusMessageService extends IOIOService {
 				time = Calendar.getInstance();
 				lastRead = time.getTimeInMillis();
 				lastSend = time.getTimeInMillis();
+				
+				// Map Device src Addresses with the respective handler class
+				IBusSysMap.put(DeviceAddress.Radio.toByte(), new RadioSystemCommand());
+				IBusSysMap.put(DeviceAddress.InstrumentClusterElectronics.toByte(), new IKESystemCommand());
+				IBusSysMap.put(DeviceAddress.NavigationEurope.toByte(), new NavigationSystemCommand());
+				IBusSysMap.put(DeviceAddress.MultiFunctionSteeringWheel.toByte(), new SteeringWheelSystemCommand());
+				IBusSysMap.put(DeviceAddress.GraphicsNavigationDriver.toByte(), new BoardMonitorSystemCommand());
+				// Register the callback listener here ;)
+				for (Object key : IBusSysMap.keySet()) {
+					IBusSysMap.get(key).registerCallbacks(mIBusCbListener);
+				}
+				// Register functions
+				IBusCommandMap.put(
+						IBusCommands.IKEGetFuel1,
+						((BoardMonitorSystemCommand) IBusSysMap.get(DeviceAddress.GraphicsNavigationDriver.toByte())).getFuel1()
+				);
+				IBusCommandMap.put(
+						IBusCommands.IKEResetFuel1,
+						((BoardMonitorSystemCommand) IBusSysMap.get(DeviceAddress.GraphicsNavigationDriver.toByte())).resetFuel1()
+				);
 			}
 			
 			/**
@@ -156,15 +176,15 @@ public class IBusMessageService extends IOIOService {
 							readBuffer.clear();
 						}
 					}else if(actionQueue.size() > 0){
-						// You should probably wait at least 4 ms between writes if not more
-						// We don't to turn the M3 into a heaping mess of lights and windshield wipers again
-						IBusCommands function = actionQueue.get(0);
-						actionQueue.remove(0);
-						//IBusSysMap.get(function.getTargetSystem()).getCommand(function.getFunctionID());
-						byte[] msg = {};
-						// Write the message out to the bus byte by byte
-						for(int i = 0; i < msg.length; i++){
-							busOut.write(msg[i]);
+						// Wait at least 4ms between messages and then write out to the bus
+						if ((Calendar.getInstance().getTimeInMillis() - lastSend) > 4) {
+							byte[] outboundMsg = IBusCommandMap.get(actionQueue.get(0));
+							actionQueue.remove(0);
+							// Write the message out to the bus byte by byte
+							for(int i = 0; i < outboundMsg.length; i++){
+								busOut.write(outboundMsg[i]);
+							}
+							lastSend = Calendar.getInstance().getTimeInMillis();
 						}
 					}
 				} catch (IOException e) {
@@ -172,20 +192,6 @@ public class IBusMessageService extends IOIOService {
 				}
 				statusLED.write(false);
 				Thread.sleep(2);
-			}
-			
-			/**
-			 * Populate the IBusSysMap with instances of each class
-			 */
-			private void mapIBusSystems(){
-				IBusSysMap.put(DeviceAddress.Radio.toByte(), new RadioSystemCommand());
-				IBusSysMap.put(DeviceAddress.InstrumentClusterElectronics.toByte(), new IKESystemCommand());
-				IBusSysMap.put(DeviceAddress.NavigationEurope.toByte(), new NavigationSystemCommand());
-				IBusSysMap.put(DeviceAddress.MultiFunctionSteeringWheel.toByte(), new SteeringWheelSystemCommand());
-				// Register the callback listener here ;)
-				for (Object key : IBusSysMap.keySet()) {
-					IBusSysMap.get(key).registerCallbacks(mIBusCbListener);
-				}
 			}
 				
 			/**
@@ -209,11 +215,6 @@ public class IBusMessageService extends IOIOService {
 			 * @param msg
 			 */
 			private void handleMessage(ArrayList<Byte> msg){
-				// This may be repeatedly executed but in the interest of readability
-				// I'm not going to move it back into the class construct
-				if(IBusSysMap.isEmpty()){
-					mapIBusSystems();
-				}
 				// The first item in the IBus message indicates the source system
 				try{
 					IBusSysMap.get(msg.get(0)).mapReceived(msg);
@@ -221,33 +222,14 @@ public class IBusMessageService extends IOIOService {
 					// Things not in the map throw a NullPointerException
 				}
 			}
-			
-			/**
-			 * **This isn't supposed to mean anything to anyone but me.**
-			 * SomeKindOfMap = MapOfMap with function references
-			 * 
-			 */
-			
-			//Messages
-			/*
-				private byte[] volUp = new byte[] {0x50, 0x04, 0x68, 0x32, 0x11, 0x1F};
-				private byte[] volDown = new byte[] {0x50, 0x04, 0x68, 0x32, 0x10, 0x1E};
-				private byte[] nextBtnPress = new byte[] {0x50, 0x04, 0x68, 0x3B, 0x01, 0x06};
-				private byte[] nextBtnRls = new byte[] {0x50, 0x04, 0x68, 0x3B, 0x21, 0x26};
-				private byte[] prevBtnPress = new byte[] {0x50, 0x04, 0x68, 0x3B, 0x08, 0x0F};
-				private byte[] prevBtnRls = new byte[] {0x50, 0x04, 0x68, 0x3B, 0x28, 0x2f};
-				private byte[] modeBtnPress = new byte[] {(byte)0xF0, 0x04, 0x68, 0x48, 0x23,(byte) 0xF7};
-				private byte[] modeBtnRls = new byte[] {(byte)0xF0, 0x04, 0x68, 0x48, 0x23,(byte) 0x77};
-				private byte[] fuel2Rqst = new byte[] {0x3B, 0x05, (byte)0x80, 0x41, 0x05, 0x01, (byte)0xFB};
-			*/
 		};
 	}
 	/**
 	 * Add an action into the queue of message waiting to be sent
-	 * @param act	ENUM String of action to be performed
+	 * @param cmd	ENUM String of action to be performed
 	 */
-	public void addAction(String act){
-		//actionQueue.add(act);
+	public void sendCommand(IBusCommands cmd){
+		actionQueue.add(cmd);
 	}
 	
 	public void setCallbackListener(IBusMessageReceiver listener){
