@@ -12,7 +12,7 @@ public class SteeringWheelSystemCommand extends IBusSystemCommand{
 
 		public void mapReceived(ArrayList<Byte> msg) {
 			currentMessage = msg;
-			if(currentMessage.get(4) == 0x3B){
+			if(currentMessage.get(3) == 0x3B){
 				switch(currentMessage.get(4)){
 					case 0x21: //Fwds Btn
 						if(mCallbackReceiver != null)
