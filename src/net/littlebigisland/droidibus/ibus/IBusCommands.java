@@ -7,9 +7,12 @@ public enum IBusCommands {
 	BMToIKEGetFuel1,
 	BMToIKEGetFuel2,
 	BMToIKEGetRange,
+	BMToIKEGetAvgSpeed,
 	BMToIKEResetFuel1,
 	BMToIKEResetFuel2,
 	BMToIKEResetAvgSpeed,
 	BMToRadioModePress,
-	BMToRadioModeRelease;
+	BMToRadioModeRelease,
+	BMToRadioVolumeUp,
+	BMToRadioVolumeDown;
 }

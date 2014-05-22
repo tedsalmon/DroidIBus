@@ -97,7 +97,7 @@ public class BoardMonitorSystemCommand extends IBusSystemCommand {
 	 * @return Byte array of message to send to IBus
 	 */
 	public byte[] getAvgSpeed(){
-		return IKEGetRequest(0x06, 0xF4);
+		return IKEGetRequest(0x0A, 0xF4);
 	}
 	
 	/**
@@ -125,6 +125,11 @@ public class BoardMonitorSystemCommand extends IBusSystemCommand {
 	}
 
 	// Radio Buttons
+	public byte[] getRadioStatus(){
+		return new byte[]{
+			boardMonitor, 0x04, RadioSystem, 0x30, (byte)0xE4
+		};
+	}
 	
 	public byte[] sendModePress(){
 		return new byte[]{
@@ -135,6 +140,18 @@ public class BoardMonitorSystemCommand extends IBusSystemCommand {
 	public byte[] sendModeRelease(){
 		return new byte[]{
 			boardMonitor, 0x04, RadioSystem, 0x48, (byte)0xA3, (byte)0xFF
+		};
+	}
+	
+	public byte[] sendVolumeUp(){
+		return new byte[]{
+			boardMonitor, 0x04, RadioSystem, 0x32, (byte)0x21, (byte)0x8F
+		};
+	}
+	
+	public byte[] sendVolumeDown(){
+		return new byte[]{
+			boardMonitor, 0x04, RadioSystem, 0x32, (byte)0x20, (byte)0x8E
 		};
 	}
 }
