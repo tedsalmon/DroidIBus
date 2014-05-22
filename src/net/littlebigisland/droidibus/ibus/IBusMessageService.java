@@ -195,18 +195,13 @@ public class IBusMessageService extends IOIOService {
 				for (Object key : IBusSysMap.keySet())
 					IBusSysMap.get(key).registerCallbacks(mIBusCbListener);
 				// Register functions
-				IBusCommandMap.put(
-					IBusCommands.IKEGetFuel1,
-					((BoardMonitorSystemCommand) IBusSysMap.get(DeviceAddress.GraphicsNavigationDriver.toByte())).getFuel1()
-				);
-				IBusCommandMap.put(
-					IBusCommands.IKEResetFuel1,
-					((BoardMonitorSystemCommand) IBusSysMap.get(DeviceAddress.GraphicsNavigationDriver.toByte())).resetFuel1()
-				);
-				IBusCommandMap.put(
-					IBusCommands.IKEResetAvgSpeed,
-					((BoardMonitorSystemCommand) IBusSysMap.get(DeviceAddress.GraphicsNavigationDriver.toByte())).resetAvgSpeed()
-				);
+				BoardMonitorSystemCommand BM = (BoardMonitorSystemCommand) IBusSysMap.get(DeviceAddress.GraphicsNavigationDriver.toByte());
+				IBusCommandMap.put(IBusCommands.BMToIKEGetFuel1, BM.getFuel1());
+				IBusCommandMap.put(IBusCommands.BMToIKEGetFuel2, BM.getFuel2());
+				
+				IBusCommandMap.put(IBusCommands.BMToIKEResetFuel1, BM.resetFuel1());
+				IBusCommandMap.put(IBusCommands.BMToIKEResetFuel2, BM.resetFuel2());
+				IBusCommandMap.put(IBusCommands.BMToIKEResetAvgSpeed, BM.resetAvgSpeed());
 				callbackRegistered = true;
 			}
 				

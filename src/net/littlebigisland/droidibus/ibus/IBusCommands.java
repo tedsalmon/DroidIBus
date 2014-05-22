@@ -1,9 +1,15 @@
 package net.littlebigisland.droidibus.ibus;
 
 public enum IBusCommands {
-	IKEGetFuel1,
-	IKEResetFuel1,
-	IKEGetFuel2,
-	IKEResetFuel2,
-	IKEResetAvgSpeed;
+	BMToIKEGetTime,
+	BMToIKEGetDate,
+	BMToIKEGetOutdoorTemp,
+	BMToIKEGetFuel1,
+	BMToIKEGetFuel2,
+	BMToIKEGetRange,
+	BMToIKEResetFuel1,
+	BMToIKEResetFuel2,
+	BMToIKEResetAvgSpeed,
+	BMToRadioModePress,
+	BMToRadioModeRelease;
 }

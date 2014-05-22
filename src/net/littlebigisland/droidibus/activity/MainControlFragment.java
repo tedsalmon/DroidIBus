@@ -271,25 +271,21 @@ public class MainControlFragment extends Fragment {
 		@Override
 		public void onUpdateIgnitionSate(int state) {
 			Log.d(TAG, "Ignition state is " + state);
-			
 		}
 
 		@Override
 		public void onUpdateStreetLocation(String streetName) {
-			// TODO Auto-generated method stub
-			
+			Log.d(TAG, "Street name " + streetName);
+		}
+		
+		@Override
+		public void onUpdateLocale(String cityName) {
+			Log.d(TAG, "Locale name " + cityName);
 		}
 
 		@Override
 		public void onUpdateGPSCoordinates(String gpsCoordinates) {
-			// TODO Auto-generated method stub
-			
-		}
-
-		@Override
-		public void onUpdateLocale(String cityName) {
-			// TODO Auto-generated method stub
-			
+			Log.d(TAG, "GPS Coordinates are " + gpsCoordinates);			
 		}
 
 		@Override
@@ -350,7 +346,7 @@ public class MainControlFragment extends Fragment {
     			// Send a "get" request to populate the values on screen
     			// Do it here because this is when the service methods come into scope
     			if(mIBusBound){
-    				mIBusService.sendCommand(IBusCommands.IKEGetFuel1);
+    				mIBusService.sendCommand(IBusCommands.BMToIKEGetFuel1);
     			}
     		}
             mIBusBound = true;
@@ -562,7 +558,7 @@ public class MainControlFragment extends Fragment {
 				Toast.makeText(getActivity(), "Fuel 1 Reset Triggered", Toast.LENGTH_LONG).show();
 				if(mIBusBound){
 					Log.d(TAG, "RESETTING FUEL 1");
-					mIBusService.sendCommand(IBusCommands.IKEResetFuel1);
+					mIBusService.sendCommand(IBusCommands.BMToIKEResetFuel1);
 				}
 			}
 		});
@@ -572,7 +568,7 @@ public class MainControlFragment extends Fragment {
 				Log.d(TAG, "AVG Speed Reset Triggered");
 				Toast.makeText(getActivity(), "AVG Speed Reset Triggered", Toast.LENGTH_LONG).show();
 				if(mIBusBound){
-					mIBusService.sendCommand(IBusCommands.IKEResetAvgSpeed);
+					mIBusService.sendCommand(IBusCommands.BMToIKEResetAvgSpeed);
 				}
 			}
 		});
