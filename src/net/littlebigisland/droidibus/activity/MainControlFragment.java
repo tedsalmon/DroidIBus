@@ -27,6 +27,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.View.OnClickListener;
+import android.view.View.OnLongClickListener;
 import android.view.WindowManager.LayoutParams;
 import android.widget.CompoundButton;
 import android.widget.CompoundButton.OnCheckedChangeListener;
@@ -549,34 +550,38 @@ public class MainControlFragment extends Fragment {
 		        }
 		    }
 		});
+
 		// Set the long press of values (for reset)
-		
-		fuel1Field.setOnClickListener(new OnClickListener() {
+		fuel1Field.setOnLongClickListener(new OnLongClickListener() {
 			@Override
-			public void onClick(View v) {
-				Log.d(TAG, "FUEL 1 Reset Triggered");
-				Toast.makeText(getActivity(), "Fuel 1 Reset Triggered", Toast.LENGTH_LONG).show();
-				if(mIBusBound){
-					Log.d(TAG, "RESETTING FUEL 1");
+			public boolean onLongClick(View v) {
+				showToast("Resetting Fuel 1 Value");
+				if(mIBusBound)
 					mIBusService.sendCommand(IBusCommands.BMToIKEResetFuel1);
-				}
+				return true;
 			}
 		});
-		avgSpeedField.setOnClickListener(new OnClickListener() {
+		fuel2Field.setOnLongClickListener(new OnLongClickListener() {
 			@Override
-			public void onClick(View v) {
-				Log.d(TAG, "AVG Speed Reset Triggered");
-				Toast.makeText(getActivity(), "AVG Speed Reset Triggered", Toast.LENGTH_LONG).show();
-				if(mIBusBound){
-					mIBusService.sendCommand(IBusCommands.BMToIKEResetAvgSpeed);
-				}
+			public boolean onLongClick(View v) {
+				showToast("Resetting Fuel 2 Value");
+				if(mIBusBound)
+					mIBusService.sendCommand(IBusCommands.BMToIKEResetFuel2);
+				return true;
 			}
 		});
-		/*fuel2Field.setOnLongClickListener();
-		avgSpeedField.setOnLongClickListener();
+		avgSpeedField.setOnLongClickListener(new OnLongClickListener() {
+			@Override
+			public boolean onLongClick(View v) {
+				showToast("Resetting AVG Speed Value");
+				if(mIBusBound)
+					mIBusService.sendCommand(IBusCommands.BMToIKEResetAvgSpeed);
+				return true;
+			}
+		});
+		
+		/*
 		historicalAvgSpeedField.setOnLongClickListener();
-		maxgSpeedField.setOnLongClickListener();
-		historicalmaxgSpeedField.setOnLongClickListener();
 		*/
 		OnClickListener clickSingleAction = new OnClickListener() {
 			@Override
@@ -595,8 +600,12 @@ public class MainControlFragment extends Fragment {
 		btnVolDown.setOnClickListener(clickSingleAction);
 		btnPrev.setOnClickListener(clickSingleAction);
 		btnNext.setOnClickListener(clickSingleAction);
-
 		return v;
+	}
+
+	private void showToast(String toastText){
+		Context appContext = getActivity();
+		Toast.makeText(appContext, toastText, Toast.LENGTH_LONG).show();
 	}
 	
     @Override
