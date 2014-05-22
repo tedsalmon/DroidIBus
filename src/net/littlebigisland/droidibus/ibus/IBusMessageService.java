@@ -155,21 +155,20 @@ public class IBusMessageService extends IOIOService {
 						// Read until readBuffer contains msgLength plus two more bytes for the full message
 						if (readBuffer.size() == msgLength + 2) {
 							if(checksumMessage(readBuffer)) {
-								Log.d(TAG, "Handling Bytes");
 								handleMessage(readBuffer);
 							}
 							readBuffer.clear();
 						}
 					}else if(actionQueue.size() > 0){
-						// Wait at least 4ms between messages and then write out to the bus
-						if ((Calendar.getInstance().getTimeInMillis() - lastSend) > 4) {
+						// Wait at least 25ms between messages and then write out to the bus
+						if ((Calendar.getInstance().getTimeInMillis() - lastSend) > 25) {
 							Log.d(TAG, String.format("Sending %s Command out", actionQueue.get(0).toString()));
 							byte[] outboundMsg = IBusCommandMap.get(actionQueue.get(0));
 							actionQueue.remove(0);
 							// Write the message out to the bus byte by byte
 							String out = "Sending: ";
 							for(int i = 0; i < outboundMsg.length; i++){
-								out = String.format("%s 0x%02X", out, outboundMsg[i]);
+								out = String.format("%s %02X", out, outboundMsg[i]);
 								busOut.write(outboundMsg[i]);
 							}
 							Log.d(TAG, out);
@@ -196,12 +195,20 @@ public class IBusMessageService extends IOIOService {
 					IBusSysMap.get(key).registerCallbacks(mIBusCbListener);
 				// Register functions
 				BoardMonitorSystemCommand BM = (BoardMonitorSystemCommand) IBusSysMap.get(DeviceAddress.GraphicsNavigationDriver.toByte());
+				IBusCommandMap.put(IBusCommands.BMToIKEGetOutdoorTemp, BM.getOutdoorTemp());
 				IBusCommandMap.put(IBusCommands.BMToIKEGetFuel1, BM.getFuel1());
 				IBusCommandMap.put(IBusCommands.BMToIKEGetFuel2, BM.getFuel2());
+				IBusCommandMap.put(IBusCommands.BMToIKEGetRange, BM.getRange());
+				IBusCommandMap.put(IBusCommands.BMToIKEGetAvgSpeed, BM.getAvgSpeed());
 				
 				IBusCommandMap.put(IBusCommands.BMToIKEResetFuel1, BM.resetFuel1());
 				IBusCommandMap.put(IBusCommands.BMToIKEResetFuel2, BM.resetFuel2());
 				IBusCommandMap.put(IBusCommands.BMToIKEResetAvgSpeed, BM.resetAvgSpeed());
+				
+				IBusCommandMap.put(IBusCommands.BMToRadioModePress, BM.sendModePress());
+				IBusCommandMap.put(IBusCommands.BMToRadioModeRelease, BM.sendModeRelease());
+				IBusCommandMap.put(IBusCommands.BMToRadioVolumeUp, BM.sendVolumeUp());
+				IBusCommandMap.put(IBusCommands.BMToRadioVolumeDown, BM.sendVolumeDown());
 				callbackRegistered = true;
 			}
 				
