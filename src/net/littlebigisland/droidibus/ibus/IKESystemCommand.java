@@ -1,14 +1,8 @@
 package net.littlebigisland.droidibus.ibus;
 
 import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Map;
-
-import android.util.Log;
 
 public class IKESystemCommand extends IBusSystemCommand {
-	
-	private Map<Byte, IBusSystemCommand> IBusIKEMap = new HashMap<Byte, IBusSystemCommand>();
 	
 	/**
 	 * Handle globally broadcast messages from IKE
@@ -51,7 +45,6 @@ public class IKESystemCommand extends IBusSystemCommand {
 		private void OBCData(){
 			// Minus two because the array starts at zero and we need to ignore the last byte (XOR Checksum)
 			int endByte = currentMessage.size() - 2;
-			Log.d("DroidIBus", String.format("IKE OBC Type is 0x%02X", currentMessage.get(4)));
 			switch(currentMessage.get(4)){
 				case 0x01: //Time
 					if(mCallbackReceiver != null)
@@ -115,18 +108,11 @@ public class IKESystemCommand extends IBusSystemCommand {
 		}
 	}
 	
-	public void mapReceived(ArrayList<Byte> msg){
-		if(IBusIKEMap.isEmpty()){
-			IBusIKEMap.put(DeviceAddress.Broadcast.toByte(), new IKEBroadcast());
-			IBusIKEMap.put(DeviceAddress.GlobalBroadcastAddress.toByte(), new IKEGlobalBroadcast());
-			// Register the callback listener here ;)
-			for (Object key : IBusIKEMap.keySet())
-				IBusIKEMap.get(key).registerCallbacks(mCallbackReceiver);
-		}
-		try{
-			IBusIKEMap.get((byte) msg.get(2)).mapReceived(msg);
-		}catch(NullPointerException npe){
-			// Things not in the map throw a NullPointerException
-		}
+	/**
+	 * Cstruct - Bind all child classes to the object 
+	 */
+	IKESystemCommand(){
+		IBusDestinationSystems.put(DeviceAddress.Broadcast.toByte(), new IKEBroadcast());
+		IBusDestinationSystems.put(DeviceAddress.GlobalBroadcastAddress.toByte(), new IKEGlobalBroadcast());
 	}
 }

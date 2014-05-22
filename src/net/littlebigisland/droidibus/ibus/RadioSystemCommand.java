@@ -2,16 +2,12 @@ package net.littlebigisland.droidibus.ibus;
 
 import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Map;
-
 import android.util.Log;
 
 /**
  * Handle messages emitted by the Radio unit
  */
 class RadioSystemCommand extends IBusSystemCommand{
-	private Map<Byte, IBusSystemCommand> IBusRadioMap = new HashMap<Byte, IBusSystemCommand>();
 	
 	/**
 	 * Handle messages bound for the BoardMonitor from the Radio in the trunk
@@ -48,20 +44,10 @@ class RadioSystemCommand extends IBusSystemCommand{
 		
 	}
 	
-	public void mapReceived(ArrayList<Byte> msg){
-		// private byte[] modeBtnPress = new byte[] {(byte)0xF0, 0x04, 0x68, 0x48, 0x23,(byte) 0xF7};
-		// private byte[] modeBtnRls = new byte[] {(byte)0xF0, 0x04, 0x68, 0x48, 0x23,(byte) 0x77};
-		if(IBusRadioMap.isEmpty()){
-			IBusRadioMap.put(DeviceAddress.GraphicsNavigationDriver.toByte(), new GFXNavigationSystem());
-			// Register the callback listener here ;)
-			for (Object key : IBusRadioMap.keySet())
-				IBusRadioMap.get(key).registerCallbacks(mCallbackReceiver);
-		}
-		// The first item in the IBus message indicates the source system
-		try{
-			IBusRadioMap.get((byte) msg.get(2)).mapReceived(msg);
-		}catch(NullPointerException npe){
-			// Things not in the map throw a NullPointerException
-		}
+	/**
+	 * Cstruct - Register destination systems
+	 */
+	RadioSystemCommand(){
+		IBusDestinationSystems.put(DeviceAddress.GraphicsNavigationDriver.toByte(), new GFXNavigationSystem());
 	}
 }

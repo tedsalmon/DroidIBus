@@ -1,12 +1,8 @@
 package net.littlebigisland.droidibus.ibus;
 
 import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Map;
 
 public class SteeringWheelSystemCommand extends IBusSystemCommand{
-	
-	private Map<Byte, IBusSystemCommand> IBusMFSWMap = new HashMap<Byte, IBusSystemCommand>();
 	
 	class Radio extends IBusSystemCommand{
 
@@ -28,18 +24,10 @@ public class SteeringWheelSystemCommand extends IBusSystemCommand{
 		
 	}
 	
-	public void mapReceived(ArrayList<Byte> msg) {
-		if(IBusMFSWMap.isEmpty()){
-			IBusMFSWMap.put(DeviceAddress.Radio.toByte(), new Radio());
-			// Register the callback listener here ;)
-			for (Object key : IBusMFSWMap.keySet())
-				IBusMFSWMap.get(key).registerCallbacks(mCallbackReceiver);
-		}
-		try{
-			IBusMFSWMap.get((byte) msg.get(2)).mapReceived(msg);
-		}catch(NullPointerException npe){
-			// Things not in the map throw a NullPointerException
-		}
+	/**
+	 * Cstruct - Register destination systems
+	 */
+	SteeringWheelSystemCommand(){
+		IBusDestinationSystems.put(DeviceAddress.Radio.toByte(), new Radio());
 	}
-
 }
