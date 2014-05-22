@@ -1,38 +1,140 @@
 package net.littlebigisland.droidibus.ibus;
 
-import java.util.ArrayList;
-
+/**
+ * Implements functions of the BoardMonitor. For the most part 
+ * we won't be doing any message parsing here since the BoardMonitor
+ * is more of an input interface than anything. 
+ */
 public class BoardMonitorSystemCommand extends IBusSystemCommand {
-	
-	private byte BoardMonitorSystem = DeviceAddress.GraphicsNavigationDriver.toByte();
+
+	// Main Systems
+	private byte boardMonitor = DeviceAddress.OnBoardMonitor.toByte();
+	private byte gfxDriver = DeviceAddress.GraphicsNavigationDriver.toByte();
 	private byte IKESystem = DeviceAddress.InstrumentClusterElectronics.toByte();
+	private byte RadioSystem = DeviceAddress.Radio.toByte();
 	
 	// OBC Functions
 	private byte OBCRequest = 0x41;
 	private byte OBCRequestGet = 0x01;
 	private byte OBCRequestReset = 0x10;
-
-	public void mapReceived(ArrayList<Byte> msg) {
-		// TODO Auto-generated method stub
-		
+	
+	/**
+	 * Generate an IKE message requesting a value reset for the given system.
+	 * @param system The hex value of the system in question
+	 * @param checksum The hex value of the message checksum
+	 * @return Byte array of message to send to IBus
+	 */
+	private byte[] IKEGetRequest(int system, int checksum){
+		return new byte[] {
+			gfxDriver, 0x05, IKESystem, 
+			OBCRequest, (byte)system, OBCRequestGet, (byte)checksum
+		};
 	}
 	
+	/**
+	 * Generate an IKE message requesting the value for the given system.
+	 * @param system The hex value of the system in question
+	 * @param checksum The hex value of the message checksum
+	 * @return Byte array of message to send to IBus
+	 */
+	private byte[] IKEResetRequest(int system, int checksum){
+		return new byte[] {
+			gfxDriver, 0x05, IKESystem, 
+			OBCRequest, (byte)system, OBCRequestReset, (byte)checksum 
+		};
+	}
+	
+	/**
+	 * Issue a Get request for the "Time" Value.
+	 * @return Byte array of message to send to IBus
+	 */
+	public byte[] getTime(){
+		return IKEGetRequest(0x01, 0xFF);
+	}
+	
+	/**
+	 * Issue a Get request for the "Date" Value.
+	 * @return Byte array of message to send to IBus
+	 */
+	public byte[] getDate(){
+		return IKEGetRequest(0x02, 0xFC);
+	}
+	
+	/**
+	 * Issue a Get request for the "Outdoor Temp" Value.
+	 * @return Byte array of message to send to IBus
+	 */
+	public byte[] getOutdoorTemp(){
+		return IKEGetRequest(0x03, 0xFD);
+	}
+	
+	/**
+	 * Issue a Get request for the "Consumption 1" Value.
+	 * @return Byte array of message to send to IBus
+	 */
 	public byte[] getFuel1(){
-		return new byte[] {
-			BoardMonitorSystem, 0x05, IKESystem, OBCRequest, 0x04, OBCRequestGet, (byte)0xFA
-		};
+		return IKEGetRequest(0x04, 0xFA);
 	}
 	
+	/**
+	 * Issue a Get request for the "Consumption 2" Value.
+	 * @return Byte array of message to send to IBus
+	 */
+	public byte[] getFuel2(){
+		return IKEGetRequest(0x05, 0xFB);
+	}
+	
+	/**
+	 * Issue a Get request for the "Fuel Tank Range" Value.
+	 * @return Byte array of message to send to IBus
+	 */
+	public byte[] getRange(){
+		return IKEGetRequest(0x06, 0xF8);
+	}
+	
+	/**
+	 * Issue a Get request for the "Avg. Speed" Value.
+	 * @return Byte array of message to send to IBus
+	 */
+	public byte[] getAvgSpeed(){
+		return IKEGetRequest(0x06, 0xF4);
+	}
+	
+	/**
+	 * Reset the "Consumption 1" IKE metric
+	 * @return Byte array of message to send to IBus
+	 */
 	public byte[] resetFuel1(){
-		return new byte[] {
-			BoardMonitorSystem, 0x05, IKESystem, OBCRequest, 0x04, OBCRequestReset, (byte)0xEB
-		};
+		return IKEResetRequest(0x04, 0xEB);
 	}
 	
+	/**
+	 * Reset the "Consumption 2" IKE metric
+	 * @return Byte array of message to send to IBus
+	 */
+	public byte[] resetFuel2(){
+		return IKEResetRequest(0x05, 0xEA);
+	}
+	
+	/**
+	 * Reset the "Avg. Speed" IKE metric
+	 * @return Byte array of message to send to IBus
+	 */
 	public byte[] resetAvgSpeed(){
-		return new byte[] {
-			BoardMonitorSystem, 0x05, IKESystem, OBCRequest, 0x0A, OBCRequestReset, (byte)0xE5
-		};
+		return IKEResetRequest(0x0A, 0xE5);
 	}
 
+	// Radio Buttons
+	
+	public byte[] sendModePress(){
+		return new byte[]{
+			boardMonitor, 0x04, RadioSystem, 0x48, 0x23, (byte)0xF7
+		};
+	}
+	
+	public byte[] sendModeRelease(){
+		return new byte[]{
+			boardMonitor, 0x04, RadioSystem, 0x48, (byte)0xA3, (byte)0xFF
+		};
+	}
 }
