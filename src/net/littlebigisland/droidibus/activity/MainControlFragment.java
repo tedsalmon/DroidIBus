@@ -10,6 +10,7 @@ import net.littlebigisland.droidibus.ibus.IBusMessageReceiver;
 import net.littlebigisland.droidibus.ibus.IBusMessageService;
 import net.littlebigisland.droidibus.ibus.IBusMessageService.IOIOBinder;
 import net.littlebigisland.droidibus.music.MusicControllerService;
+import android.app.Activity;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
@@ -62,6 +63,8 @@ public class MainControlFragment extends Fragment {
 
 	protected boolean mIsPlaying = false;
 	protected long mSongDuration = 1;
+	
+	private String currentRadioMode = "";
 
 	private RemoteController.OnClientUpdateListener mPlayerUpdateListener = new RemoteController.OnClientUpdateListener() {
 
@@ -169,6 +172,7 @@ public class MainControlFragment extends Fragment {
 			Log.d(TAG, "Setting station text back in Callback!");
 			postToUI(new Runnable() {
 			    public void run() {
+			    	currentRadioMode = text;
 			    	stationText.setText(text);
 			    }
 			});
@@ -342,15 +346,19 @@ public class MainControlFragment extends Fragment {
             IOIOBinder binder = (IOIOBinder) service;
             mIBusService = binder.getService();
     		if(mIBusService != null) {
+    			mIBusBound = true;
     			Log.d("DroidIBus", "mIBusService is NOT NULL");
     			mIBusService.setCallbackListener(mIBusUpdateListener);
     			// Send a "get" request to populate the values on screen
     			// Do it here because this is when the service methods come into scope
     			if(mIBusBound){
     				mIBusService.sendCommand(IBusCommands.BMToIKEGetFuel1);
+    				mIBusService.sendCommand(IBusCommands.BMToIKEGetFuel2);
+    				mIBusService.sendCommand(IBusCommands.BMToIKEGetRange);
+    				mIBusService.sendCommand(IBusCommands.BMToIKEGetAvgSpeed); // Does not work
+    				mIBusService.sendCommand(IBusCommands.BMToIKEGetOutdoorTemp);
     			}
     		}
-            mIBusBound = true;
         }
 
         @Override
@@ -407,7 +415,7 @@ public class MainControlFragment extends Fragment {
 				applicationContext.unbindService(mIBusConnection);
 				if(doServiceStop){
 					applicationContext.stopService(
-							new Intent(applicationContext, IBusMessageService.class)
+						new Intent(applicationContext, IBusMessageService.class)
 					);
 				}
 				mIBusBound = false;
@@ -456,7 +464,6 @@ public class MainControlFragment extends Fragment {
 		mPlayerScrubBar = (SeekBar) v.findViewById(R.id.playerTrackBar);
 		
 		OnClickListener playerClickListener = new OnClickListener() {
-
 			@Override
 			public void onClick(View v) {
 				if(mPlayerBound){
@@ -507,8 +514,8 @@ public class MainControlFragment extends Fragment {
 		ImageButton btnVolUp = (ImageButton) v.findViewById(R.id.btnVolUp);
 		ImageButton btnVolDown = (ImageButton) v.findViewById(R.id.btnVolDown);
 		Switch btnMusicMode = (Switch) v.findViewById(R.id.btnMusicMode);
-		ImageButton btnPrev = (ImageButton) v.findViewById(R.id.btnPrev);
-		ImageButton btnNext = (ImageButton) v.findViewById(R.id.btnNext);
+		//ImageButton btnPrev = (ImageButton) v.findViewById(R.id.btnPrev);
+		//ImageButton btnNext = (ImageButton) v.findViewById(R.id.btnNext);
 
 		// Setup the text fields for the view
 		stationText = (TextView) v.findViewById(R.id.stationText);
@@ -527,11 +534,10 @@ public class MainControlFragment extends Fragment {
 		coolantTempField = (TextView) v.findViewById(R.id.coolantTempField);
 
 		// Set the action of each button
-		/*btnVolUp.setTag(IBusEnums.Actions.VOL_UP.name());
-		btnVolDown.setTag(IBusEnums.Actions.VOL_DOWN.name());
-		btnMusicMode.setTag(IBusEnums.Actions.MODE_CHG.name());
-		btnPrev.setTag(IBusEnums.Actions.PREV_BTN.name());
-		btnNext.setTag(IBusEnums.Actions.NEXT_BTN.name());*/
+		btnVolUp.setTag(IBusCommands.BMToRadioVolumeUp.name());
+		btnVolDown.setTag(IBusCommands.BMToRadioVolumeDown.name());
+		//btnPrev.setTag(IBusCommands.Actions.PREV_BTN.name());
+		//btnNext.setTag(IBusCommands.Actions.NEXT_BTN.name());
 		
 		// Change Audio Modes
 		btnMusicMode.setOnCheckedChangeListener(new OnCheckedChangeListener(){
@@ -543,10 +549,62 @@ public class MainControlFragment extends Fragment {
 		    		radioLayout.setVisibility(View.GONE);
 		    		tabletLayout.setVisibility(View.VISIBLE);
 		    		// Send IBus Message
+		    		
+		    		// This is ridiculous and needs to be refactored
+		    		if(mIBusBound){
+		    			new Thread(new Runnable() {
+		    			    public void run() {
+		    			    	Activity ctx = getActivity();
+		    			    	ctx.runOnUiThread(new Runnable(){
+		    			    		@Override
+		    			    		public void run(){
+		    			    			try {
+			    			    			if(currentRadioMode != "AUX"){
+			    			    				Log.d(TAG, "Trying to go to AUX - Current state: " + currentRadioMode);
+			    			    				mIBusService.sendCommand(IBusCommands.BMToRadioModePress);
+			    			    				Thread.sleep(500);
+			    			    				mIBusService.sendCommand(IBusCommands.BMToRadioModeRelease);
+			    			    				Thread.sleep(500);
+			    			    				mIBusService.sendCommand(IBusCommands.BMToRadioModePress);
+			    			    				Thread.sleep(500);
+			    			    				mIBusService.sendCommand(IBusCommands.BMToRadioModeRelease);
+			    			    			}
+		    			    			} catch (InterruptedException e){
+		    			    				// Nothing
+		    			    			}
+		    			    		}
+		    			    	});
+		    			    }
+		    			  }).start();
+		    		}
 		        }else{
+		        	if(mIsPlaying)
+		        		mPlayerService.sendPauseKey();
 		    		radioLayout.setVisibility(View.VISIBLE);
 		    		tabletLayout.setVisibility(View.GONE);
 		    		// Send IBus Message
+		    		if(mIBusBound){
+		    			new Thread(new Runnable() {
+		    			    public void run() {
+		    			    	Activity ctx = getActivity();
+		    			    	ctx.runOnUiThread(new Runnable(){
+		    			    		@Override
+		    			    		public void run(){
+		    			    			try {
+			    			    			if(currentRadioMode == "AUX" || currentRadioMode == "NO CD"){
+			    			    				Log.d(TAG, "Trying to go to Radio - Current state: " + currentRadioMode);
+			    			    				mIBusService.sendCommand(IBusCommands.BMToRadioModePress);
+			    			    				Thread.sleep(500);
+			    			    				mIBusService.sendCommand(IBusCommands.BMToRadioModeRelease);
+			    			    			}
+		    			    			} catch (InterruptedException e){
+		    			    				// Nothing
+		    			    			}
+		    			    		}
+		    			    	});
+		    			    }
+		    			  }).start();
+		    		}
 		        }
 		    }
 		});
@@ -598,8 +656,8 @@ public class MainControlFragment extends Fragment {
 		
 		btnVolUp.setOnClickListener(clickSingleAction);
 		btnVolDown.setOnClickListener(clickSingleAction);
-		btnPrev.setOnClickListener(clickSingleAction);
-		btnNext.setOnClickListener(clickSingleAction);
+		//btnPrev.setOnClickListener(clickSingleAction);
+		//btnNext.setOnClickListener(clickSingleAction);
 		return v;
 	}
 
