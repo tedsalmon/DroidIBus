@@ -2,16 +2,17 @@ package net.littlebigisland.droidibus.ibus;
 /**
  * IBusService
  * Communicate with the IBus using the IOIO
- * All Read/Writes are done here but message parsing and callbacks
- * are handled via the IBusMessenger class
+ * All Read/Writes are done here
  * 
  * @author Ted S <tass2001@gmail.com>
- * @package net.littlebigisland.droidibus.IBusService
+ * @package net.littlebigisland.droidibus.ibus.IBusMessageService
  * 
  */
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.HashMap;
@@ -76,7 +77,7 @@ public class IBusMessageService extends IOIOService {
 			
 			private Map<Byte, IBusSystemCommand> IBusSysMap = new HashMap<Byte, IBusSystemCommand>();
 			
-			private Map<IBusCommands, byte[]> IBusCommandMap = new HashMap<IBusCommands, byte[]>();
+			private Map<IBusCommands, IBusMethodHolder> IBusCommandMap = new HashMap<IBusCommands, IBusMethodHolder>();
 			
 			/**
 			 * Called every time a connection with IOIO has been established.
@@ -163,7 +164,20 @@ public class IBusMessageService extends IOIOService {
 						// Wait at least 25ms between messages and then write out to the bus
 						if ((Calendar.getInstance().getTimeInMillis() - lastSend) > 25) {
 							Log.d(TAG, String.format("Sending %s Command out", actionQueue.get(0).toString()));
-							byte[] outboundMsg = IBusCommandMap.get(actionQueue.get(0));
+							IBusMethodHolder command = IBusCommandMap.get(actionQueue.get(0));
+							byte[] outboundMsg = new byte[] {};
+							try {
+								if(command.args  == null)
+									outboundMsg = (byte[]) command.methodReference.invoke(command.classInstance);
+								else
+									outboundMsg = (byte[]) command.methodReference.invoke(command.classInstance, command.args);
+							} catch (IllegalAccessException e) {
+								e.printStackTrace();
+							} catch (IllegalArgumentException e) {
+								e.printStackTrace();
+							} catch (InvocationTargetException e) {
+								e.printStackTrace();
+							}
 							actionQueue.remove(0);
 							// Write the message out to the bus byte by byte
 							String out = "Sending: ";
@@ -183,6 +197,30 @@ public class IBusMessageService extends IOIOService {
 				Thread.sleep(2);
 			}
 			
+			/**
+			 * This class is used to hold a class instance, method instance
+			 * and any possible optional arguments. These instances will be placed into
+			 * a map and called when a command execution request comes into the `actionQueue`
+			 *
+			 */
+			class IBusMethodHolder{
+				public IBusSystemCommand classInstance = null;
+				public Method methodReference = null;
+				public String args = null;
+				
+				IBusMethodHolder(IBusSystemCommand cls, Method mth){
+					classInstance = cls;
+					methodReference = mth;
+				}
+				
+				@SuppressWarnings("unused")
+				IBusMethodHolder(IBusSystemCommand cls, Method mth, String arg){
+					classInstance = cls;
+					methodReference = mth;
+					args = arg;
+				}
+			}
+			
 			private void initiateHandlers(){
 				// Map Device src Addresses with the respective handler class
 				IBusSysMap.put(DeviceAddress.Radio.toByte(), new RadioSystemCommand());
@@ -193,22 +231,32 @@ public class IBusMessageService extends IOIOService {
 				// Register the callback listener here ;)
 				for (Object key : IBusSysMap.keySet())
 					IBusSysMap.get(key).registerCallbacks(mIBusCbListener);
+				
 				// Register functions
-				BoardMonitorSystemCommand BM = (BoardMonitorSystemCommand) IBusSysMap.get(DeviceAddress.GraphicsNavigationDriver.toByte());
-				IBusCommandMap.put(IBusCommands.BMToIKEGetOutdoorTemp, BM.getOutdoorTemp());
-				IBusCommandMap.put(IBusCommands.BMToIKEGetFuel1, BM.getFuel1());
-				IBusCommandMap.put(IBusCommands.BMToIKEGetFuel2, BM.getFuel2());
-				IBusCommandMap.put(IBusCommands.BMToIKEGetRange, BM.getRange());
-				IBusCommandMap.put(IBusCommands.BMToIKEGetAvgSpeed, BM.getAvgSpeed());
-				
-				IBusCommandMap.put(IBusCommands.BMToIKEResetFuel1, BM.resetFuel1());
-				IBusCommandMap.put(IBusCommands.BMToIKEResetFuel2, BM.resetFuel2());
-				IBusCommandMap.put(IBusCommands.BMToIKEResetAvgSpeed, BM.resetAvgSpeed());
-				
-				IBusCommandMap.put(IBusCommands.BMToRadioModePress, BM.sendModePress());
-				IBusCommandMap.put(IBusCommands.BMToRadioModeRelease, BM.sendModeRelease());
-				IBusCommandMap.put(IBusCommands.BMToRadioVolumeUp, BM.sendVolumeUp());
-				IBusCommandMap.put(IBusCommands.BMToRadioVolumeDown, BM.sendVolumeDown());
+				IBusSystemCommand BM = IBusSysMap.get(DeviceAddress.GraphicsNavigationDriver.toByte());
+				try {
+					IBusCommandMap.put(IBusCommands.BMToIKEGetOutdoorTemp, new IBusMethodHolder(BM, BM.getClass().getMethod("getOutdoorTemp")));
+					IBusCommandMap.put(IBusCommands.BMToIKEGetFuel1, new IBusMethodHolder(BM, BM.getClass().getMethod("getFuel1")));
+					IBusCommandMap.put(IBusCommands.BMToIKEGetFuel2, new IBusMethodHolder(BM, BM.getClass().getMethod("getFuel2")));
+					IBusCommandMap.put(IBusCommands.BMToIKEGetRange, new IBusMethodHolder(BM, BM.getClass().getMethod("getRange")));
+					IBusCommandMap.put(IBusCommands.BMToIKEGetAvgSpeed, new IBusMethodHolder(BM, BM.getClass().getMethod("getAvgSpeed")));
+					
+					IBusCommandMap.put(IBusCommands.BMToIKEResetFuel1, new IBusMethodHolder(BM, BM.getClass().getMethod("resetFuel1")));
+					IBusCommandMap.put(IBusCommands.BMToIKEResetFuel2, new IBusMethodHolder(BM, BM.getClass().getMethod("resetFuel2")));
+					IBusCommandMap.put(IBusCommands.BMToIKEResetAvgSpeed, new IBusMethodHolder(BM, BM.getClass().getMethod("resetAvgSpeed")));
+					
+					IBusCommandMap.put(IBusCommands.BMToRadioModePress, new IBusMethodHolder(BM, BM.getClass().getMethod("sendModePress")));
+					IBusCommandMap.put(IBusCommands.BMToRadioModeRelease, new IBusMethodHolder(BM, BM.getClass().getMethod("sendModeRelease")));
+					IBusCommandMap.put(IBusCommands.BMToRadioVolumeUp, new IBusMethodHolder(BM, BM.getClass().getMethod("sendVolumeUp")));
+					IBusCommandMap.put(IBusCommands.BMToRadioVolumeDown, new IBusMethodHolder(BM, BM.getClass().getMethod("sendVolumeDown")));
+					// TODO - Radio Tuning buttons
+					//IBusCommandMap.put(IBusCommands.BMToRadioTuneFwdPress, new IBusMethodHolder(BM, BM.getClass().getMethod("getRange")));
+					//IBusCommandMap.put(IBusCommands.BMToRadioTuneFwdRelease, new IBusMethodHolder(BM, BM.getClass().getMethod("getRange")));
+					//IBusCommandMap.put(IBusCommands.BMToRadioTunePrevPress, new IBusMethodHolder(BM, BM.getClass().getMethod("getRange")));
+					//IBusCommandMap.put(IBusCommands.BMToRadioTunePrevRelease, new IBusMethodHolder(BM, BM.getClass().getMethod("getRange")));
+				} catch (NoSuchMethodException e) {
+					e.printStackTrace();
+				}
 				callbackRegistered = true;
 			}
 				
@@ -257,6 +305,7 @@ public class IBusMessageService extends IOIOService {
 	public void disable(){
 		stopSelf();
 	}
+
 	
 	@Override
 	public int onStartCommand(Intent intent, int flags, int startId) {

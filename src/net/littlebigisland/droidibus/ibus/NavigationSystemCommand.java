@@ -80,9 +80,9 @@ public class NavigationSystemCommand extends IBusSystemCommand {
 		
 		Telephone(){
 			try{
-				IBusTelephoneMap.put((byte)0x00, this.getClass().getMethod("setGPSCoordinates", (Class<?>) null));
-				IBusTelephoneMap.put((byte)0x01, this.getClass().getMethod("setLocale", (Class<?>) null));
-				IBusTelephoneMap.put((byte)0x02, this.getClass().getMethod("setStreetLocation", (Class<?>) null));
+				IBusTelephoneMap.put((byte)0x00, this.getClass().getMethod("setGPSCoordinates"));
+				IBusTelephoneMap.put((byte)0x01, this.getClass().getMethod("setLocale"));
+				IBusTelephoneMap.put((byte)0x02, this.getClass().getMethod("setStreetLocation"));
 			}catch(NoSuchMethodException e){
 			}
 		}
@@ -92,7 +92,8 @@ public class NavigationSystemCommand extends IBusSystemCommand {
 			currentMessage = msg;
 			try{
 				if(msg.get(3) == locationData){
-					IBusTelephoneMap.get(msg.get(5)).invoke(this, (Class<?>) null);
+					Log.d("DroidIBus", "Invoking method for navi data!");
+					IBusTelephoneMap.get(msg.get(5)).invoke(this);
 				}
 			}catch(IllegalArgumentException e){
 				Log.d("DroidIBus", "Illegal Argument to Navi Method");

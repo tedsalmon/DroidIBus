@@ -1,6 +1,7 @@
 package net.littlebigisland.droidibus.ibus;
 
 public enum IBusCommands {
+	//BoardMonitor to IKE Commands
 	BMToIKEGetTime,
 	BMToIKEGetDate,
 	BMToIKEGetOutdoorTemp,
@@ -11,8 +12,13 @@ public enum IBusCommands {
 	BMToIKEResetFuel1,
 	BMToIKEResetFuel2,
 	BMToIKEResetAvgSpeed,
+	//BoardMonitor to Radio Commands
 	BMToRadioModePress,
 	BMToRadioModeRelease,
 	BMToRadioVolumeUp,
-	BMToRadioVolumeDown;
+	BMToRadioVolumeDown,
+	BMToRadioTuneFwdPress,
+	BMToRadioTuneFwdRelease,
+	BMToRadioTunePrevPress,
+	BMToRadioTunePrevRelease;
 }

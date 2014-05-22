@@ -154,4 +154,28 @@ public class BoardMonitorSystemCommand extends IBusSystemCommand {
 			boardMonitor, 0x04, RadioSystem, 0x32, (byte)0x20, (byte)0x8E
 		};
 	}
+	
+	public byte[] sendSeekFwdPress(){
+		return new byte[]{
+			boardMonitor, 0x04, RadioSystem, 0x32, (byte)0x20, (byte)0x8E
+		};
+	}
+	
+	public byte[] sendSeekFwdRelease(){
+		return new byte[]{
+			boardMonitor, 0x04, RadioSystem, 0x32, (byte)0x20, (byte)0x8E
+		};
+	}
+	
+	public byte[] sendSeekRewPress(){
+		return new byte[]{
+			boardMonitor, 0x04, RadioSystem, 0x32, (byte)0x20, (byte)0x8E
+		};
+	}
+	
+	public byte[] sendSeekRewRelease(){
+		return new byte[]{
+			boardMonitor, 0x04, RadioSystem, 0x32, (byte)0x20, (byte)0x8E
+		};
+	}
 }
