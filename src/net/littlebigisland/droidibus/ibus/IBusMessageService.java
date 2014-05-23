@@ -255,7 +255,7 @@ public class IBusMessageService extends IOIOService {
 					//IBusCommandMap.put(IBusCommands.BMToRadioTunePrevPress, new IBusMethodHolder(BM, BM.getClass().getMethod("getRange")));
 					//IBusCommandMap.put(IBusCommands.BMToRadioTunePrevRelease, new IBusMethodHolder(BM, BM.getClass().getMethod("getRange")));
 				} catch (NoSuchMethodException e) {
-					e.printStackTrace();
+					Log.e(TAG, e.getMessage());
 				}
 				callbackRegistered = true;
 			}
@@ -290,9 +290,10 @@ public class IBusMessageService extends IOIOService {
 			}
 		};
 	}
+	
 	/**
 	 * Add an action into the queue of message waiting to be sent
-	 * @param cmd	ENUM String of action to be performed
+	 * @param cmd	ENUM Action to be performed
 	 */
 	public void sendCommand(IBusCommands cmd){
 		actionQueue.add(cmd);
@@ -305,7 +306,6 @@ public class IBusMessageService extends IOIOService {
 	public void disable(){
 		stopSelf();
 	}
-
 	
 	@Override
 	public int onStartCommand(Intent intent, int flags, int startId) {

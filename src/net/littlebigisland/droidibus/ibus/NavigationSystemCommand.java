@@ -84,6 +84,7 @@ public class NavigationSystemCommand extends IBusSystemCommand {
 				IBusTelephoneMap.put((byte)0x01, this.getClass().getMethod("setLocale"));
 				IBusTelephoneMap.put((byte)0x02, this.getClass().getMethod("setStreetLocation"));
 			}catch(NoSuchMethodException e){
+				// First world anarchy
 			}
 		}
 		
