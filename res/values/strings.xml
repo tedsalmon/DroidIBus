@@ -12,7 +12,7 @@
     <string name="topSpeedLbl">Top Speed</string>
     <string name="outdoorTempFieldLbl">Outdoor:</string>
     <string name="coolantTempFieldLbl">Coolant:</string>
-    <string name="defaultText">--</string>
+    <string name="defaultText">----</string>
     <string name="playerAlbumArtistSeperator">-</string>
     <string name="vehicleStatLbl">Vehicle</string>
     <string name="temperatureStatLbl">Temps</string>

@@ -41,11 +41,13 @@
         <item name="android:layout_height">wrap_content</item>
     </style>
     <style name="statItemValueText">
-        <item name="android:textSize">15sp</item>
+        <item name="android:textSize">17.5sp</item>
         <item name="android:layout_marginTop">5dp</item>
         <item name="android:layout_marginLeft">5dp</item>
         <item name="android:layout_width">wrap_content</item>
         <item name="android:layout_height">wrap_content</item>
         <item name="android:layout_centerVertical">true</item>
+        <item name="android:paddingBottom">25dp</item>
+	    <item name="android:paddingRight">75dp</item>
     </style>
 </resources>

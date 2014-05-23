@@ -169,7 +169,7 @@
 	       android:checked="true"
 	       android:textOn="Tablet"
 	       android:textOff="Radio" />
-   </LinearLayout>
+	</LinearLayout>
 	<LinearLayout
 	    android:id="@+id/obcLayout"
 	    android:baselineAligned="false"
@@ -312,6 +312,7 @@
 	                style="@style/statItemValueText"
 	                android:layout_below="@+id/historicalAvgSpeedLbl"
 	                android:text="@string/defaultText" />
+
 	        </RelativeLayout>
 	    </RelativeLayout>
 
@@ -348,5 +349,43 @@
 	            android:layout_below="@+id/coolantTempFieldLbl"
 	            android:text="@string/defaultText" />
 	    </RelativeLayout>
+	</LinearLayout>
+	<LinearLayout 
+	    android:id="@+id/miscDataLayout"
+	    android:layout_alignParentBottom="true"
+	    android:layout_width="match_parent"
+	    android:layout_height="wrap_content"
+	    android:orientation="horizontal">
+	    <TextView
+            android:id="@+id/geoCoordinatesField"
+           	style="@style/majorStatItemValueText"
+            android:text="@string/defaultText" />
+	    <TextView
+            android:id="@+id/geoStreetField"
+            style="@style/majorStatItemValueText"
+            android:text="@string/defaultText" />
+	    <TextView
+            android:id="@+id/geoLocaleField"
+            style="@style/majorStatItemValueText"
+            android:text="@string/defaultText" />
+
+	    <LinearLayout
+	        android:layout_width="fill_parent"
+	        android:layout_height="wrap_content"
+	        android:gravity="right" >
+
+		    <TextView
+	            android:id="@+id/dateField"
+	            style="@style/majorStatItemValueText"
+	            android:layout_width="wrap_content"
+	            android:text="@string/defaultText" />
+	
+		    <TextView
+		        android:id="@+id/timeField"
+		        style="@style/majorStatItemValueText"
+		        android:layout_width="wrap_content"
+		        android:text="@string/defaultText" />
+	    </LinearLayout>
+
 	</LinearLayout>
 </RelativeLayout>
