@@ -2,7 +2,7 @@ package net.littlebigisland.droidibus.activity;
 /**
  * Control Fragment for IBus UI 
  * @author Ted S <tass2001@gmail.com>
- * @package net.littlebigisland.droidibus
+ * @package net.littlebigisland.droidibus.activity
  */
 import net.littlebigisland.droidibus.R;
 import net.littlebigisland.droidibus.ibus.IBusCommands;
@@ -10,7 +10,6 @@ import net.littlebigisland.droidibus.ibus.IBusMessageReceiver;
 import net.littlebigisland.droidibus.ibus.IBusMessageService;
 import net.littlebigisland.droidibus.ibus.IBusMessageService.IOIOBinder;
 import net.littlebigisland.droidibus.music.MusicControllerService;
-import android.app.Activity;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
@@ -49,7 +48,9 @@ public class MainControlFragment extends Fragment {
     
     
     protected TextView stationText, speedField, rpmField, rangeField, outTempField,
-					 coolantTempField, fuel1Field, fuel2Field, avgSpeedField;
+    				   coolantTempField, fuel1Field, fuel2Field, avgSpeedField,
+    				   geoCoordinatesField ,geoStreetField, geoLocaleField,
+    				   dateField, timeField;
 
 	// Views in the Activity
 	protected ImageButton mPlayerPrevBtn, mPlayerControlBtn, mPlayerNextBtn;
@@ -266,11 +267,21 @@ public class MainControlFragment extends Fragment {
 		@Override
 		public void onUpdateTime(final String time){
 			Log.d(TAG, "The time is " + time);
+			postToUI(new Runnable() {
+			    public void run() {
+			    	timeField.setText(time);
+			    }
+			});
 		}
 		
 		@Override
 		public void onUpdateDate(final String date){
 			Log.d(TAG, "The date is " + date);
+			postToUI(new Runnable() {
+			    public void run() {
+			    	dateField.setText(date);
+			    }
+			});
 		}
 
 		@Override
@@ -279,18 +290,33 @@ public class MainControlFragment extends Fragment {
 		}
 
 		@Override
-		public void onUpdateStreetLocation(String streetName) {
+		public void onUpdateStreetLocation(final String streetName) {
 			Log.d(TAG, "Street name " + streetName);
+			postToUI(new Runnable() {
+			    public void run() {
+			    	geoLocaleField.setText(streetName);
+			    }
+			});
 		}
 		
 		@Override
-		public void onUpdateLocale(String cityName) {
+		public void onUpdateLocale(final String cityName) {
 			Log.d(TAG, "Locale name " + cityName);
+			postToUI(new Runnable() {
+			    public void run() {
+			    	geoStreetField.setText(cityName);
+			    }
+			});
 		}
 
 		@Override
-		public void onUpdateGPSCoordinates(String gpsCoordinates) {
-			Log.d(TAG, "GPS Coordinates are " + gpsCoordinates);			
+		public void onUpdateGPSCoordinates(final String gpsCoordinates) {
+			Log.d(TAG, "GPS Coordinates are " + gpsCoordinates);
+			postToUI(new Runnable() {
+			    public void run() {
+			    	geoCoordinatesField.setText(gpsCoordinates);
+			    }
+			});
 		}
 
 		@Override
@@ -340,7 +366,7 @@ public class MainControlFragment extends Fragment {
     };
     
     private ServiceConnection mIBusConnection = new ServiceConnection() {
-
+    	
         @Override
         public void onServiceConnected(ComponentName className, IBinder service) {
             IOIOBinder binder = (IOIOBinder) service;
@@ -352,11 +378,11 @@ public class MainControlFragment extends Fragment {
     			// Send a "get" request to populate the values on screen
     			// Do it here because this is when the service methods come into scope
     			if(mIBusBound){
-    				mIBusService.sendCommand(IBusCommands.BMToIKEGetFuel1);
-    				mIBusService.sendCommand(IBusCommands.BMToIKEGetFuel2);
-    				mIBusService.sendCommand(IBusCommands.BMToIKEGetRange);
-    				mIBusService.sendCommand(IBusCommands.BMToIKEGetAvgSpeed); // Does not work
-    				mIBusService.sendCommand(IBusCommands.BMToIKEGetOutdoorTemp);
+    				sendIBusCommand(IBusCommands.BMToIKEGetFuel1);
+    				sendIBusCommand(IBusCommands.BMToIKEGetFuel2);
+    				sendIBusCommand(IBusCommands.BMToIKEGetRange);
+    				sendIBusCommand(IBusCommands.BMToIKEGetAvgSpeed);
+    				sendIBusCommand(IBusCommands.BMToIKEGetOutdoorTemp);
     			}
     		}
         }
@@ -373,7 +399,7 @@ public class MainControlFragment extends Fragment {
 		public void run() {
 			if(mPlayerBound) {
 				mPlayerScrubBar.setProgress(
-						(int) (mPlayerService.getEstimatedPosition() * mPlayerScrubBar.getMax() / mSongDuration)
+					(int) (mPlayerService.getEstimatedPosition() * mPlayerScrubBar.getMax() / mSongDuration)
 				);
 				// Wait one second before sending
 				mPlayerHandler.postDelayed(this, 100);
@@ -532,7 +558,16 @@ public class MainControlFragment extends Fragment {
 		// Temperature
 		outTempField = (TextView) v.findViewById(R.id.outdoorTempField);
 		coolantTempField = (TextView) v.findViewById(R.id.coolantTempField);
-
+		
+		// Geo Fields
+		geoCoordinatesField = (TextView) v.findViewById(R.id.geoCoordinatesField);
+		geoStreetField = (TextView) v.findViewById(R.id.geoStreetField);
+		geoLocaleField = (TextView) v.findViewById(R.id.geoLocaleField);
+		
+		// Time & Date Fields
+		dateField = (TextView) v.findViewById(R.id.dateField);
+		timeField = (TextView) v.findViewById(R.id.timeField);
+		
 		// Set the action of each button
 		btnVolUp.setTag(IBusCommands.BMToRadioVolumeUp.name());
 		btnVolDown.setTag(IBusCommands.BMToRadioVolumeDown.name());
@@ -549,108 +584,56 @@ public class MainControlFragment extends Fragment {
 		    		radioLayout.setVisibility(View.GONE);
 		    		tabletLayout.setVisibility(View.VISIBLE);
 		    		// Send IBus Message
-		    		
-		    		// This is ridiculous and needs to be refactored
-		    		if(mIBusBound){
-		    			new Thread(new Runnable() {
-		    			    public void run() {
-		    			    	Activity ctx = getActivity();
-		    			    	ctx.runOnUiThread(new Runnable(){
-		    			    		@Override
-		    			    		public void run(){
-		    			    			try {
-			    			    			if(currentRadioMode != "AUX"){
-			    			    				Log.d(TAG, "Trying to go to AUX - Current state: " + currentRadioMode);
-			    			    				mIBusService.sendCommand(IBusCommands.BMToRadioModePress);
-			    			    				Thread.sleep(500);
-			    			    				mIBusService.sendCommand(IBusCommands.BMToRadioModeRelease);
-			    			    				Thread.sleep(500);
-			    			    				mIBusService.sendCommand(IBusCommands.BMToRadioModePress);
-			    			    				Thread.sleep(500);
-			    			    				mIBusService.sendCommand(IBusCommands.BMToRadioModeRelease);
-			    			    			}
-		    			    			} catch (InterruptedException e){
-		    			    				// Nothing
-		    			    			}
-		    			    		}
-		    			    	});
-		    			    }
-		    			  }).start();
-		    		}
+		    		if(currentRadioMode != "AUX")
+		    			changeRadioMode();
 		        }else{
 		        	if(mIsPlaying)
 		        		mPlayerService.sendPauseKey();
 		    		radioLayout.setVisibility(View.VISIBLE);
 		    		tabletLayout.setVisibility(View.GONE);
 		    		// Send IBus Message
-		    		if(mIBusBound){
-		    			new Thread(new Runnable() {
-		    			    public void run() {
-		    			    	Activity ctx = getActivity();
-		    			    	ctx.runOnUiThread(new Runnable(){
-		    			    		@Override
-		    			    		public void run(){
-		    			    			try {
-			    			    			if(currentRadioMode == "AUX" || currentRadioMode == "NO CD"){
-			    			    				Log.d(TAG, "Trying to go to Radio - Current state: " + currentRadioMode);
-			    			    				mIBusService.sendCommand(IBusCommands.BMToRadioModePress);
-			    			    				Thread.sleep(500);
-			    			    				mIBusService.sendCommand(IBusCommands.BMToRadioModeRelease);
-			    			    			}
-		    			    			} catch (InterruptedException e){
-		    			    				// Nothing
-		    			    			}
-		    			    		}
-		    			    	});
-		    			    }
-		    			  }).start();
-		    		}
+		    		if(currentRadioMode == "AUX" || currentRadioMode == "NO CD")
+		    			changeRadioMode();
 		        }
 		    }
 		});
 
-		// Set the long press of values (for reset)
-		fuel1Field.setOnLongClickListener(new OnLongClickListener() {
+		// Set the long press of values for IKE resets
+		OnLongClickListener valueResetter = new OnLongClickListener() {
 			@Override
 			public boolean onLongClick(View v) {
-				showToast("Resetting Fuel 1 Value");
-				if(mIBusBound)
-					mIBusService.sendCommand(IBusCommands.BMToIKEResetFuel1);
+				IBusCommands action = IBusCommands.valueOf(v.getTag().toString());
+				switch(action){
+					case BMToIKEResetFuel1:
+						showToast("Resetting Fuel 1 Value");
+						break;
+					case BMToIKEResetFuel2:
+						showToast("Resetting Fuel 2 Value");
+						break;
+					case BMToIKEResetAvgSpeed:
+						showToast("Resetting Average Speed Value");
+						break;
+					default:
+						break;
+				}
+				sendIBusCommand(action);
 				return true;
 			}
-		});
-		fuel2Field.setOnLongClickListener(new OnLongClickListener() {
-			@Override
-			public boolean onLongClick(View v) {
-				showToast("Resetting Fuel 2 Value");
-				if(mIBusBound)
-					mIBusService.sendCommand(IBusCommands.BMToIKEResetFuel2);
-				return true;
-			}
-		});
-		avgSpeedField.setOnLongClickListener(new OnLongClickListener() {
-			@Override
-			public boolean onLongClick(View v) {
-				showToast("Resetting AVG Speed Value");
-				if(mIBusBound)
-					mIBusService.sendCommand(IBusCommands.BMToIKEResetAvgSpeed);
-				return true;
-			}
-		});
+		};
 		
-		/*
-		historicalAvgSpeedField.setOnLongClickListener();
-		*/
+		fuel1Field.setTag(IBusCommands.BMToIKEResetFuel1.name());
+		fuel2Field.setTag(IBusCommands.BMToIKEResetFuel1.name());
+		avgSpeedField.setTag(IBusCommands.BMToIKEResetAvgSpeed.name());
+
+		fuel1Field.setOnLongClickListener(valueResetter);
+		fuel2Field.setOnLongClickListener(valueResetter);
+		avgSpeedField.setOnLongClickListener(valueResetter);
+		//historicalAvgSpeedField.setOnLongClickListener(valueResetter);
+		
 		OnClickListener clickSingleAction = new OnClickListener() {
 			@Override
 			public void onClick(View v) {
-				if(mIBusBound){
-					mIBusService.sendCommand(
-						IBusCommands.valueOf(
-							v.getTag().toString()
-						)
-					);
-				}
+				sendIBusCommand(IBusCommands.valueOf(v.getTag().toString()));
 			}
 		};
 		
@@ -660,10 +643,35 @@ public class MainControlFragment extends Fragment {
 		//btnNext.setOnClickListener(clickSingleAction);
 		return v;
 	}
-
+	
+	private void changeRadioMode(){
+		new Thread(new Runnable() {
+			public void run() {
+				getActivity().runOnUiThread(new Runnable(){
+					@Override
+					public void run(){
+						try {
+							sendIBusCommand(IBusCommands.BMToRadioModePress);
+							Thread.sleep(500);
+							sendIBusCommand(IBusCommands.BMToRadioModeRelease);
+						} catch (InterruptedException e){
+							// First world anarchy
+						}
+					}
+				});
+			}
+		}).start();
+	}
+	
 	private void showToast(String toastText){
 		Context appContext = getActivity();
 		Toast.makeText(appContext, toastText, Toast.LENGTH_LONG).show();
+	}
+	
+	private void sendIBusCommand(IBusCommands cmd){
+		if(mIBusBound){
+			mIBusService.sendCommand(cmd);
+		}
 	}
 	
     @Override
