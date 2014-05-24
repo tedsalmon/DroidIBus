@@ -162,7 +162,7 @@ public class IBusMessageService extends IOIOService {
 						}
 					}else if(actionQueue.size() > 0){
 						// Wait at least 25ms between messages and then write out to the bus
-						if ((Calendar.getInstance().getTimeInMillis() - lastSend) > 25) {
+						if ((Calendar.getInstance().getTimeInMillis() - lastSend) > 50) {
 							Log.d(TAG, String.format("Sending %s Command out", actionQueue.get(0).toString()));
 							IBusMethodHolder command = IBusCommandMap.get(actionQueue.get(0));
 							byte[] outboundMsg = new byte[] {};
@@ -235,6 +235,8 @@ public class IBusMessageService extends IOIOService {
 				// Register functions
 				IBusSystemCommand BM = IBusSysMap.get(DeviceAddress.GraphicsNavigationDriver.toByte());
 				try {
+					IBusCommandMap.put(IBusCommands.BMToIKEGetTime, new IBusMethodHolder(BM, BM.getClass().getMethod("getTime")));
+					IBusCommandMap.put(IBusCommands.BMToIKEGetDate, new IBusMethodHolder(BM, BM.getClass().getMethod("getDate")));
 					IBusCommandMap.put(IBusCommands.BMToIKEGetOutdoorTemp, new IBusMethodHolder(BM, BM.getClass().getMethod("getOutdoorTemp")));
 					IBusCommandMap.put(IBusCommands.BMToIKEGetFuel1, new IBusMethodHolder(BM, BM.getClass().getMethod("getFuel1")));
 					IBusCommandMap.put(IBusCommands.BMToIKEGetFuel2, new IBusMethodHolder(BM, BM.getClass().getMethod("getFuel2")));
