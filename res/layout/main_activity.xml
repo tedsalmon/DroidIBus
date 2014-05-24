@@ -358,15 +358,15 @@
 	    android:orientation="horizontal">
 	    <TextView
             android:id="@+id/geoCoordinatesField"
-           	style="@style/majorStatItemValueText"
+           	style="@style/statItemValueText"
             android:text="@string/defaultText" />
 	    <TextView
             android:id="@+id/geoStreetField"
-            style="@style/majorStatItemValueText"
+            style="@style/statItemValueText"
             android:text="@string/defaultText" />
 	    <TextView
             android:id="@+id/geoLocaleField"
-            style="@style/majorStatItemValueText"
+            style="@style/statItemValueText"
             android:text="@string/defaultText" />
 
 	    <LinearLayout
