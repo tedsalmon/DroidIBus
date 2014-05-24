@@ -294,7 +294,7 @@ public class MainControlFragment extends Fragment {
 			Log.d(TAG, "Street name " + streetName);
 			postToUI(new Runnable() {
 			    public void run() {
-			    	geoLocaleField.setText(streetName);
+			    	geoStreetField.setText(streetName);
 			    }
 			});
 		}
@@ -304,7 +304,7 @@ public class MainControlFragment extends Fragment {
 			Log.d(TAG, "Locale name " + cityName);
 			postToUI(new Runnable() {
 			    public void run() {
-			    	geoStreetField.setText(cityName);
+			    	geoLocaleField.setText(cityName);
 			    }
 			});
 		}
@@ -378,6 +378,8 @@ public class MainControlFragment extends Fragment {
     			// Send a "get" request to populate the values on screen
     			// Do it here because this is when the service methods come into scope
     			if(mIBusBound){
+    				sendIBusCommand(IBusCommands.BMToIKEGetTime);
+    				sendIBusCommand(IBusCommands.BMToIKEGetDate);
     				sendIBusCommand(IBusCommands.BMToIKEGetFuel1);
     				sendIBusCommand(IBusCommands.BMToIKEGetFuel2);
     				sendIBusCommand(IBusCommands.BMToIKEGetRange);
