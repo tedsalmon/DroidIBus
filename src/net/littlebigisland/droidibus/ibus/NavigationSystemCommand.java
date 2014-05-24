@@ -63,7 +63,7 @@ public class NavigationSystemCommand extends IBusSystemCommand {
 			}
 			if(mCallbackReceiver != null)
 				mCallbackReceiver.onUpdateLocale(
-					decodeMessage(currentMessage, 6, lastData)
+					decodeMessage(currentMessage, 6, lastData-1)
 				);
 		}
 		
@@ -74,7 +74,7 @@ public class NavigationSystemCommand extends IBusSystemCommand {
 			}
 			if(mCallbackReceiver != null)
 				mCallbackReceiver.onUpdateStreetLocation(
-					decodeMessage(currentMessage, 6, lastData)
+					decodeMessage(currentMessage, 6, lastData-1)
 				);
 		}
 		
