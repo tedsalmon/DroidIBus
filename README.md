@@ -9,7 +9,7 @@ Currently the app is not complete and not all messages that I would like are bei
 
 # Pre Reqs
 * Android 4.4.2 - Required to interface with Android Music Player
-* IOIO App-IOIO0503
+* IOIO Board w/ IOIO App-IOIO0503
 
 # Goals
 
@@ -18,7 +18,7 @@ Currently the app is not complete and not all messages that I would like are bei
 * Interface with the car without modifying the wiring harness.
 
 
-Disclaimer: I'm a pythonista and this is my first Android app and the first time I use Java since AP Computer Science in high school so please forgive me if I'm not up to Java snuff. Feel free to submit pull requests for any changes you feel necessary.
+Disclaimer: I'm a Pythonista and this is my first Android app and the first time I use Java since AP Computer Science in high school so please forgive me if I'm not up to Java snuff. Feel free to submit pull requests for any changes you feel necessary.
 
 # Features
 
@@ -27,12 +27,11 @@ Disclaimer: I'm a pythonista and this is my first Android app and the first time
 * Radio Control
 * Integrated `Play Music` Interface
 * Nav Integration (Nav Data, not Maps)
+* Steering wheel next/previous Music control (for Play Music)
 
 # Planned Features
-
-* Steering wheel Music control (for Play Music)
-* Ability to control the build in amp EQ from within the App
-* Built in Map
+* Ability to control the built-in amp EQ from within the App
+* Built in Google Maps Navigation
 * G-Sensor Display
 
 # About the Hardware
