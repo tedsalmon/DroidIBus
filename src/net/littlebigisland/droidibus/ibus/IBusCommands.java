@@ -19,6 +19,10 @@ public enum IBusCommands {
 	BMToRadioVolumeDown,
 	BMToRadioTuneFwdPress,
 	BMToRadioTuneFwdRelease,
-	BMToRadioTunePrevPress,
-	BMToRadioTunePrevRelease;
+	BMToRadioTuneRevPress,
+	BMToRadioTuneRevRelease,
+	BMToRadioFMPress,
+	BMToRadioFMRelease,
+	BMToRadioAMPress,
+	BMToRadioAMRelease;
 }

@@ -11,7 +11,7 @@ public class BoardMonitorSystemCommand extends IBusSystemCommand {
 	private byte boardMonitor = DeviceAddress.OnBoardMonitor.toByte();
 	private byte gfxDriver = DeviceAddress.GraphicsNavigationDriver.toByte();
 	private byte IKESystem = DeviceAddress.InstrumentClusterElectronics.toByte();
-	private byte RadioSystem = DeviceAddress.Radio.toByte();
+	private byte radioSystem = DeviceAddress.Radio.toByte();
 	
 	// OBC Functions
 	private byte OBCRequest = 0x41;
@@ -127,55 +127,79 @@ public class BoardMonitorSystemCommand extends IBusSystemCommand {
 	// Radio Buttons
 	public byte[] getRadioStatus(){
 		return new byte[]{
-			boardMonitor, 0x04, RadioSystem, 0x30, (byte)0xE4
+			boardMonitor, 0x04, radioSystem, 0x30, (byte)0xE4
 		};
 	}
 	
 	public byte[] sendModePress(){
 		return new byte[]{
-			boardMonitor, 0x04, RadioSystem, 0x48, 0x23, (byte)0xF7
+			boardMonitor, 0x04, radioSystem, 0x48, 0x23, (byte)0xF7
 		};
 	}
 	
 	public byte[] sendModeRelease(){
 		return new byte[]{
-			boardMonitor, 0x04, RadioSystem, 0x48, (byte)0xA3, (byte)0xFF
+			boardMonitor, 0x04, radioSystem, 0x48, (byte)0xA3, (byte)0xFF
 		};
 	}
 	
 	public byte[] sendVolumeUp(){
 		return new byte[]{
-			boardMonitor, 0x04, RadioSystem, 0x32, (byte)0x21, (byte)0x8F
+			boardMonitor, 0x04, radioSystem, 0x32, (byte)0x21, (byte)0x8F
 		};
 	}
 	
 	public byte[] sendVolumeDown(){
 		return new byte[]{
-			boardMonitor, 0x04, RadioSystem, 0x32, (byte)0x20, (byte)0x8E
+			boardMonitor, 0x04, radioSystem, 0x32, (byte)0x20, (byte)0x8E
 		};
 	}
 	
 	public byte[] sendSeekFwdPress(){
 		return new byte[]{
-			boardMonitor, 0x04, RadioSystem, 0x32, (byte)0x20, (byte)0x8E
+			boardMonitor, 0x04, radioSystem, 0x32, (byte)0x20, (byte)0x8E
 		};
 	}
 	
 	public byte[] sendSeekFwdRelease(){
 		return new byte[]{
-			boardMonitor, 0x04, RadioSystem, 0x32, (byte)0x20, (byte)0x8E
+			boardMonitor, 0x04, radioSystem, 0x32, (byte)0x20, (byte)0x8E
 		};
 	}
 	
-	public byte[] sendSeekRewPress(){
+	public byte[] sendSeekRevPress(){
 		return new byte[]{
-			boardMonitor, 0x04, RadioSystem, 0x32, (byte)0x20, (byte)0x8E
+			boardMonitor, 0x04, radioSystem, 0x32, (byte)0x20, (byte)0x8E
 		};
 	}
 	
-	public byte[] sendSeekRewRelease(){
+	public byte[] sendSeekRevRelease(){
 		return new byte[]{
-			boardMonitor, 0x04, RadioSystem, 0x32, (byte)0x20, (byte)0x8E
+			boardMonitor, 0x04, radioSystem, 0x32, (byte)0x20, (byte)0x8E
+		};
+	}
+	
+	public byte[] sendFMPress(){
+		return new byte[]{
+			boardMonitor, 0x04, radioSystem, 0x48, (byte)0x31, (byte)0xE5
+		};
+	}
+	
+	public byte[] sendFMRelease(){
+		return new byte[]{
+			boardMonitor, 0x04, radioSystem, 0x48, (byte)0xB1, (byte)0x65
+		};
+	}
+	
+	public byte[] sendAMPress(){
+		return new byte[]{
+			boardMonitor, 0x04, radioSystem, 0x48, (byte)0x21, (byte)0xF5
+		};
+	}
+	
+	public byte[] sendAMRelease(){
+		return new byte[]{
+			boardMonitor, 0x04, radioSystem, 0x48, (byte)0xA1, (byte)0x75
 		};
 	}
 }

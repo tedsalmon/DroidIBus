@@ -24,7 +24,9 @@ import android.os.IBinder;
 import android.support.v4.app.Fragment;
 import android.util.Log;
 import android.view.LayoutInflater;
+import android.view.MotionEvent;
 import android.view.View;
+import android.view.View.OnTouchListener;
 import android.view.ViewGroup;
 import android.view.View.OnClickListener;
 import android.view.View.OnLongClickListener;
@@ -541,10 +543,13 @@ public class MainControlFragment extends Fragment {
 		// Get the buttons from the view
 		ImageButton btnVolUp = (ImageButton) v.findViewById(R.id.btnVolUp);
 		ImageButton btnVolDown = (ImageButton) v.findViewById(R.id.btnVolDown);
+		ImageButton btnRadioFM = (ImageButton) v.findViewById(R.id.btnRadioFM);
+		ImageButton btnRadioAM = (ImageButton) v.findViewById(R.id.btnRadioAM);
 		Switch btnMusicMode = (Switch) v.findViewById(R.id.btnMusicMode);
-		//ImageButton btnPrev = (ImageButton) v.findViewById(R.id.btnPrev);
-		//ImageButton btnNext = (ImageButton) v.findViewById(R.id.btnNext);
-
+		ImageButton btnPrev = (ImageButton) v.findViewById(R.id.btnPrev);
+		ImageButton btnNext = (ImageButton) v.findViewById(R.id.btnNext);
+		
+		
 		// Setup the text fields for the view
 		stationText = (TextView) v.findViewById(R.id.stationText);
 
@@ -569,12 +574,14 @@ public class MainControlFragment extends Fragment {
 		// Time & Date Fields
 		dateField = (TextView) v.findViewById(R.id.dateField);
 		timeField = (TextView) v.findViewById(R.id.timeField);
-		
+
 		// Set the action of each button
 		btnVolUp.setTag(IBusCommands.BMToRadioVolumeUp.name());
 		btnVolDown.setTag(IBusCommands.BMToRadioVolumeDown.name());
-		//btnPrev.setTag(IBusCommands.Actions.PREV_BTN.name());
-		//btnNext.setTag(IBusCommands.Actions.NEXT_BTN.name());
+		btnRadioFM.setTag("BMToRadioFM");
+		btnRadioAM.setTag("BMToRadioAM");
+		btnPrev.setTag("BMToRadioTuneRev");
+		btnNext.setTag("BMToRadioTuneFwd");
 		
 		// Change Audio Modes
 		btnMusicMode.setOnCheckedChangeListener(new OnCheckedChangeListener(){
@@ -586,8 +593,15 @@ public class MainControlFragment extends Fragment {
 		    		radioLayout.setVisibility(View.GONE);
 		    		tabletLayout.setVisibility(View.VISIBLE);
 		    		// Send IBus Message
-		    		if(currentRadioMode != "AUX")
+		    		if(currentRadioMode != "AUX"){
 		    			changeRadioMode();
+		    			new Handler().postDelayed(new Runnable() { 
+		    		         public void run() {
+		    		        	 changeRadioMode();
+		    		        } 
+		    		    }, 750); 
+		    			
+		    		}
 		        }else{
 		        	if(mIsPlaying)
 		        		mPlayerService.sendPauseKey();
@@ -639,10 +653,22 @@ public class MainControlFragment extends Fragment {
 			}
 		};
 		
+		OnTouchListener touchAction = new OnTouchListener() {
+			@Override
+			public boolean onTouch(View v, MotionEvent event) {
+				String action = (event.getAction() == MotionEvent.ACTION_DOWN) ? "Press" : "Release";
+				sendIBusCommand(IBusCommands.valueOf(v.getTag().toString() + action));
+				return false;
+			}
+		};
+		
 		btnVolUp.setOnClickListener(clickSingleAction);
 		btnVolDown.setOnClickListener(clickSingleAction);
-		//btnPrev.setOnClickListener(clickSingleAction);
-		//btnNext.setOnClickListener(clickSingleAction);
+		btnRadioFM.setOnTouchListener(touchAction);
+		btnRadioAM.setOnTouchListener(touchAction);
+		btnPrev.setOnTouchListener(touchAction);
+		btnNext.setOnTouchListener(touchAction);
+		
 		return v;
 	}
 	

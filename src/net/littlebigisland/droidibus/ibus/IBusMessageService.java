@@ -251,11 +251,17 @@ public class IBusMessageService extends IOIOService {
 					IBusCommandMap.put(IBusCommands.BMToRadioModeRelease, new IBusMethodHolder(BM, BM.getClass().getMethod("sendModeRelease")));
 					IBusCommandMap.put(IBusCommands.BMToRadioVolumeUp, new IBusMethodHolder(BM, BM.getClass().getMethod("sendVolumeUp")));
 					IBusCommandMap.put(IBusCommands.BMToRadioVolumeDown, new IBusMethodHolder(BM, BM.getClass().getMethod("sendVolumeDown")));
-					// TODO - Radio Tuning buttons
-					//IBusCommandMap.put(IBusCommands.BMToRadioTuneFwdPress, new IBusMethodHolder(BM, BM.getClass().getMethod("getRange")));
-					//IBusCommandMap.put(IBusCommands.BMToRadioTuneFwdRelease, new IBusMethodHolder(BM, BM.getClass().getMethod("getRange")));
-					//IBusCommandMap.put(IBusCommands.BMToRadioTunePrevPress, new IBusMethodHolder(BM, BM.getClass().getMethod("getRange")));
-					//IBusCommandMap.put(IBusCommands.BMToRadioTunePrevRelease, new IBusMethodHolder(BM, BM.getClass().getMethod("getRange")));
+					
+					IBusCommandMap.put(IBusCommands.BMToRadioTuneFwdPress, new IBusMethodHolder(BM, BM.getClass().getMethod("sendSeekFwdPress")));
+					IBusCommandMap.put(IBusCommands.BMToRadioTuneFwdRelease, new IBusMethodHolder(BM, BM.getClass().getMethod("sendSeekFwdRelease")));
+					IBusCommandMap.put(IBusCommands.BMToRadioTuneRevPress, new IBusMethodHolder(BM, BM.getClass().getMethod("sendSeekRevPress")));
+					IBusCommandMap.put(IBusCommands.BMToRadioTuneRevRelease, new IBusMethodHolder(BM, BM.getClass().getMethod("sendSeekRevRelease")));
+					
+					IBusCommandMap.put(IBusCommands.BMToRadioFMPress, new IBusMethodHolder(BM, BM.getClass().getMethod("sendFMPress")));
+					IBusCommandMap.put(IBusCommands.BMToRadioFMRelease, new IBusMethodHolder(BM, BM.getClass().getMethod("sendFMRelease")));
+					IBusCommandMap.put(IBusCommands.BMToRadioAMPress, new IBusMethodHolder(BM, BM.getClass().getMethod("sendAMPress")));
+					IBusCommandMap.put(IBusCommands.BMToRadioAMRelease, new IBusMethodHolder(BM, BM.getClass().getMethod("sendAMRelease")));
+					
 				} catch (NoSuchMethodException e) {
 					Log.e(TAG, e.getMessage());
 				}
