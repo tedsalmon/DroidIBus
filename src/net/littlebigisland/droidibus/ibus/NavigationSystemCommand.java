@@ -20,6 +20,7 @@ public class NavigationSystemCommand extends IBusSystemCommand {
 	class Telephone extends IBusSystemCommand{
 		
 		private byte locationData = (byte) 0xA4;
+		private byte gpsData = (byte) 0xA2;
 		private Map<Byte, Method> IBusTelephoneMap = new HashMap<Byte, Method>();
 		
 		public void setGPSCoordinates(){
@@ -92,7 +93,7 @@ public class NavigationSystemCommand extends IBusSystemCommand {
 			Log.d("DroidIBus", "Got some kind of Navi data");
 			currentMessage = msg;
 			try{
-				if(msg.get(3) == locationData){
+				if(msg.get(3) == locationData || msg.get(3) == gpsData){
 					Log.d("DroidIBus", "Invoking method for navi data!");
 					IBusTelephoneMap.get(msg.get(5)).invoke(this);
 				}
