@@ -161,8 +161,8 @@ public class IBusMessageService extends IOIOService {
 							readBuffer.clear();
 						}
 					}else if(actionQueue.size() > 0){
-						// Wait at least 25ms between messages and then write out to the bus
-						if ((Calendar.getInstance().getTimeInMillis() - lastSend) > 50) {
+						// Wait at least 75ms between messages and then write out to the bus
+						if ((Calendar.getInstance().getTimeInMillis() - lastSend) > 75) {
 							Log.d(TAG, String.format("Sending %s Command out", actionQueue.get(0).toString()));
 							IBusMethodHolder command = IBusCommandMap.get(actionQueue.get(0));
 							byte[] outboundMsg = new byte[] {};
