@@ -31,6 +31,7 @@ import android.view.ViewGroup;
 import android.view.View.OnClickListener;
 import android.view.View.OnLongClickListener;
 import android.view.WindowManager.LayoutParams;
+import android.widget.Button;
 import android.widget.CompoundButton;
 import android.widget.CompoundButton.OnCheckedChangeListener;
 import android.widget.ImageButton;
@@ -543,8 +544,8 @@ public class MainControlFragment extends Fragment {
 		// Get the buttons from the view
 		ImageButton btnVolUp = (ImageButton) v.findViewById(R.id.btnVolUp);
 		ImageButton btnVolDown = (ImageButton) v.findViewById(R.id.btnVolDown);
-		ImageButton btnRadioFM = (ImageButton) v.findViewById(R.id.btnRadioFM);
-		ImageButton btnRadioAM = (ImageButton) v.findViewById(R.id.btnRadioAM);
+		Button btnRadioFM = (Button) v.findViewById(R.id.btnRadioFM);
+		Button btnRadioAM = (Button) v.findViewById(R.id.btnRadioAM);
 		Switch btnMusicMode = (Switch) v.findViewById(R.id.btnMusicMode);
 		ImageButton btnPrev = (ImageButton) v.findViewById(R.id.btnPrev);
 		ImageButton btnNext = (ImageButton) v.findViewById(R.id.btnNext);
@@ -668,7 +669,7 @@ public class MainControlFragment extends Fragment {
 		btnRadioAM.setOnTouchListener(touchAction);
 		btnPrev.setOnTouchListener(touchAction);
 		btnNext.setOnTouchListener(touchAction);
-		
+		//  3B 05 68 22 00 06 72 might trigger radio data? F0 05 FF 47 00 38 75 Does for sure
 		return v;
 	}
 	
