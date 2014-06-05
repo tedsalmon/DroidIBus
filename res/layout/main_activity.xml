@@ -121,12 +121,12 @@
 	       <Button
 	           android:id="@+id/btnRadioFM"
 	           style="@style/mediaBtn"
-	           android:text="@string/btnRadioAMLbl" />
+	           android:text="@string/btnRadioFMLbl" />
 
 	       <Button 
 	           android:id="@+id/btnRadioAM"
 	           style="@style/mediaBtn"
-	           android:text="@string/btnRadioFMLbl" />
+	           android:text="@string/btnRadioAMLbl" />
 
 	       <LinearLayout
 	           android:layout_width="480dp"
