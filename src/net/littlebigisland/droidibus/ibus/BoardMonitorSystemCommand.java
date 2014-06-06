@@ -202,4 +202,12 @@ public class BoardMonitorSystemCommand extends IBusSystemCommand {
 			boardMonitor, 0x04, radioSystem, 0x48, (byte)0xA1, (byte)0x75
 		};
 	}
+	
+	public byte[] sendInfoPress(){
+		return new byte[]{};
+	}
+	
+	public byte[] sendInfoRelease(){
+		return new byte[]{};
+	}
 }
