@@ -368,7 +368,12 @@
             android:id="@+id/geoLocaleField"
             style="@style/statItemValueText"
             android:text="@string/defaultText" />
-
+		
+		<TextView
+            android:id="@+id/geoAltitudeField"
+            style="@style/statItemValueText"
+            android:text="@string/defaultText" />
+	    	    
 	    <LinearLayout
 	        android:layout_width="fill_parent"
 	        android:layout_height="wrap_content"

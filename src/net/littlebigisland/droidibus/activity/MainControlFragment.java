@@ -53,7 +53,7 @@ public class MainControlFragment extends Fragment {
     protected TextView stationText, speedField, rpmField, rangeField, outTempField,
     				   coolantTempField, fuel1Field, fuel2Field, avgSpeedField,
     				   geoCoordinatesField ,geoStreetField, geoLocaleField,
-    				   dateField, timeField;
+    				   geoAltitudeField, dateField, timeField;
 
 	// Views in the Activity
 	protected ImageButton mPlayerPrevBtn, mPlayerControlBtn, mPlayerNextBtn;
@@ -68,8 +68,12 @@ public class MainControlFragment extends Fragment {
 	protected boolean mIsPlaying = false;
 	protected long mSongDuration = 1;
 	
-	private String currentRadioMode = "";
+	public static String currentRadioMode = "";
 
+	private enum radioModes{
+		AUX,
+		Radio
+	}
 	private RemoteController.OnClientUpdateListener mPlayerUpdateListener = new RemoteController.OnClientUpdateListener() {
 
 		private boolean mScrubbingSupported = false;
@@ -345,6 +349,23 @@ public class MainControlFragment extends Fragment {
 			    }
 			});
 		}
+
+		@Override
+		public void onUpdateGPSAltitude(final int altitude) {
+			Log.d(TAG, "Setting GPS Alitude");
+			postToUI(new Runnable() {
+			    public void run() {
+			    	geoAltitudeField.setText(String.format("Altitude: %s", altitude));
+			    }
+			});
+			
+			
+		}
+
+		@Override
+		public void onUpdateGPSTime(String time) {
+			// Do nothing for now
+		}
 		
 	};
 	
@@ -571,6 +592,7 @@ public class MainControlFragment extends Fragment {
 		geoCoordinatesField = (TextView) v.findViewById(R.id.geoCoordinatesField);
 		geoStreetField = (TextView) v.findViewById(R.id.geoStreetField);
 		geoLocaleField = (TextView) v.findViewById(R.id.geoLocaleField);
+		geoAltitudeField = (TextView) v.findViewById(R.id.geoAltitudeField);
 		
 		// Time & Date Fields
 		dateField = (TextView) v.findViewById(R.id.dateField);
@@ -584,7 +606,9 @@ public class MainControlFragment extends Fragment {
 		btnPrev.setTag("BMToRadioTuneRev");
 		btnNext.setTag("BMToRadioTuneFwd");
 		
-		// Change Audio Modes
+		//  3B 05 68 22 00 06 72 might trigger radio data? F0 05 FF 47 00 38 75 Does for sure		
+		// Change Audio Modes - Currently broken. Dun dun dunnnnnnnnnnnnnn
+		// Trying a fix with threads and the typing of currentRadioMode
 		btnMusicMode.setOnCheckedChangeListener(new OnCheckedChangeListener(){
 		    public void onCheckedChanged(CompoundButton buttonView, boolean isChecked){
 		    	LinearLayout radioLayout = (LinearLayout) v.findViewById(R.id.radioAudio);
@@ -594,15 +618,8 @@ public class MainControlFragment extends Fragment {
 		    		radioLayout.setVisibility(View.GONE);
 		    		tabletLayout.setVisibility(View.VISIBLE);
 		    		// Send IBus Message
-		    		if(currentRadioMode != "AUX"){
-		    			changeRadioMode();
-		    			new Handler().postDelayed(new Runnable() { 
-		    		         public void run() {
-		    		        	 changeRadioMode();
-		    		        } 
-		    		    }, 750); 
-		    			
-		    		}
+		    		if(currentRadioMode != "AUX")
+		    			changeRadioMode(radioModes.AUX);
 		        }else{
 		        	if(mIsPlaying)
 		        		mPlayerService.sendPauseKey();
@@ -610,7 +627,7 @@ public class MainControlFragment extends Fragment {
 		    		tabletLayout.setVisibility(View.GONE);
 		    		// Send IBus Message
 		    		if(currentRadioMode == "AUX" || currentRadioMode == "NO CD")
-		    			changeRadioMode();
+		    			changeRadioMode(radioModes.Radio);
 		        }
 		    }
 		});
@@ -637,7 +654,7 @@ public class MainControlFragment extends Fragment {
 				return true;
 			}
 		};
-		
+
 		fuel1Field.setTag(IBusCommands.BMToIKEResetFuel1.name());
 		fuel2Field.setTag(IBusCommands.BMToIKEResetFuel1.name());
 		avgSpeedField.setTag(IBusCommands.BMToIKEResetAvgSpeed.name());
@@ -669,20 +686,35 @@ public class MainControlFragment extends Fragment {
 		btnRadioAM.setOnTouchListener(touchAction);
 		btnPrev.setOnTouchListener(touchAction);
 		btnNext.setOnTouchListener(touchAction);
-		//  3B 05 68 22 00 06 72 might trigger radio data? F0 05 FF 47 00 38 75 Does for sure
 		return v;
 	}
 	
-	private void changeRadioMode(){
+	private void changeRadioMode(final radioModes mode){
 		new Thread(new Runnable() {
 			public void run() {
 				getActivity().runOnUiThread(new Runnable(){
 					@Override
 					public void run(){
 						try {
-							sendIBusCommand(IBusCommands.BMToRadioModePress);
-							Thread.sleep(500);
-							sendIBusCommand(IBusCommands.BMToRadioModeRelease);
+							if(mode == radioModes.AUX){
+								while(currentRadioMode != "AUX"){
+									Log.d(TAG, "Pressing Mode");
+									sendIBusCommand(IBusCommands.BMToRadioModePress);
+									Thread.sleep(500);
+									sendIBusCommand(IBusCommands.BMToRadioModeRelease);
+									Thread.sleep(500);
+									Log.d(TAG, "Mode now " + currentRadioMode);
+								}
+							}else if(mode == radioModes.Radio){
+								while(currentRadioMode == "AUX" || currentRadioMode == "NO CD"){
+									Log.d(TAG, "Pressing Mode to get Radio");
+									sendIBusCommand(IBusCommands.BMToRadioModePress);
+									Thread.sleep(500);
+									sendIBusCommand(IBusCommands.BMToRadioModeRelease);
+									Thread.sleep(500);
+									Log.d(TAG, "Mode now " + currentRadioMode);
+								}
+							}
 						} catch (InterruptedException e){
 							// First world anarchy
 						}

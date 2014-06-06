@@ -10,7 +10,7 @@ package net.littlebigisland.droidibus.ibus;
 /**
  * Interface to build call backs off of
  */
-public interface IBusMessageReceiver{
+public abstract interface IBusMessageReceiver{
 
 	// Radio System
 	public void onUpdateStation(final String text);
@@ -41,7 +41,11 @@ public interface IBusMessageReceiver{
 	// Navigation System
 	public void onUpdateStreetLocation(final String streetName);
 	
+	public void onUpdateGPSAltitude(final int altitude);
+	
 	public void onUpdateGPSCoordinates(final String gpsCoordinates);
+	
+	public void onUpdateGPSTime(final String time);
 	
 	public void onUpdateLocale(final String cityName);
 	

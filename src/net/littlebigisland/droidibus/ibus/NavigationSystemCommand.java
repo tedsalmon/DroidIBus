@@ -23,11 +23,12 @@ public class NavigationSystemCommand extends IBusSystemCommand {
 		private byte gpsData = (byte) 0xA2;
 		private Map<Byte, Method> IBusTelephoneMap = new HashMap<Byte, Method>();
 		
-		public void setGPSCoordinates(){
-			List<String> strData = new ArrayList<String>();
+		public void parseGPSData(){
+			// Parse out coordinate data
+			List<String> coordData = new ArrayList<String>();
 			for (int i = 6; i < currentMessage.size(); i++) {
-				// Convert to int to rid ourselves of preceeding zeros. Yes, this is bad.
-				strData.add(
+				// Convert to int to rid ourselves of preceding zeros. Yes, this is bad.
+				coordData.add(
 					String.valueOf(
 						Integer.parseInt(
 							bcdToStr(currentMessage.get(i))
@@ -40,23 +41,40 @@ public class NavigationSystemCommand extends IBusSystemCommand {
 					String.format(
 						"%s%s%s'%s.%s\"%s %s%s%s'%s.%s\"%s", 
 						//Latitude
-						strData.get(0),
+						coordData.get(0),
 						(char) 0x00B0,
-						strData.get(1), 
-						strData.get(2),
-						strData.get(3).charAt(0),
-						(strData.get(3).charAt(1) == '0') ? "N" : "S",
+						coordData.get(1), 
+						coordData.get(2),
+						coordData.get(3).charAt(0),
+						(coordData.get(3).charAt(1) == '0') ? "N" : "S",
 						//Longitude
-						Integer.parseInt(strData.get(4) + strData.get(5)),
+						Integer.parseInt(coordData.get(4) + coordData.get(5)),
 						(char) 0x00B0,
-						strData.get(6),
-						strData.get(7),
-						strData.get(8).charAt(0),
-						(strData.get(8).charAt(1) == '0') ?"E" : "W"
+						coordData.get(6),
+						coordData.get(7),
+						coordData.get(8).charAt(0),
+						(coordData.get(8).charAt(1) == '0') ? "E" : "W"
 					)
 				);
-		}
 		
+			// Parse out altitude data which is in meters
+			int altitude = Integer.parseInt(
+				String.format("%s%s", currentMessage.get(15), currentMessage.get(16))
+			);
+			if(mCallbackReceiver != null)
+				mCallbackReceiver.onUpdateGPSAltitude(altitude);
+			
+			// Parse out time data which is in UTC
+			String gpsUTCTime = String.format(
+					"%s:%s:%s",
+					currentMessage.get(18),
+					currentMessage.get(19),
+					currentMessage.get(20)
+			);
+			if(mCallbackReceiver != null)
+				mCallbackReceiver.onUpdateGPSTime(gpsUTCTime);
+		}
+				
 		public void setLocale(){
 			int lastData = 6;
 			while(currentMessage.get(lastData) != (byte) 0x00){
@@ -81,7 +99,7 @@ public class NavigationSystemCommand extends IBusSystemCommand {
 		
 		Telephone(){
 			try{
-				IBusTelephoneMap.put((byte)0x00, this.getClass().getMethod("setGPSCoordinates"));
+				IBusTelephoneMap.put((byte)0x00, this.getClass().getMethod("parseGPSData"));
 				IBusTelephoneMap.put((byte)0x01, this.getClass().getMethod("setLocale"));
 				IBusTelephoneMap.put((byte)0x02, this.getClass().getMethod("setStreetLocation"));
 			}catch(NoSuchMethodException e){
