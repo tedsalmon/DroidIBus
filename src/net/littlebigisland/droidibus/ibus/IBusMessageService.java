@@ -261,7 +261,6 @@ public class IBusMessageService extends IOIOService {
 					IBusCommandMap.put(IBusCommands.BMToRadioFMRelease, new IBusMethodHolder(BM, BM.getClass().getMethod("sendFMRelease")));
 					IBusCommandMap.put(IBusCommands.BMToRadioAMPress, new IBusMethodHolder(BM, BM.getClass().getMethod("sendAMPress")));
 					IBusCommandMap.put(IBusCommands.BMToRadioAMRelease, new IBusMethodHolder(BM, BM.getClass().getMethod("sendAMRelease")));
-					
 				} catch (NoSuchMethodException e) {
 					Log.e(TAG, e.getMessage());
 				}
