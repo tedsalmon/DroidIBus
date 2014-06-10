@@ -57,9 +57,9 @@ public class NavigationSystemCommand extends IBusSystemCommand {
 					)
 				);
 		
-			// Parse out altitude data which is in meters
+			// Parse out altitude data which is in meters and is stored as a byte coded decimal
 			int altitude = Integer.parseInt(
-				String.format("%s%s", currentMessage.get(15), currentMessage.get(16))
+				bcdToStr(currentMessage.get(15)) + bcdToStr(currentMessage.get(16))
 			);
 			if(mCallbackReceiver != null)
 				mCallbackReceiver.onUpdateGPSAltitude(altitude);

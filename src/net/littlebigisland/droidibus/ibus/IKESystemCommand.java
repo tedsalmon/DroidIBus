@@ -17,6 +17,7 @@ public class IKESystemCommand extends IBusSystemCommand {
 						mCallbackReceiver.onUpdateIgnitionSate(state);
 					break;
 				case 0x18: // Speed and RPM
+					// TODO Return Km/h - We shouldn't manipulate data this far down in the code
 					int speedInMPH = ((int) ((msg.get(4) * 2) * 0.621371));
 					if(mCallbackReceiver != null)
 						mCallbackReceiver.onUpdateSpeed(
