@@ -191,11 +191,12 @@ public class MainControlFragment extends Fragment {
 		 * @param text Text to set
 		 */
 		@Override
-		public void onUpdateSpeed(final String speed){
+		public void onUpdateSpeed(final int speed){
 			Log.d(TAG, "Setting Speed in Callback!");
+			int speedMPH = ((int) ((speed * 2) * 0.621371));
 			postToUI(new Runnable() {
 			    public void run() {
-			    	speedField.setText(speed);
+			    	speedField.setText(String.format("%d MPH", speedMPH));
 			    }
 			});
 		}

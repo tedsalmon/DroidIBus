@@ -30,7 +30,7 @@ public abstract interface IBusMessageReceiver{
 	
 	public void onUpdateDate(final String date);
 	
-	public void onUpdateSpeed(final String speed);
+	public void onUpdateSpeed(final int speed);
 
 	public void onUpdateRPM(final String rpm);
 	
