@@ -17,18 +17,19 @@ public class IKESystemCommand extends IBusSystemCommand {
 						mCallbackReceiver.onUpdateIgnitionSate(state);
 					break;
 				case 0x18: // Speed and RPM
-					if(mCallbackReceiver != null)
+					if(mCallbackReceiver != null){
 						mCallbackReceiver.onUpdateSpeed(
-								(int) msg.get(4)
+							(int) msg.get(4)
 						);
-					mCallbackReceiver.onUpdateRPM(
-							String.format("%s", (int) msg.get(5) * 100)
+						mCallbackReceiver.onUpdateRPM(
+							(int) msg.get(5) * 100
 						);
+					}
 					break;
 				case 0x19: // Coolant Temperature
 					if(mCallbackReceiver != null)
 						mCallbackReceiver.onUpdateCoolantTemp(
-							String.format("%s C", (int) msg.get(5))
+							(int) msg.get(5)
 						);
 					break;
 			}
@@ -60,7 +61,7 @@ public class IKESystemCommand extends IBusSystemCommand {
 				case 0x03: //Outdoor Temperature
 					if(mCallbackReceiver != null)
 						mCallbackReceiver.onUpdateOutdoorTemp(
-							decodeMessage(currentMessage, 7, endByte)
+							Integer.parseInt(decodeMessage(currentMessage, 7, endByte))
 						);
 					break;
 				case 0x04: // Fuel 1
@@ -78,7 +79,7 @@ public class IKESystemCommand extends IBusSystemCommand {
 				case 0x06: // Range
 					if(mCallbackReceiver != null)
 						mCallbackReceiver.onUpdateRange(
-							decodeMessage(currentMessage, 6, endByte)
+							Integer.parseInt(decodeMessage(currentMessage, 6, endByte))
 						);
 					break;
 				case 0x0A: // AVG Speed

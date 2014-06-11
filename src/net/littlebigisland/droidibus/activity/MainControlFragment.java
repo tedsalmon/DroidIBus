@@ -202,7 +202,7 @@ public class MainControlFragment extends Fragment {
 		}
 		
 		@Override
-		public void onUpdateRPM(final String rpm){
+		public void onUpdateRPM(final int rpm){
 			Log.d(TAG, "Setting RPM in Callback!");
 			postToUI(new Runnable() {
 			    public void run() {
@@ -213,7 +213,7 @@ public class MainControlFragment extends Fragment {
 		}
 		
 		@Override
-		public void onUpdateRange(final String range){
+		public void onUpdateRange(final int range){
 			Log.d(TAG, "Setting Gas Range in Callback!");
 			postToUI(new Runnable() {
 			    public void run() {
@@ -223,7 +223,7 @@ public class MainControlFragment extends Fragment {
 		}
 		
 		@Override
-		public void onUpdateOutdoorTemp(final String temp){
+		public void onUpdateOutdoorTemp(final int temp){
 			Log.d(TAG, "Setting Outdoor Temp in Callback!");
 			postToUI(new Runnable() {
 			    public void run() {
@@ -233,7 +233,7 @@ public class MainControlFragment extends Fragment {
 		}
 		
 		@Override
-		public void onUpdateCoolantTemp(final String temp){
+		public void onUpdateCoolantTemp(final int temp){
 			Log.d(TAG, "Setting Coolant Temp in Callback!");
 			postToUI(new Runnable() {
 			    public void run() {

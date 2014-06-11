@@ -16,9 +16,9 @@ public abstract interface IBusMessageReceiver{
 	public void onUpdateStation(final String text);
 	
 	// IKE System
-	public void onUpdateRange(final String range);
+	public void onUpdateRange(final int range);
 		
-	public void onUpdateOutdoorTemp(final String temp);
+	public void onUpdateOutdoorTemp(final int temp);
 
 	public void onUpdateFuel1(final String mpg);
 
@@ -32,9 +32,9 @@ public abstract interface IBusMessageReceiver{
 	
 	public void onUpdateSpeed(final int speed);
 
-	public void onUpdateRPM(final String rpm);
+	public void onUpdateRPM(final int rpm);
 	
-	public void onUpdateCoolantTemp(final String temp);
+	public void onUpdateCoolantTemp(final int temp);
 	
 	public void onUpdateIgnitionSate(final int state);
 	
