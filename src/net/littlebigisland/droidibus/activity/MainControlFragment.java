@@ -193,7 +193,7 @@ public class MainControlFragment extends Fragment {
 		@Override
 		public void onUpdateSpeed(final int speed){
 			Log.d(TAG, "Setting Speed in Callback!");
-			int speedMPH = ((int) ((speed * 2) * 0.621371));
+			final int speedMPH = ((int) ((speed * 2) * 0.621371));
 			postToUI(new Runnable() {
 			    public void run() {
 			    	speedField.setText(String.format("%d MPH", speedMPH));
