@@ -37,9 +37,7 @@ class RadioSystemCommand extends IBusSystemCommand{
 			} catch (UnsupportedEncodingException e) {
 				e.printStackTrace();
 			}
-			Log.d("DroidIBus", String.format("Handling Station Text - Got '%s'", str));
-			if(mCallbackReceiver != null)
-				mCallbackReceiver.onUpdateStation(str);
+			triggerCallback("onUpdateStation", str);
 		}
 		
 	}

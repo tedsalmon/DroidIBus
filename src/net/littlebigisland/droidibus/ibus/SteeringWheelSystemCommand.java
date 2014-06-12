@@ -11,12 +11,10 @@ public class SteeringWheelSystemCommand extends IBusSystemCommand{
 			if(currentMessage.get(3) == 0x3B){
 				switch(currentMessage.get(4)){
 					case 0x21: //Fwds Btn
-						if(mCallbackReceiver != null)
-							mCallbackReceiver.onTrackFwd();
+						triggerCallback("onTrackFwd");
 						break;
 					case 0x28: //Prev Btn
-						if(mCallbackReceiver != null)
-							mCallbackReceiver.onTrackPrev();
+						triggerCallback("onTrackPrev");
 						break;
 				}
 			}

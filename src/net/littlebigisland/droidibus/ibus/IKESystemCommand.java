@@ -13,24 +13,14 @@ public class IKESystemCommand extends IBusSystemCommand {
 			switch(msg.get(3)){
 				case 0x11: // Ignition State
 					int state = (msg.get(3) < 3) ? msg.get(3) : (0x02 & msg.get(3));
-					if(mCallbackReceiver != null)
-						mCallbackReceiver.onUpdateIgnitionSate(state);
+					triggerCallback("onUpdateIgnitionSate", state);
 					break;
 				case 0x18: // Speed and RPM
-					if(mCallbackReceiver != null){
-						mCallbackReceiver.onUpdateSpeed(
-							(int) msg.get(4)
-						);
-						mCallbackReceiver.onUpdateRPM(
-							(int) msg.get(5) * 100
-						);
-					}
+					triggerCallback("onUpdateSpeed", (int) msg.get(4));
+					triggerCallback("onUpdateRPM", (int) msg.get(5) * 100);
 					break;
 				case 0x19: // Coolant Temperature
-					if(mCallbackReceiver != null)
-						mCallbackReceiver.onUpdateCoolantTemp(
-							(int) msg.get(5)
-						);
+					triggerCallback("onUpdateCoolantTemp", (int) msg.get(5));
 					break;
 			}
 		}
@@ -47,46 +37,25 @@ public class IKESystemCommand extends IBusSystemCommand {
 			int endByte = currentMessage.size() - 2;
 			switch(currentMessage.get(4)){
 				case 0x01: //Time
-					if(mCallbackReceiver != null)
-						mCallbackReceiver.onUpdateTime(
-							decodeMessage(currentMessage, 6, endByte)
-						);
+					triggerCallback("onUpdateTime", decodeMessage(currentMessage, 6, endByte));
 					break;
 				case 0x02: //Date
-					if(mCallbackReceiver != null)
-						mCallbackReceiver.onUpdateDate(
-							decodeMessage(currentMessage, 6, endByte)
-						);
+					triggerCallback("onUpdateDate", decodeMessage(currentMessage, 6, endByte));
 					break;
 				case 0x03: //Outdoor Temperature
-					if(mCallbackReceiver != null)
-						mCallbackReceiver.onUpdateOutdoorTemp(
-							Integer.parseInt(decodeMessage(currentMessage, 7, endByte))
-						);
+					triggerCallback("onUpdateOutdoorTemp", decodeMessage(currentMessage, 7, endByte));
 					break;
 				case 0x04: // Fuel 1
-					if(mCallbackReceiver != null)
-						mCallbackReceiver.onUpdateFuel1(
-							decodeMessage(currentMessage, 6, endByte)
-						);
+					triggerCallback("onUpdateFuel1", decodeMessage(currentMessage, 6, endByte));
 					break;
 				case 0x05: // Fuel 2
-					if(mCallbackReceiver != null)
-						mCallbackReceiver.onUpdateFuel2(
-							decodeMessage(currentMessage, 6, endByte)
-						);
+					triggerCallback("onUpdateFuel2", decodeMessage(currentMessage, 6, endByte));
 					break;
 				case 0x06: // Range
-					if(mCallbackReceiver != null)
-						mCallbackReceiver.onUpdateRange(
-							Integer.parseInt(decodeMessage(currentMessage, 6, endByte))
-						);
+					triggerCallback("onUpdateRange", decodeMessage(currentMessage, 6, endByte));
 					break;
 				case 0x0A: // AVG Speed
-					if(mCallbackReceiver != null)
-						mCallbackReceiver.onUpdateAvgSpeed(
-							decodeMessage(currentMessage, 6, endByte)
-						);
+					triggerCallback("onUpdateAvgSpeed", decodeMessage(currentMessage, 6, endByte));
 					break;
 				case 0x07: // Distance
 				case 0x08: // Unknown

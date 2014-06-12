@@ -1,6 +1,8 @@
 package net.littlebigisland.droidibus.ibus;
 
 import java.io.UnsupportedEncodingException;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
@@ -101,5 +103,75 @@ public abstract class IBusSystemCommand {
 		mCallbackReceiver = cb;
 		for (Object key : IBusDestinationSystems.keySet())
 			IBusDestinationSystems.get(key).registerCallbacks(mCallbackReceiver);
+	}
+	
+	/**
+	 * Trigger a method callback. Check to see if the callback receiver has been defined, 
+	 * if so call the given method.
+	 * @param callback The name of the function to trigger
+	 */
+	public void triggerCallback(String callback){
+		if(mCallbackReceiver != null){
+			try {
+				Method cb = mCallbackReceiver.getClass().getMethod(callback);
+				cb.invoke(mCallbackReceiver);
+			} catch (NoSuchMethodException e) {
+				e.printStackTrace();
+			} catch (IllegalAccessException e) {
+				e.printStackTrace();
+			} catch (IllegalArgumentException e) {
+				e.printStackTrace();
+			} catch (InvocationTargetException e) {
+				e.printStackTrace();
+			}
+		}
+	}
+	
+	/**
+	 * Trigger a method callback. Check to see if the callback receiver has been defined, 
+	 * if so call the given method with the given parameters (if any). Overloaded 
+	 * for different data types.
+	 * @param callback The name of the function to trigger
+	 * @param value    The string value to pass to the callback
+	 */
+	public void triggerCallback(String callback, String value){
+		if(mCallbackReceiver != null){
+			try {
+				Method cb = mCallbackReceiver.getClass().getMethod(callback, String.class);
+				cb.invoke(mCallbackReceiver, value);
+			} catch (NoSuchMethodException e) {
+				e.printStackTrace();
+			} catch (IllegalAccessException e) {
+				e.printStackTrace();
+			} catch (IllegalArgumentException e) {
+				e.printStackTrace();
+			} catch (InvocationTargetException e) {
+				e.printStackTrace();
+			}
+		}
+	}
+	
+	/**
+	 * Trigger a method callback. Check to see if the callback receiver has been defined, 
+	 * if so call the given method with the given parameters (if any). Overloaded 
+	 * for different data types.
+	 * @param callback The name of the function to trigger
+	 * @param value    The integer value to pass to the callback
+	 */
+	public void triggerCallback(String callback, int value){
+		if(mCallbackReceiver != null){
+			try {
+				Method cb = mCallbackReceiver.getClass().getMethod(callback, int.class);
+				cb.invoke(mCallbackReceiver, value);
+			} catch (NoSuchMethodException e) {
+				e.printStackTrace();
+			} catch (IllegalAccessException e) {
+				e.printStackTrace();
+			} catch (IllegalArgumentException e) {
+				e.printStackTrace();
+			} catch (InvocationTargetException e) {
+				e.printStackTrace();
+			}
+		}
 	}
 }

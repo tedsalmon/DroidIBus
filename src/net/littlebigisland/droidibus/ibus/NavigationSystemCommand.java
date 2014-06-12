@@ -36,33 +36,32 @@ public class NavigationSystemCommand extends IBusSystemCommand {
 					)
 				);
 			}
-			if(mCallbackReceiver != null)
-				mCallbackReceiver.onUpdateGPSCoordinates(
-					String.format(
-						"%s%s%s'%s.%s\"%s %s%s%s'%s.%s\"%s", 
-						//Latitude
-						coordData.get(0),
-						(char) 0x00B0,
-						coordData.get(1), 
-						coordData.get(2),
-						coordData.get(3).charAt(0),
-						(coordData.get(3).charAt(1) == '0') ? "N" : "S",
-						//Longitude
-						Integer.parseInt(coordData.get(4) + coordData.get(5)),
-						(char) 0x00B0,
-						coordData.get(6),
-						coordData.get(7),
-						coordData.get(8).charAt(0),
-						(coordData.get(8).charAt(1) == '0') ? "E" : "W"
-					)
-				);
+			triggerCallback("onUpdateGPSCoordinates",
+				String.format(
+					"%s%s%s'%s.%s\"%s %s%s%s'%s.%s\"%s", 
+					//Latitude
+					coordData.get(0),
+					(char) 0x00B0,
+					coordData.get(1), 
+					coordData.get(2),
+					coordData.get(3).charAt(0),
+					(coordData.get(3).charAt(1) == '0') ? "N" : "S",
+					//Longitude
+					Integer.parseInt(coordData.get(4) + coordData.get(5)),
+					(char) 0x00B0,
+					coordData.get(6),
+					coordData.get(7),
+					coordData.get(8).charAt(0),
+					(coordData.get(8).charAt(1) == '0') ? "E" : "W"
+				)
+			);
 		
 			// Parse out altitude data which is in meters and is stored as a byte coded decimal
 			int altitude = Integer.parseInt(
 				bcdToStr(currentMessage.get(15)) + bcdToStr(currentMessage.get(16))
 			);
-			if(mCallbackReceiver != null)
-				mCallbackReceiver.onUpdateGPSAltitude(altitude);
+
+			triggerCallback("onUpdateGPSAltitude", altitude);
 			
 			// Parse out time data which is in UTC
 			String gpsUTCTime = String.format(
@@ -71,8 +70,8 @@ public class NavigationSystemCommand extends IBusSystemCommand {
 					currentMessage.get(19),
 					currentMessage.get(20)
 			);
-			if(mCallbackReceiver != null)
-				mCallbackReceiver.onUpdateGPSTime(gpsUTCTime);
+			
+			triggerCallback("onUpdateGPSTime", gpsUTCTime);
 		}
 				
 		public void setLocale(){
@@ -80,10 +79,7 @@ public class NavigationSystemCommand extends IBusSystemCommand {
 			while(currentMessage.get(lastData) != (byte) 0x00){
 				lastData++;
 			}
-			if(mCallbackReceiver != null)
-				mCallbackReceiver.onUpdateLocale(
-					decodeMessage(currentMessage, 6, lastData-1)
-				);
+			triggerCallback("onUpdateLocale", decodeMessage(currentMessage, 6, lastData-1));
 		}
 		
 		public void setStreetLocation(){
@@ -91,10 +87,7 @@ public class NavigationSystemCommand extends IBusSystemCommand {
 			while(currentMessage.get(lastData) != (byte)0x3B){
 				lastData++;
 			}
-			if(mCallbackReceiver != null)
-				mCallbackReceiver.onUpdateStreetLocation(
-					decodeMessage(currentMessage, 6, lastData-1)
-				);
+			triggerCallback("onUpdateStreetLocation", decodeMessage(currentMessage, 6, lastData-1));
 		}
 		
 		Telephone(){
