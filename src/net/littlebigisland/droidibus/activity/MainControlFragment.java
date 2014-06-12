@@ -49,7 +49,7 @@ public class MainControlFragment extends Fragment {
 	protected IBusMessageService mIBusService;
     protected boolean mIBusBound = false;
     
-    
+    // Fields in the activity
     protected TextView stationText, speedField, rpmField, rangeField, outTempField,
     				   coolantTempField, fuel1Field, fuel2Field, avgSpeedField,
     				   geoCoordinatesField ,geoStreetField, geoLocaleField,
@@ -68,18 +68,20 @@ public class MainControlFragment extends Fragment {
 	protected boolean mIsPlaying = false;
 	protected long mSongDuration = 1;
 	
-	public static String currentRadioMode = "";
+	public static String currentRadioMode = ""; // Current Radio Text
+	public int lastRadioStatus = 0; // Epoch of last time we got a status message from the Radio 
 
 	private enum radioModes{
 		AUX,
 		Radio
 	}
+	
 	private RemoteController.OnClientUpdateListener mPlayerUpdateListener = new RemoteController.OnClientUpdateListener() {
 
 		private boolean mScrubbingSupported = false;
 		
 		private boolean isScrubbingSupported(int flags) {
-			// If flags bit mask contains certain bits it means that srcubbing is supported
+			// If flags bit mask contains certain bits it means that scrubbing is supported
 			return (flags & RemoteControlClient.FLAG_KEY_MEDIA_POSITION_UPDATE) != 0; 
 		}
 
@@ -180,6 +182,7 @@ public class MainControlFragment extends Fragment {
 			Log.d(TAG, "Setting station text back in Callback!");
 			postToUI(new Runnable() {
 			    public void run() {
+			    	// TODO Update time of last update
 			    	currentRadioMode = text;
 			    	stationText.setText(text);
 			    }
@@ -607,7 +610,7 @@ public class MainControlFragment extends Fragment {
 		btnPrev.setTag("BMToRadioTuneRev");
 		btnNext.setTag("BMToRadioTuneFwd");
 		
-		//  3B 05 68 22 00 06 72 might trigger radio data? F0 05 FF 47 00 38 75 Does for sure		
+		//   might trigger radio data? F0 05 FF 47 00 38 75 Does for sure
 		// Change Audio Modes - Currently broken. Dun dun dunnnnnnnnnnnnnn
 		// Trying a fix with threads and the typing of currentRadioMode
 		btnMusicMode.setOnCheckedChangeListener(new OnCheckedChangeListener(){
@@ -699,21 +702,21 @@ public class MainControlFragment extends Fragment {
 						try {
 							if(mode == radioModes.AUX){
 								if(currentRadioMode != "AUX"){
-									Log.d(TAG, "Pressing Mode");
+									Log.d(TAG, "Pressing Mode for AUX - Current Mode '" + currentRadioMode + "'");
 									sendIBusCommand(IBusCommands.BMToRadioModePress);
-									Thread.sleep(500);
+									Thread.sleep(250);
 									sendIBusCommand(IBusCommands.BMToRadioModeRelease);
-									Thread.sleep(500);
+									Thread.sleep(1000);
 									Log.d(TAG, "Mode now " + currentRadioMode);
 									changeRadioMode(mode);
 								}
 							}else if(mode == radioModes.Radio){
 								if(currentRadioMode == "AUX" || currentRadioMode == "NO CD"){
-									Log.d(TAG, "Pressing Mode to get Radio");
+									Log.d(TAG, "Pressing Mode to get Radio - Current Mode '" + currentRadioMode+ "'");
 									sendIBusCommand(IBusCommands.BMToRadioModePress);
-									Thread.sleep(500);
+									Thread.sleep(250);
 									sendIBusCommand(IBusCommands.BMToRadioModeRelease);
-									Thread.sleep(500);
+									Thread.sleep(1000);
 									Log.d(TAG, "Mode now " + currentRadioMode);
 									changeRadioMode(mode);
 								}
