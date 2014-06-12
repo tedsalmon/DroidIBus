@@ -698,22 +698,24 @@ public class MainControlFragment extends Fragment {
 					public void run(){
 						try {
 							if(mode == radioModes.AUX){
-								while(currentRadioMode != "AUX"){
+								if(currentRadioMode != "AUX"){
 									Log.d(TAG, "Pressing Mode");
 									sendIBusCommand(IBusCommands.BMToRadioModePress);
 									Thread.sleep(500);
 									sendIBusCommand(IBusCommands.BMToRadioModeRelease);
 									Thread.sleep(500);
 									Log.d(TAG, "Mode now " + currentRadioMode);
+									changeRadioMode(mode);
 								}
 							}else if(mode == radioModes.Radio){
-								while(currentRadioMode == "AUX" || currentRadioMode == "NO CD"){
+								if(currentRadioMode == "AUX" || currentRadioMode == "NO CD"){
 									Log.d(TAG, "Pressing Mode to get Radio");
 									sendIBusCommand(IBusCommands.BMToRadioModePress);
 									Thread.sleep(500);
 									sendIBusCommand(IBusCommands.BMToRadioModeRelease);
 									Thread.sleep(500);
 									Log.d(TAG, "Mode now " + currentRadioMode);
+									changeRadioMode(mode);
 								}
 							}
 						} catch (InterruptedException e){
