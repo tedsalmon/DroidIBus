@@ -2,7 +2,6 @@ package net.littlebigisland.droidibus.ibus;
 
 import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
-import android.util.Log;
 
 /**
  * Handle messages emitted by the Radio unit
