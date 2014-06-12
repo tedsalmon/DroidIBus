@@ -622,7 +622,7 @@ public class MainControlFragment extends Fragment {
 		    		radioLayout.setVisibility(View.GONE);
 		    		tabletLayout.setVisibility(View.VISIBLE);
 		    		// Send IBus Message
-		    		if(currentRadioMode != "AUX")
+		    		if(!currentRadioMode.equals("AUX"))
 		    			changeRadioMode(radioModes.AUX);
 		        }else{
 		        	if(mIsPlaying)
@@ -630,7 +630,7 @@ public class MainControlFragment extends Fragment {
 		    		radioLayout.setVisibility(View.VISIBLE);
 		    		tabletLayout.setVisibility(View.GONE);
 		    		// Send IBus Message
-		    		if(currentRadioMode == "AUX" || currentRadioMode == "NO CD")
+		    		if(currentRadioMode.equals("AUX") || currentRadioMode.equals("NO CD"))
 		    			changeRadioMode(radioModes.Radio);
 		        }
 		    }
@@ -701,7 +701,7 @@ public class MainControlFragment extends Fragment {
 					public void run(){
 						try {
 							if(mode == radioModes.AUX){
-								if(currentRadioMode != "AUX"){
+								if(!currentRadioMode.equals("AUX")){
 									Log.d(TAG, "Pressing Mode for AUX - Current Mode '" + currentRadioMode + "'");
 									sendIBusCommand(IBusCommands.BMToRadioModePress);
 									Thread.sleep(250);
@@ -711,7 +711,7 @@ public class MainControlFragment extends Fragment {
 									changeRadioMode(mode);
 								}
 							}else if(mode == radioModes.Radio){
-								if(currentRadioMode == "AUX" || currentRadioMode == "NO CD"){
+								if(currentRadioMode.equals("AUX") || currentRadioMode.equals("NO CD")){
 									Log.d(TAG, "Pressing Mode to get Radio - Current Mode '" + currentRadioMode+ "'");
 									sendIBusCommand(IBusCommands.BMToRadioModePress);
 									Thread.sleep(250);
