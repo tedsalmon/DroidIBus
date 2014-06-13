@@ -213,7 +213,7 @@ public class MainControlFragment extends Fragment {
 			Log.d(TAG, "Setting RPM in Callback!");
 			postToUI(new Runnable() {
 			    public void run() {
-			    	rpmField.setText(rpm);
+			    	rpmField.setText(Integer.toString(rpm));
 			    }
 			});
 			
@@ -224,7 +224,7 @@ public class MainControlFragment extends Fragment {
 			Log.d(TAG, "Setting Gas Range in Callback!");
 			postToUI(new Runnable() {
 			    public void run() {
-			    	rangeField.setText(range);
+			    	rangeField.setText(Integer.toString(range));
 			    }
 			});
 		}
@@ -234,7 +234,7 @@ public class MainControlFragment extends Fragment {
 			Log.d(TAG, "Setting Outdoor Temp in Callback!");
 			postToUI(new Runnable() {
 			    public void run() {
-			    	outTempField.setText(temp);
+			    	outTempField.setText(Integer.toString(temp));
 			    }
 			});
 		}
@@ -244,7 +244,7 @@ public class MainControlFragment extends Fragment {
 			Log.d(TAG, "Setting Coolant Temp in Callback!");
 			postToUI(new Runnable() {
 			    public void run() {
-			    	coolantTempField.setText(temp);
+			    	coolantTempField.setText(Integer.toString(temp));
 			    }
 			});
 		}
