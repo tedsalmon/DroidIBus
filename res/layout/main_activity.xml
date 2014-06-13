@@ -34,7 +34,7 @@
            android:id="@+id/tabletAudio"
            android:layout_width="wrap_content"
            android:layout_height="85dp"
-           android:visibility="gone" >
+           android:visibility="visible" >
            
 	       <ImageView
 	           android:id="@+id/albumArt"
@@ -116,7 +116,7 @@
            android:id="@+id/radioAudio"
            android:layout_width="wrap_content"
            android:layout_height="85dp"
-           android:visibility="visible" >
+           android:visibility="gone" >
            
 	       <Button
 	           android:id="@+id/btnRadioFM"
@@ -156,7 +156,7 @@
 	          <TextView
 	               android:id="@+id/radioStereoIndicator"
 	               android:textSize="15sp"
-	               android:visibility="visible"
+	               android:visibility="gone"
 	               android:layout_marginTop="2sp"
 	               android:layout_width="fill_parent"
 	               android:layout_height="wrap_content"
@@ -165,7 +165,7 @@
 	         <TextView
 	               android:id="@+id/radioRDSIndicator"
 	               android:textSize="15sp"
-	               android:visibility="visible"
+	               android:visibility="gone"
 	               android:layout_marginTop="2sp"
 	               android:layout_width="fill_parent"
 	               android:layout_height="wrap_content"
