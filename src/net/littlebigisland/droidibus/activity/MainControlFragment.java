@@ -60,6 +60,7 @@ public class MainControlFragment extends Fragment {
     				   geoAltitudeField, dateField, timeField;
 
 	// Views in the Activity
+    protected LinearLayout radioLayout, tabletLayout;
 	protected ImageButton mPlayerPrevBtn, mPlayerControlBtn, mPlayerNextBtn;
 	protected TextView mPlayerArtistText, mPlayerTitleText, mPlayerAlbumText;
 	protected SeekBar mPlayerScrubBar;
@@ -392,9 +393,11 @@ public class MainControlFragment extends Fragment {
 			Log.d(TAG, "Setting Stereo Indicator - '" + stereoIndicator + "'");
 			postToUI(new Runnable(){
 			    public void run(){
-			    	lastRadioStatus = time.getTimeInMillis();
-			    	int visibility = (stereoIndicator.equals("")) ? View.GONE : View.VISIBLE;
-			    	radioStereoIndicatorField.setVisibility(visibility);
+			    	if(radioLayout.getVisibility() == View.VISIBLE){
+			    		lastRadioStatus = time.getTimeInMillis();
+			    		int visibility = (stereoIndicator.equals("")) ? View.GONE : View.VISIBLE;
+			    		radioStereoIndicatorField.setVisibility(visibility);
+			    	}
 			    }
 			});
 		}
@@ -405,8 +408,10 @@ public class MainControlFragment extends Fragment {
 			postToUI(new Runnable(){
 			    public void run(){
 			    	lastRadioStatus = time.getTimeInMillis();
-			    	int visibility = (rdsIndicator.equals("")) ? View.GONE : View.VISIBLE;
-			    	radioRDSIndicatorField.setVisibility(visibility);
+			    	if(radioLayout.getVisibility() == View.VISIBLE){
+			    		int visibility = (rdsIndicator.equals("")) ? View.GONE : View.VISIBLE;
+			    		radioRDSIndicatorField.setVisibility(visibility);
+			    	}
 			    }
 			});
 		}
@@ -587,6 +592,10 @@ public class MainControlFragment extends Fragment {
 	@Override
 	public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
 		final View v = inflater.inflate(R.layout.main_activity, container, false);
+		// Layouts
+    	radioLayout = (LinearLayout) v.findViewById(R.id.radioAudio);
+    	tabletLayout = (LinearLayout) v.findViewById(R.id.tabletAudio);
+    	
 		bindServices(true);
 		// Keep a wake lock
 		getActivity().getWindow().addFlags(LayoutParams.FLAG_KEEP_SCREEN_ON);
@@ -702,8 +711,6 @@ public class MainControlFragment extends Fragment {
 
 		btnMusicMode.setOnCheckedChangeListener(new OnCheckedChangeListener(){
 		    public void onCheckedChanged(CompoundButton buttonView, boolean isChecked){
-		    	LinearLayout radioLayout = (LinearLayout) v.findViewById(R.id.radioAudio);
-		    	LinearLayout tabletLayout = (LinearLayout) v.findViewById(R.id.tabletAudio);
 		        // Tablet Mode if checked, else Radio
 		    	if(isChecked){
 		    		radioLayout.setVisibility(View.GONE);
@@ -799,7 +806,7 @@ public class MainControlFragment extends Fragment {
 								}
 							}else if(mode == radioModes.Radio){
 								if(currentRadioMode.equals("AUX") || currentRadioMode.equals("NO CD")){
-									Log.d(TAG, "Pressing Mode to get Radio - Current Mode '" + currentRadioMode+ "'");
+									Log.d(TAG, "Pressing Mode to get Radio - Current Mode '" + currentRadioMode + "'");
 									sendIBusCommand(IBusCommands.BMToRadioModePress);
 									Thread.sleep(250);
 									sendIBusCommand(IBusCommands.BMToRadioModeRelease);
