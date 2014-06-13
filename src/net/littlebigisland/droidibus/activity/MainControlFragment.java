@@ -464,6 +464,40 @@ public class MainControlFragment extends Fragment {
     				sendIBusCommand(IBusCommands.BMToIKEGetRange);
     				sendIBusCommand(IBusCommands.BMToIKEGetAvgSpeed);
     				sendIBusCommand(IBusCommands.BMToIKEGetOutdoorTemp);
+    				
+    				/* This thread should make sure to send out and request
+    				 * any IBus messages that the BM usually would.
+    				 * We should also make sure to keep the radio in "Info"
+    				 * mode at all times here. 
+    				 */
+    				new Thread(new Runnable() {
+    					public void run() {
+    						while(mIBusBound){
+    							try{
+	    							getActivity().runOnUiThread(new Runnable(){
+	    								@Override
+	    								public void run(){
+	    									// When did the radio last update us? If more than ten seconds, ask info
+	    									if( (time.getTimeInMillis() - lastRadioStatus) > 10000 ){
+	    										Log.d(TAG, "Requesting Radio Status");
+	    										try {
+	    											sendIBusCommand(IBusCommands.BMToRadioInfoPress);
+													Thread.sleep(500);
+													sendIBusCommand(IBusCommands.BMToRadioInfoPress);
+												} catch (InterruptedException e) {
+													// First world anarchy
+												}
+	    										
+	    									}
+	    								}
+	    							});
+	    							Thread.sleep(2000);
+    							}catch(InterruptedException e){
+    								// First world anarchy
+    							}
+    						}
+    					}
+    				}).start();
     			}
     		}
         }
