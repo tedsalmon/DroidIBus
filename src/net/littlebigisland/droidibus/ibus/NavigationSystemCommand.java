@@ -101,11 +101,9 @@ public class NavigationSystemCommand extends IBusSystemCommand {
 		}
 		
 		public void mapReceived(ArrayList<Byte> msg){
-			Log.d("DroidIBus", "Got some kind of Navi data");
 			currentMessage = msg;
 			try{
 				if(msg.get(3) == locationData || msg.get(3) == gpsData){
-					Log.d("DroidIBus", "Invoking method for navi data!");
 					IBusTelephoneMap.get(msg.get(5)).invoke(this);
 				}
 			}catch(IllegalArgumentException e){
