@@ -71,9 +71,8 @@ public class IKESystemCommand extends IBusSystemCommand {
 		public void mapReceived(ArrayList<Byte> msg){
 			currentMessage = msg;
 			byte operation = msg.get(3);
-			if(operation == OBCData){
+			if(operation == OBCData)
 				OBCData();
-			}
 		}
 	}
 	
@@ -84,6 +83,4 @@ public class IKESystemCommand extends IBusSystemCommand {
 		IBusDestinationSystems.put(DeviceAddress.Broadcast.toByte(), new IKEBroadcast());
 		IBusDestinationSystems.put(DeviceAddress.GlobalBroadcastAddress.toByte(), new IKEGlobalBroadcast());
 	}
-	
-	// TODO IKE Unit changing below
 }
