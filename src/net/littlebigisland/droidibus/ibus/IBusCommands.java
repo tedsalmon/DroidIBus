@@ -24,5 +24,8 @@ public enum IBusCommands {
 	BMToRadioFMPress,
 	BMToRadioFMRelease,
 	BMToRadioAMPress,
-	BMToRadioAMRelease;
+	BMToRadioAMRelease,
+	BMToRadioInfoPress,
+	BMToRadioInfoRelease,
+	BMToRadioGetStatus;
 }

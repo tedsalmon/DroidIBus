@@ -13,7 +13,17 @@ package net.littlebigisland.droidibus.ibus;
 public abstract interface IBusMessageReceiver{
 
 	// Radio System
-	public void onUpdateStation(final String text);
+	public void onUpdateRadioStation(final String text);
+	
+	public void onUpdateRadioStatus(final int status);
+	
+	public void onUpdateRadioBrodcasts(final String broadcastType);
+	
+	public void onUpdateRadioStereoIndicator(final String stereoIndicator);
+	
+	public void onUpdateRadioRDSIndicator(final String rdsIndicator);
+	
+	public void onUpdateRadioProgramIndicator(final String currentProgram);
 	
 	// IKE System
 	public void onUpdateRange(final int range);

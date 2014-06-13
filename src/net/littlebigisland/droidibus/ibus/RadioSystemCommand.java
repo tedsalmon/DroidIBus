@@ -1,6 +1,5 @@
 package net.littlebigisland.droidibus.ibus;
 
-import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 
 /**
@@ -15,28 +14,63 @@ class RadioSystemCommand extends IBusSystemCommand{
 		
 		public void mapReceived(ArrayList<Byte> msg){
 			currentMessage = msg;
-			// This is the AM/FM text - Data starts after 0x41, which appears to be the
-			// Index of the box to fill with this text on the BoardMonitor
-			// 0x68 0x0B 0x3B 0xA5 0x62 0x01 0x41 0x20 0x46 0x4D 0x31 0x20 0xE5
-			if(msg.get(3) == 0x23 && msg.get(4) == 0x62 && msg.get(5) == 0x10){
-				stationText();
+			
+			final byte stationText = 0x23;
+			final byte metaData = (byte)0xA5;
+			
+			switch(currentMessage.get(3)){
+				case stationText:
+					triggerCallback("onUpdateRadioStation", decodeData());
+					break;
+				case metaData:
+					byte metaDataType = currentMessage.get(6);
+					String dataText = decodeData();
+
+					switch(metaDataType){
+						case 0x41: // Broadcast Type
+							triggerCallback("onUpdateRadioBrodcasts", dataText);
+							break;
+						case 0x44: // Stereo Indicator
+							triggerCallback("onUpdateRadioStereoIndicator", dataText);
+							break;
+						case 0x45: // Radio Data System Indicator
+							triggerCallback("onUpdateRadioRDSIndicator", dataText);
+							break;
+						case 0x02: // Program Type
+							triggerCallback("onUpdateRadioProgramIndicator", dataText);
+							break;
+					}
+					break;
 			}
+
 		}
 		
-		private void stationText(){
-			int msgSize = currentMessage.size() - 2;
-			while (currentMessage.get(msgSize) == 0x20)
-				msgSize--;
-			byte[] displayBytes = new byte[msgSize - 5];
-			for (int i = 0; i < displayBytes.length; i++)
-				displayBytes[i] = currentMessage.get(i + 6);
-			String str = "";
-			try{
-				str = new String(displayBytes, "UTF-8");
-			} catch (UnsupportedEncodingException e) {
-				e.printStackTrace();
+		/**
+		 * Iterate through the message and remove all non-ASCII data
+		 * 
+		 * @return String 	String representation of data
+		 */
+		private String decodeData(){
+			ArrayList<Byte> finalMsg = new ArrayList<Byte>();
+			for(int i = 7; i < currentMessage.size()-1; i++){
+				int currByte = (int) currentMessage.get(i);
+				if(currByte > 32 && currByte < 126)
+					finalMsg.add(currentMessage.get(i));
 			}
-			triggerCallback("onUpdateStation", str);
+			return decodeMessage(finalMsg, 0, finalMsg.size()-1);			
+		}
+		
+	}
+	
+	/** 
+	 * Handle messages broadcast by the Radio
+	 */
+	class BroadcastSystem extends IBusSystemCommand{
+		
+		public void mapReceived(ArrayList<Byte> msg){
+			currentMessage = msg;
+			if(currentMessage.get(3) == 0x02)
+				triggerCallback("onUpdateRadioStatus", (int)currentMessage.get(4));
 		}
 		
 	}
@@ -46,5 +80,6 @@ class RadioSystemCommand extends IBusSystemCommand{
 	 */
 	RadioSystemCommand(){
 		IBusDestinationSystems.put(DeviceAddress.GraphicsNavigationDriver.toByte(), new GFXNavigationSystem());
+		IBusDestinationSystems.put(DeviceAddress.Broadcast.toByte(), new BroadcastSystem());
 	}
 }

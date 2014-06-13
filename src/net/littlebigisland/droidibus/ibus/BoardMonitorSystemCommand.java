@@ -101,6 +101,17 @@ public class BoardMonitorSystemCommand extends IBusSystemCommand {
 	}
 	
 	/**
+	 * Issue Get Request to Radio for Status
+	 * This should be sent every ten seconds
+	 * @return Byte array of message to send to IBus
+	 */
+	public byte[] getRadioStatus(){
+		return new byte[]{
+			boardMonitor, 0x03, radioSystem, 0x01, (byte)0x9A	
+		};
+	}
+	
+	/**
 	 * Reset the "Consumption 1" IKE metric
 	 * @return Byte array of message to send to IBus
 	 */
@@ -125,11 +136,6 @@ public class BoardMonitorSystemCommand extends IBusSystemCommand {
 	}
 
 	// Radio Buttons
-	public byte[] getRadioStatus(){
-		return new byte[]{
-			boardMonitor, 0x04, radioSystem, 0x30, (byte)0xE4
-		};
-	}
 	
 	public byte[] sendModePress(){
 		return new byte[]{
@@ -214,4 +220,5 @@ public class BoardMonitorSystemCommand extends IBusSystemCommand {
 			boardMonitor, 0x04, radioSystem, 0x48, (byte)0xB0, 0x64
 		};
 	}
+	
 }

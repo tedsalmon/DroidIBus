@@ -222,7 +222,7 @@ public class IBusMessageService extends IOIOService {
 			}
 			
 			private void initiateHandlers(){
-				// Map Device src Addresses with the respective handler class
+				// Map Device source Addresses with the respective handler class
 				IBusSysMap.put(DeviceAddress.Radio.toByte(), new RadioSystemCommand());
 				IBusSysMap.put(DeviceAddress.InstrumentClusterElectronics.toByte(), new IKESystemCommand());
 				IBusSysMap.put(DeviceAddress.NavigationEurope.toByte(), new NavigationSystemCommand());
@@ -242,6 +242,7 @@ public class IBusMessageService extends IOIOService {
 					IBusCommandMap.put(IBusCommands.BMToIKEGetFuel2, new IBusMethodHolder(BM, BM.getClass().getMethod("getFuel2")));
 					IBusCommandMap.put(IBusCommands.BMToIKEGetRange, new IBusMethodHolder(BM, BM.getClass().getMethod("getRange")));
 					IBusCommandMap.put(IBusCommands.BMToIKEGetAvgSpeed, new IBusMethodHolder(BM, BM.getClass().getMethod("getAvgSpeed")));
+					IBusCommandMap.put(IBusCommands.BMToRadioGetStatus, new IBusMethodHolder(BM, BM.getClass().getMethod("getRadioStatus")));
 					
 					IBusCommandMap.put(IBusCommands.BMToIKEResetFuel1, new IBusMethodHolder(BM, BM.getClass().getMethod("resetFuel1")));
 					IBusCommandMap.put(IBusCommands.BMToIKEResetFuel2, new IBusMethodHolder(BM, BM.getClass().getMethod("resetFuel2")));
@@ -261,6 +262,9 @@ public class IBusMessageService extends IOIOService {
 					IBusCommandMap.put(IBusCommands.BMToRadioFMRelease, new IBusMethodHolder(BM, BM.getClass().getMethod("sendFMRelease")));
 					IBusCommandMap.put(IBusCommands.BMToRadioAMPress, new IBusMethodHolder(BM, BM.getClass().getMethod("sendAMPress")));
 					IBusCommandMap.put(IBusCommands.BMToRadioAMRelease, new IBusMethodHolder(BM, BM.getClass().getMethod("sendAMRelease")));
+					
+					IBusCommandMap.put(IBusCommands.BMToRadioInfoPress, new IBusMethodHolder(BM, BM.getClass().getMethod("sendInfoPress")));
+					IBusCommandMap.put(IBusCommands.BMToRadioInfoRelease, new IBusMethodHolder(BM, BM.getClass().getMethod("sendInfoRelease")));
 				} catch (NoSuchMethodException e) {
 					Log.e(TAG, e.getMessage());
 				}
