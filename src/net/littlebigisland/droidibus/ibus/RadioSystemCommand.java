@@ -12,11 +12,13 @@ class RadioSystemCommand extends IBusSystemCommand{
 	 */
 	class GFXNavigationSystem extends IBusSystemCommand{
 		
+		private final byte stationText = 0x23;
+		private final byte metaData = (byte)0xA5;
+		
 		public void mapReceived(ArrayList<Byte> msg){
 			currentMessage = msg;
 			
-			final byte stationText = 0x23;
-			final byte metaData = (byte)0xA5;
+
 			
 			switch(currentMessage.get(3)){
 				case stationText:
@@ -51,13 +53,15 @@ class RadioSystemCommand extends IBusSystemCommand{
 		 * @return String 	String representation of data
 		 */
 		private String decodeData(){
-			ArrayList<Byte> finalMsg = new ArrayList<Byte>();
-			for(int i = 7; i < currentMessage.size()-1; i++){
-				int currByte = (int) currentMessage.get(i);
-				if(currByte > 32 && currByte < 126)
-					finalMsg.add(currentMessage.get(i));
-			}
-			return decodeMessage(finalMsg, 0, finalMsg.size()-1);			
+			int startByte = (currentMessage.get(3) == stationText) ? 6 : 7; // Radio RDS starts 6 bytes in, metadata at 7
+			int endByte = currentMessage.size() - 2; // Skip the CRC
+			
+			// Remove the padding from the front and back of the message
+			while(currentMessage.get(endByte) == 0x20)
+				endByte--;
+			while(currentMessage.get(startByte) == 0x20)
+					startByte++;
+			return decodeMessage(currentMessage, startByte, endByte);			
 		}
 		
 	}
