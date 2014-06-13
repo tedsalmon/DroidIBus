@@ -4,6 +4,8 @@ package net.littlebigisland.droidibus.activity;
  * @author Ted S <tass2001@gmail.com>
  * @package net.littlebigisland.droidibus.activity
  */
+import java.util.Calendar;
+
 import net.littlebigisland.droidibus.R;
 import net.littlebigisland.droidibus.ibus.IBusCommands;
 import net.littlebigisland.droidibus.ibus.IBusMessageReceiver;
@@ -50,7 +52,9 @@ public class MainControlFragment extends Fragment {
     protected boolean mIBusBound = false;
     
     // Fields in the activity
-    protected TextView stationText, speedField, rpmField, rangeField, outTempField,
+    protected TextView stationText, radioRDSIndicatorField, radioProgramField,
+    				   radioBroadcastField, radioStereoIndicatorField, 
+    				   speedField, rpmField, rangeField, outTempField,
     				   coolantTempField, fuel1Field, fuel2Field, avgSpeedField,
     				   geoCoordinatesField ,geoStreetField, geoLocaleField,
     				   geoAltitudeField, dateField, timeField;
@@ -68,8 +72,10 @@ public class MainControlFragment extends Fragment {
 	protected boolean mIsPlaying = false;
 	protected long mSongDuration = 1;
 	
-	public static String currentRadioMode = ""; // Current Radio Text
-	public int lastRadioStatus = 0; // Epoch of last time we got a status message from the Radio 
+	protected Calendar time = Calendar.getInstance();
+	
+	protected String currentRadioMode = ""; // Current Radio Text
+	protected long lastRadioStatus = 0; // Epoch of last time we got a status message from the Radio 
 
 	private enum radioModes{
 		AUX,
@@ -81,7 +87,6 @@ public class MainControlFragment extends Fragment {
 		private boolean mScrubbingSupported = false;
 		
 		private boolean isScrubbingSupported(int flags) {
-			// If flags bit mask contains certain bits it means that scrubbing is supported
 			return (flags & RemoteControlClient.FLAG_KEY_MEDIA_POSITION_UPDATE) != 0; 
 		}
 
@@ -154,7 +159,6 @@ public class MainControlFragment extends Fragment {
 
 		@Override
 		public void onClientChange(boolean clearing) {
-
 		}
 	};
 	
@@ -178,11 +182,11 @@ public class MainControlFragment extends Fragment {
 		 * @param text Text to set
 		 */
 		@Override
-		public void onUpdateStation(final String text){
+		public void onUpdateRadioStation(final String text){
 			Log.d(TAG, "Setting station text back in Callback!");
 			postToUI(new Runnable() {
 			    public void run() {
-			    	// TODO Update time of last update
+			    	lastRadioStatus = time.getTimeInMillis();
 			    	currentRadioMode = text;
 			    	stationText.setText(text);
 			    }
@@ -321,9 +325,9 @@ public class MainControlFragment extends Fragment {
 		}
 
 		@Override
-		public void onUpdateGPSCoordinates(final String gpsCoordinates) {
+		public void onUpdateGPSCoordinates(final String gpsCoordinates){
 			Log.d(TAG, "GPS Coordinates are " + gpsCoordinates);
-			postToUI(new Runnable() {
+			postToUI(new Runnable(){
 			    public void run() {
 			    	geoCoordinatesField.setText(gpsCoordinates);
 			    }
@@ -331,52 +335,99 @@ public class MainControlFragment extends Fragment {
 		}
 
 		@Override
-		public void onTrackFwd() {
+		public void onTrackFwd(){
 			Log.d(TAG, "Changing the track fwd in callback due to steering input!");
-			postToUI(new Runnable() {
-			    public void run() {
-					if(mPlayerBound){
+			postToUI(new Runnable(){
+			    public void run(){
+					if(mPlayerBound)
 						mPlayerService.sendNextKey();
-					}
 			    }
 			});
 		}
 
 		@Override
-		public void onTrackPrev() {
+		public void onTrackPrev(){
 			Log.d(TAG, "Changing the track fwd in callback due to steering input!");
-			postToUI(new Runnable() {
-			    public void run() {
-					if(mPlayerBound){
+			postToUI(new Runnable(){
+			    public void run(){
+					if(mPlayerBound)
 						mPlayerService.sendPreviousKey();
-					}
 			    }
 			});
 		}
 
 		@Override
-		public void onUpdateGPSAltitude(final int altitude) {
+		public void onUpdateGPSAltitude(final int altitude){
 			Log.d(TAG, "Setting GPS Alitude");
-			postToUI(new Runnable() {
-			    public void run() {
+			postToUI(new Runnable(){
+			    public void run(){
 			    	geoAltitudeField.setText(String.format("Altitude: %s", altitude));
 			    }
 			});
-			
-			
 		}
 
 		@Override
-		public void onUpdateGPSTime(String time) {
-			// Do nothing for now
+		public void onUpdateGPSTime(final String time){
+			Log.d(TAG, "Got GPS Time of " + time);
+		}
+
+		@Override
+		public void onUpdateRadioStatus(int status){
+			// TODO Track status
+		}
+
+		@Override
+		public void onUpdateRadioBrodcasts(final String broadcastType){
+			Log.d(TAG, "Setting Radio Broadcast Type");
+			postToUI(new Runnable(){
+			    public void run(){
+			    	lastRadioStatus = time.getTimeInMillis();
+			    	radioBroadcastField.setText(broadcastType);
+			    }
+			});
+		}
+
+		@Override
+		public void onUpdateRadioStereoIndicator(final String stereoIndicator){
+			Log.d(TAG, "Setting Stereo Indicator - '" + stereoIndicator + "'");
+			postToUI(new Runnable(){
+			    public void run(){
+			    	lastRadioStatus = time.getTimeInMillis();
+			    	int visibility = (stereoIndicator.equals("")) ? View.GONE : View.VISIBLE;
+			    	radioStereoIndicatorField.setVisibility(visibility);
+			    }
+			});
+		}
+
+		@Override
+		public void onUpdateRadioRDSIndicator(final String rdsIndicator){
+			Log.d(TAG, "Setting RDS Indicator - '" + rdsIndicator + "'");
+			postToUI(new Runnable(){
+			    public void run(){
+			    	lastRadioStatus = time.getTimeInMillis();
+			    	int visibility = (rdsIndicator.equals("")) ? View.GONE : View.VISIBLE;
+			    	radioRDSIndicatorField.setVisibility(visibility);
+			    }
+			});
+		}
+
+		@Override
+		public void onUpdateRadioProgramIndicator(final String currentProgram){
+			Log.d(TAG, "Setting Radio Program Type");
+			postToUI(new Runnable(){
+			    public void run(){
+			    	lastRadioStatus = time.getTimeInMillis();
+			    	radioProgramField.setText(currentProgram);
+			    }
+			});
 		}
 		
 	};
 	
-    private ServiceConnection mPlayerConnection = new ServiceConnection() {
+    private ServiceConnection mPlayerConnection = new ServiceConnection(){
     	
     	@Override
-    	public void onServiceConnected(ComponentName className, IBinder service) {
+    	public void onServiceConnected(ComponentName className, IBinder service){
     		// Getting the binder and activating RemoteController instantly
     		Log.d(TAG, "Getting Music Player Binder object");
     		MusicControllerService.PlayerBinder binder = (MusicControllerService.PlayerBinder) service;
@@ -431,7 +482,6 @@ public class MainControlFragment extends Fragment {
 				mPlayerScrubBar.setProgress(
 					(int) (mPlayerService.getEstimatedPosition() * mPlayerScrubBar.getMax() / mSongDuration)
 				);
-				// Wait one second before sending
 				mPlayerHandler.postDelayed(this, 100);
 			}
 		}
@@ -546,10 +596,10 @@ public class MainControlFragment extends Fragment {
 		mPlayerNextBtn.setOnClickListener(playerClickListener);
 		mPlayerControlBtn.setOnClickListener(playerClickListener);
 		
-		mPlayerScrubBar.setOnSeekBarChangeListener(new OnSeekBarChangeListener() {
+		mPlayerScrubBar.setOnSeekBarChangeListener(new OnSeekBarChangeListener(){
 
 			@Override
-			public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
+			public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser){
 				if(mPlayerBound && fromUser) {
 					mPlayerService.seekTo(mSongDuration * progress/seekBar.getMax());
 				}
@@ -577,7 +627,13 @@ public class MainControlFragment extends Fragment {
 		
 		
 		// Setup the text fields for the view
+		
+		// Radio Fields
 		stationText = (TextView) v.findViewById(R.id.stationText);
+		radioRDSIndicatorField = (TextView) v.findViewById(R.id.radioRDSIndicator);
+		radioStereoIndicatorField = (TextView) v.findViewById(R.id.radioStereoIndicator);
+		radioProgramField = (TextView) v.findViewById(R.id.radioProgram);
+		radioBroadcastField = (TextView) v.findViewById(R.id.radioBroadcast);
 
 		
 		// OBC Fields
@@ -609,10 +665,7 @@ public class MainControlFragment extends Fragment {
 		btnRadioAM.setTag("BMToRadioAM");
 		btnPrev.setTag("BMToRadioTuneRev");
 		btnNext.setTag("BMToRadioTuneFwd");
-		
-		//   might trigger radio data? F0 05 FF 47 00 38 75 Does for sure
-		// Change Audio Modes - Currently broken. Dun dun dunnnnnnnnnnnnnn
-		// Trying a fix with threads and the typing of currentRadioMode
+
 		btnMusicMode.setOnCheckedChangeListener(new OnCheckedChangeListener(){
 		    public void onCheckedChanged(CompoundButton buttonView, boolean isChecked){
 		    	LinearLayout radioLayout = (LinearLayout) v.findViewById(R.id.radioAudio);

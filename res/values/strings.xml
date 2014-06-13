@@ -19,4 +19,7 @@
     <string name="btnRadioAMLbl">AM</string>
     <string name="btnRadioFMLbl">FM</string>
     <string name="mediaBtnDesc">Media Button</string>
+    <string name="rdsIndicatorLbl">RDS</string>
+    <string name="stereoIndicatorLbl">Stereo</string>
+    <string name="blankLbl"></string>
 </resources>

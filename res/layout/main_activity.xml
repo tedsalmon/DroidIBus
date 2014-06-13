@@ -34,7 +34,7 @@
            android:id="@+id/tabletAudio"
            android:layout_width="wrap_content"
            android:layout_height="85dp"
-           android:visibility="visible" >
+           android:visibility="gone" >
            
 	       <ImageView
 	           android:id="@+id/albumArt"
@@ -116,7 +116,7 @@
            android:id="@+id/radioAudio"
            android:layout_width="wrap_content"
            android:layout_height="85dp"
-           android:visibility="gone" >
+           android:visibility="visible" >
            
 	       <Button
 	           android:id="@+id/btnRadioFM"
@@ -129,8 +129,7 @@
 	           android:text="@string/btnRadioAMLbl" />
 
 	       <LinearLayout
-	           android:layout_width="480dp"
-	           android:layout_marginRight="100dp"
+	           android:layout_width="450dp"
 	           android:layout_height="fill_parent"
 	           android:orientation="vertical" >
 	           <TextView
@@ -141,7 +140,46 @@
 	               android:gravity="center_horizontal|center_vertical"
 	               android:text="@string/stationTextLbl" />
 	       </LinearLayout>
-	
+	       <LinearLayout
+	           android:layout_width="100dp"
+	           android:layout_marginRight="30dp"
+	           android:layout_height="fill_parent"
+	           android:orientation="vertical" >
+	           <TextView
+	               android:id="@+id/radioBroadcast"
+	               android:textSize="15sp"
+	               android:layout_marginTop="2sp"
+	               android:layout_width="fill_parent"
+	               android:layout_height="wrap_content"
+	               android:gravity="center_horizontal|center_vertical"
+	               android:text="@string/blankLbl" />
+	          <TextView
+	               android:id="@+id/radioStereoIndicator"
+	               android:textSize="15sp"
+	               android:visibility="visible"
+	               android:layout_marginTop="2sp"
+	               android:layout_width="fill_parent"
+	               android:layout_height="wrap_content"
+	               android:gravity="center_horizontal|center_vertical"
+	               android:text="@string/stereoIndicatorLbl" />
+	         <TextView
+	               android:id="@+id/radioRDSIndicator"
+	               android:textSize="15sp"
+	               android:visibility="visible"
+	               android:layout_marginTop="2sp"
+	               android:layout_width="fill_parent"
+	               android:layout_height="wrap_content"
+	               android:gravity="center_horizontal|center_vertical"
+	               android:text="@string/rdsIndicatorLbl" />
+	        <TextView
+	               android:id="@+id/radioProgram"
+	               android:textSize="15sp"
+	               android:layout_marginTop="2sp"
+	               android:layout_width="fill_parent"
+	               android:layout_height="wrap_content"
+	               android:gravity="center_horizontal|center_vertical"
+	               android:text="@string/blankLbl" />	          	          
+	       </LinearLayout>
 	        <ImageButton
 	            android:id="@+id/btnPrev"
 	            style="@style/mediaBtn"
