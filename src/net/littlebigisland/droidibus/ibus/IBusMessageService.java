@@ -40,6 +40,7 @@ public class IBusMessageService extends IOIOService {
 	private ArrayList<IBusCommands> actionQueue = new ArrayList<IBusCommands>();
 	private String TAG = "DroidIBus";
 	private IBusMessageReceiver mIBusCbListener = null;
+	private Map<Byte, String> DeviceLookup = new HashMap<Byte, String>(); // For logging
 	
 	/**
 	 * This is the thread on which all the IOIO activity happens. It will be run
@@ -156,6 +157,15 @@ public class IBusMessageService extends IOIOService {
 						// Read until readBuffer contains msgLength plus two more bytes for the full message
 						if (readBuffer.size() == msgLength + 2) {
 							if(checksumMessage(readBuffer)) {
+								String data = "";
+								for(int i = 0; i<readBuffer.size(); i++)
+									data = String.format("%s%02X ", data, readBuffer.get(i));
+								Log.d(TAG, String.format(
+									"Received Message (%s -> %s): %s",
+									DeviceLookup.get(readBuffer.get(0)),
+									DeviceLookup.get(readBuffer.get(2)),
+									data
+								));
 								handleMessage(readBuffer);
 							}
 							readBuffer.clear();
@@ -330,6 +340,8 @@ public class IBusMessageService extends IOIOService {
 	@Override
 	public void onStart(Intent intent, int startId) {
 		super.onStart(intent, startId);
+		for(DeviceAddress d : DeviceAddress.values())
+			DeviceLookup.put(d.toByte(), d.name());
 		handleStartup(intent);
 	}	
 
