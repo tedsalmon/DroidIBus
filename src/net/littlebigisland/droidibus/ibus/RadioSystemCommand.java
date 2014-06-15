@@ -32,7 +32,8 @@ class RadioSystemCommand extends IBusSystemCommand{
 						case 0x41: // Broadcast Type
 							triggerCallback("onUpdateRadioBrodcasts", dataText);
 							break;
-						case 0x44: // Stereo Indicator
+						case 0x04:
+						case 0x44: // Stereo Indicators
 							triggerCallback("onUpdateRadioStereoIndicator", dataText);
 							break;
 						case 0x45: // Radio Data System Indicator
