@@ -145,7 +145,7 @@ public class BoardMonitorSystemCommand extends IBusSystemCommand {
 	
 	public byte[] sendModeRelease(){
 		return new byte[]{
-			boardMonitor, 0x04, radioSystem, 0x48, (byte)0xA3, (byte)0xFF
+			boardMonitor, 0x04, radioSystem, 0x48, (byte)0xA3, (byte)0x77
 		};
 	}
 	
