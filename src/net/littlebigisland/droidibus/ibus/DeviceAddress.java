@@ -53,8 +53,9 @@ enum DeviceAddress {
 	DeviceAddress(byte value) {
 	    this.value = value;
 	}
-	
+
 	public byte toByte(){
 		return value;
 	}
+	
 }
