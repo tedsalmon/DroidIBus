@@ -184,7 +184,7 @@ public class MainControlFragment extends Fragment {
 		 */
 		@Override
 		public void onUpdateRadioStation(final String text){
-			Log.d(TAG, "Setting station text back in Callback!");
+			Log.d(TAG, "Setting station text - '" + text + "'");
 			postToUI(new Runnable() {
 			    public void run() {
 			    	lastRadioStatus = time.getTimeInMillis();
@@ -526,16 +526,14 @@ public class MainControlFragment extends Fragment {
 		}
 	};
 	
-	private void bindServices(boolean doServiceStart) {
+	private void bindServices() {
 		Context applicationContext = getActivity();
 		
 		Intent IBusIntent = new Intent(applicationContext, IBusMessageService.class);
 		try {
 			Log.d(TAG, "Starting IBus service");
 			applicationContext.bindService(IBusIntent, mIBusConnection, Context.BIND_AUTO_CREATE);
-			if(doServiceStart){
-				applicationContext.startService(IBusIntent);
-			}
+			applicationContext.startService(IBusIntent);
 		}
 		catch(Exception ex) {
 			Log.e(TAG, "Unable to Start IBusService!");
@@ -551,18 +549,16 @@ public class MainControlFragment extends Fragment {
 		}
 	}
 	
-	private void unbindServices(boolean doServiceStop) {
+	private void unbindServices() {
 		Context applicationContext = getActivity();
 		if(mIBusBound){
 			try {
 				Log.d(TAG, "Unbinding from IBus service");
 				mIBusService.disable();
 				applicationContext.unbindService(mIBusConnection);
-				if(doServiceStop){
-					applicationContext.stopService(
-						new Intent(applicationContext, IBusMessageService.class)
-					);
-				}
+				applicationContext.stopService(
+					new Intent(applicationContext, IBusMessageService.class)
+				);
 				mIBusBound = false;
 			}
 			catch(Exception ex) {
@@ -596,7 +592,7 @@ public class MainControlFragment extends Fragment {
     	radioLayout = (LinearLayout) v.findViewById(R.id.radioAudio);
     	tabletLayout = (LinearLayout) v.findViewById(R.id.tabletAudio);
     	
-		bindServices(true);
+		bindServices();
 		// Keep a wake lock
 		getActivity().getWindow().addFlags(LayoutParams.FLAG_KEEP_SCREEN_ON);
 		// Music Player
@@ -839,20 +835,20 @@ public class MainControlFragment extends Fragment {
     public void onDestroy() {
     	super.onDestroy();
     	Log.d(TAG, "onDestroy called");
-    	unbindServices(true);
+    	unbindServices();
     }
     
     @Override
     public void onPause() {
     	super.onPause();
     	Log.d(TAG, "onPause called");
-    	unbindServices(false);
+    	unbindServices();
     }
     
     @Override
     public void onResume() {
     	super.onResume();
     	Log.d(TAG, "onResume called");
-    	bindServices(false);
+    	bindServices();
     }
 }
