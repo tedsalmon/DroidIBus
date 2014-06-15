@@ -60,7 +60,7 @@ class RadioSystemCommand extends IBusSystemCommand{
 			while(currentMessage.get(endByte) == 0x20)
 				endByte--;
 			while(currentMessage.get(startByte) == 0x20)
-					startByte++;
+				startByte++;
 			return decodeMessage(currentMessage, startByte, endByte);			
 		}
 		
