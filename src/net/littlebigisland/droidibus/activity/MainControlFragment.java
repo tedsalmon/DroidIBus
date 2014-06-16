@@ -483,6 +483,11 @@ public class MainControlFragment extends Fragment {
 	    								@Override
 	    								public void run(){
 	    									// When did the radio last update us? If more than ten seconds, ask info
+	    									
+	    									// BM Emulation
+	    									// TODO Every 10 seconds send a RadioStatusRequest
+	    									// TODO Respond to CD requests from Radio to support AUX
+	    									
 	    									if( (time.getTimeInMillis() - lastRadioStatus) > 10000 ){
 	    										Log.d(TAG, "Requesting Radio Status");
 	    										try {
