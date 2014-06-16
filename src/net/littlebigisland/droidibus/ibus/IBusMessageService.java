@@ -91,6 +91,8 @@ public class IBusMessageService extends IOIOService {
 			 */
 			@Override
 			protected void setup() throws ConnectionLostException, InterruptedException {
+				for(DeviceAddress d : DeviceAddress.values())
+					DeviceLookup.put(d.toByte(), d.name());
 				Log.d(TAG, "Running IOIO Setup");
 				IBusConn = ioio_.openUart(
 					IBusRXPinId, IBusTXPinId, 9600, Uart.Parity.EVEN, Uart.StopBits.ONE
@@ -340,13 +342,13 @@ public class IBusMessageService extends IOIOService {
 	@Override
 	public void onStart(Intent intent, int startId) {
 		super.onStart(intent, startId);
-		for(DeviceAddress d : DeviceAddress.values())
-			DeviceLookup.put(d.toByte(), d.name());
 		handleStartup(intent);
 	}	
 
 	private void handleStartup(Intent intent) {
 		mHandler = new Handler();
+		for(DeviceAddress d : DeviceAddress.values())
+			DeviceLookup.put(d.toByte(), d.name());
 	}
 	
 	/** 
