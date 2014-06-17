@@ -26,9 +26,10 @@ public class SteeringWheelSystemCommand extends IBusSystemCommand{
 
 		public void mapReceived(ArrayList<Byte> msg) {
 			currentMessage = msg;
-			if(currentMessage.get(3) == 0x3B && currentMessage.get(4) == (byte) 0xA0){
-				triggerCallback("onVoiceBtnPress");
-			}else if(currentMessage.get(3) == 0x01){
+			if(currentMessage.get(3) == 0x3B){
+				if(currentMessage.get(4) == (byte) 0xA0) // Voice Btn
+					triggerCallback("onVoiceBtnPress");
+			}else if(currentMessage.get(3) == 0x01){ // RT Btn
 				triggerCallback("onRTBtnPress");
 			}
 		}
