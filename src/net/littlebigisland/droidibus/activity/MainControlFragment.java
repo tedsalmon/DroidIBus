@@ -23,6 +23,8 @@ import android.media.RemoteController.MetadataEditor;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.IBinder;
+import android.os.PowerManager;
+import android.os.PowerManager.WakeLock;
 import android.support.v4.app.Fragment;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -75,8 +77,11 @@ public class MainControlFragment extends Fragment {
 	
 	protected Calendar time = Calendar.getInstance();
 	
+	protected PowerManager mPowerManager = null;
+	protected WakeLock screenWakeLock;
+	
 	protected String currentRadioMode = ""; // Current Radio Text
-	protected long lastRadioStatus = 0; // Epoch of last time we got a status message from the Radio 
+	protected long lastRadioStatus = 0; // Epoch of last time we got a status message from the Radio
 
 	private enum radioModes{
 		AUX,
@@ -194,6 +199,56 @@ public class MainControlFragment extends Fragment {
 			});
 		}
 		
+		@Override
+		public void onUpdateRadioBrodcasts(final String broadcastType){
+			Log.d(TAG, "Setting Radio Broadcast Type");
+			postToUI(new Runnable(){
+			    public void run(){
+			    	lastRadioStatus = time.getTimeInMillis();
+			    	radioBroadcastField.setText(broadcastType);
+			    }
+			});
+		}
+
+		@Override
+		public void onUpdateRadioStereoIndicator(final String stereoIndicator){
+			Log.d(TAG, "Setting Stereo Indicator - '" + stereoIndicator + "'");
+			postToUI(new Runnable(){
+			    public void run(){
+			    	if(radioLayout.getVisibility() == View.VISIBLE){
+			    		lastRadioStatus = time.getTimeInMillis();
+			    		int visibility = (stereoIndicator.equals("")) ? View.GONE : View.VISIBLE;
+			    		radioStereoIndicatorField.setVisibility(visibility);
+			    	}
+			    }
+			});
+		}
+
+		@Override
+		public void onUpdateRadioRDSIndicator(final String rdsIndicator){
+			Log.d(TAG, "Setting RDS Indicator - '" + rdsIndicator + "'");
+			postToUI(new Runnable(){
+			    public void run(){
+			    	lastRadioStatus = time.getTimeInMillis();
+			    	if(radioLayout.getVisibility() == View.VISIBLE){
+			    		int visibility = (rdsIndicator.equals("")) ? View.GONE : View.VISIBLE;
+			    		radioRDSIndicatorField.setVisibility(visibility);
+			    	}
+			    }
+			});
+		}
+
+		@Override
+		public void onUpdateRadioProgramIndicator(final String currentProgram){
+			Log.d(TAG, "Setting Radio Program Type");
+			postToUI(new Runnable(){
+			    public void run(){
+			    	lastRadioStatus = time.getTimeInMillis();
+			    	radioProgramField.setText(currentProgram);
+			    }
+			});
+		}
+		
 		/**
 		 * Callback to handle any vehicle speed Changes
 		 * @param text Text to set
@@ -303,6 +358,15 @@ public class MainControlFragment extends Fragment {
 		@Override
 		public void onUpdateIgnitionSate(int state) {
 			Log.d(TAG, "Ignition state is " + state);
+			switch(state){
+				case 0:
+					changeScreenState(false);
+					break;
+				case 1:
+					changeScreenState(true);
+					break;
+			}
+			
 		}
 
 		@Override
@@ -375,56 +439,6 @@ public class MainControlFragment extends Fragment {
 		@Override
 		public void onUpdateRadioStatus(int status){
 			// TODO Track status
-		}
-
-		@Override
-		public void onUpdateRadioBrodcasts(final String broadcastType){
-			Log.d(TAG, "Setting Radio Broadcast Type");
-			postToUI(new Runnable(){
-			    public void run(){
-			    	lastRadioStatus = time.getTimeInMillis();
-			    	radioBroadcastField.setText(broadcastType);
-			    }
-			});
-		}
-
-		@Override
-		public void onUpdateRadioStereoIndicator(final String stereoIndicator){
-			Log.d(TAG, "Setting Stereo Indicator - '" + stereoIndicator + "'");
-			postToUI(new Runnable(){
-			    public void run(){
-			    	if(radioLayout.getVisibility() == View.VISIBLE){
-			    		lastRadioStatus = time.getTimeInMillis();
-			    		int visibility = (stereoIndicator.equals("")) ? View.GONE : View.VISIBLE;
-			    		radioStereoIndicatorField.setVisibility(visibility);
-			    	}
-			    }
-			});
-		}
-
-		@Override
-		public void onUpdateRadioRDSIndicator(final String rdsIndicator){
-			Log.d(TAG, "Setting RDS Indicator - '" + rdsIndicator + "'");
-			postToUI(new Runnable(){
-			    public void run(){
-			    	lastRadioStatus = time.getTimeInMillis();
-			    	if(radioLayout.getVisibility() == View.VISIBLE){
-			    		int visibility = (rdsIndicator.equals("")) ? View.GONE : View.VISIBLE;
-			    		radioRDSIndicatorField.setVisibility(visibility);
-			    	}
-			    }
-			});
-		}
-
-		@Override
-		public void onUpdateRadioProgramIndicator(final String currentProgram){
-			Log.d(TAG, "Setting Radio Program Type");
-			postToUI(new Runnable(){
-			    public void run(){
-			    	lastRadioStatus = time.getTimeInMillis();
-			    	radioProgramField.setText(currentProgram);
-			    }
-			});
 		}
 		
 	};
@@ -558,7 +572,7 @@ public class MainControlFragment extends Fragment {
 		Context applicationContext = getActivity();
 		if(mIBusBound){
 			try {
-				Log.d(TAG, "Unbinding from IBus service");
+				Log.d(TAG, "Unbinding from IBusMessageService");
 				mIBusService.disable();
 				applicationContext.unbindService(mIBusConnection);
 				applicationContext.stopService(
@@ -567,7 +581,7 @@ public class MainControlFragment extends Fragment {
 				mIBusBound = false;
 			}
 			catch(Exception ex) {
-				Log.e(TAG, String.format("Unable to unbind the IBusService - '%s'!", ex.getMessage()));
+				Log.e(TAG, String.format("Unable to unbind the IBusMessageService - '%s'!", ex.getMessage()));
 			}
 		}
 		
@@ -597,9 +611,13 @@ public class MainControlFragment extends Fragment {
     	radioLayout = (LinearLayout) v.findViewById(R.id.radioAudio);
     	tabletLayout = (LinearLayout) v.findViewById(R.id.tabletAudio);
     	
-		bindServices();
+    	
 		// Keep a wake lock
-		getActivity().getWindow().addFlags(LayoutParams.FLAG_KEEP_SCREEN_ON);
+    	changeScreenState(true);
+		
+    	// Bind required background services
+    	bindServices();
+    	
 		// Music Player
 		mPlayerPrevBtn = (ImageButton) v.findViewById(R.id.playerPrevBtn);
 		mPlayerControlBtn = (ImageButton) v.findViewById(R.id.playerPlayPauseBtn);
@@ -825,6 +843,24 @@ public class MainControlFragment extends Fragment {
 		}).start();
 	}
 	
+	/**
+	 * Acquire a screen wake lock to either turn the screen on or off
+	 * @param screenOn if true, turn the screen on, else turn it off
+	 */
+	private void changeScreenState(boolean screenOn){
+		if(mPowerManager == null)
+			mPowerManager = (PowerManager) getActivity().getSystemService(Context.POWER_SERVICE);
+		
+		if(screenWakeLock != null)
+			if(screenWakeLock.isHeld())
+				screenWakeLock.release();
+		String state = (screenOn == true) ? "on" : "off";
+		Log.d(TAG, "Screen is being turned " + state);
+		int lockType = (screenOn == true) ? LayoutParams.FLAG_KEEP_SCREEN_ON : PowerManager.PARTIAL_WAKE_LOCK;
+    	screenWakeLock = mPowerManager.newWakeLock(lockType, "screenWakeLock");
+    	screenWakeLock.acquire();
+	}
+	
 	private void showToast(String toastText){
 		Context appContext = getActivity();
 		Toast.makeText(appContext, toastText, Toast.LENGTH_LONG).show();
@@ -840,6 +876,7 @@ public class MainControlFragment extends Fragment {
     public void onDestroy() {
     	super.onDestroy();
     	Log.d(TAG, "onDestroy called");
+    	screenWakeLock.release();
     	unbindServices();
     }
     
