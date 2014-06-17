@@ -91,8 +91,6 @@ public class IBusMessageService extends IOIOService {
 			 */
 			@Override
 			protected void setup() throws ConnectionLostException, InterruptedException {
-				//for(DeviceAddress d : DeviceAddress.values())
-				//	DeviceLookup.put(d.toByte(), d.name());
 				Log.d(TAG, "Running IOIO Setup");
 				IBusConn = ioio_.openUart(
 					IBusRXPinId, IBusTXPinId, 9600, Uart.Parity.EVEN, Uart.StopBits.ONE
@@ -179,7 +177,7 @@ public class IBusMessageService extends IOIOService {
 							IBusMethodHolder command = IBusCommandMap.get(actionQueue.get(0));
 							byte[] outboundMsg = new byte[] {};
 							try {
-								outboundMsg = (byte[]) command.methodReference.invoke(command.classInstance, command.args);
+								outboundMsg = (byte[]) command.methodReference.invoke(command.classInstance);
 							} catch (IllegalAccessException e) {
 								e.printStackTrace();
 							} catch (IllegalArgumentException e) {
@@ -216,7 +214,6 @@ public class IBusMessageService extends IOIOService {
 				
 				public IBusSystemCommand classInstance = null;
 				public Method methodReference = null;
-				public String args = null;
 				
 				IBusMethodHolder(IBusSystemCommand cls, Method mth){
 					classInstance = cls;
