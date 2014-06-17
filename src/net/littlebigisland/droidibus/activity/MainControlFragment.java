@@ -521,6 +521,7 @@ public class MainControlFragment extends Fragment {
     				 */
     				new Thread(new Runnable() {
     					public void run() {
+    						lastRadioStatus = time.getTimeInMillis();
     						while(mIBusBound){
     							try{
 	    							getActivity().runOnUiThread(new Runnable(){
@@ -547,7 +548,7 @@ public class MainControlFragment extends Fragment {
 	    									}
 	    								}
 	    							});
-	    							Thread.sleep(2000);
+	    							Thread.sleep(5000);
     							}catch(InterruptedException e){
     								// First world anarchy
     							}
@@ -889,7 +890,7 @@ public class MainControlFragment extends Fragment {
 				screenWakeLock.release();
 		String state = (screenOn == true) ? "on" : "off";
 		Log.d(TAG, "Screen is being turned " + state);
-		int lockType = (screenOn == true) ? LayoutParams.FLAG_KEEP_SCREEN_ON : PowerManager.PARTIAL_WAKE_LOCK;
+		int lockType = (screenOn == true) ? PowerManager.FULL_WAKE_LOCK : PowerManager.PARTIAL_WAKE_LOCK;
     	screenWakeLock = mPowerManager.newWakeLock(lockType, "screenWakeLock");
     	screenWakeLock.acquire();
 	}
