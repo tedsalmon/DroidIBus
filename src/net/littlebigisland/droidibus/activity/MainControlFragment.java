@@ -193,6 +193,14 @@ public class MainControlFragment extends Fragment {
 			Log.d(TAG, "Setting station text - '" + text + "'");
 			postToUI(new Runnable() {
 			    public void run() {
+			    	// We're not in the right mode, sync with the car
+			    	if(!text.equals("NO CD")){
+			    		if(text.equals("AUX") && tabletLayout.getVisibility() == View.GONE)
+			    			btnMusicMode.toggle();
+			    		if(!text.equals("AUX") && tabletLayout.getVisibility() == View.VISIBLE)
+			    			btnMusicMode.toggle();
+			    	}
+			    	
 			    	lastRadioStatus = Calendar.getInstance().getTimeInMillis();
 			    	currentRadioMode = text;
 			    	stationText.setText(text);
@@ -399,6 +407,21 @@ public class MainControlFragment extends Fragment {
 			    }
 			});
 		}
+		
+		@Override
+		public void onUpdateGPSAltitude(final int altitude){
+			Log.d(TAG, "Setting GPS Alitude");
+			postToUI(new Runnable(){
+			    public void run(){
+			    	geoAltitudeField.setText(String.format("Altitude: %sm", altitude));
+			    }
+			});
+		}
+
+		@Override
+		public void onUpdateGPSTime(final String time){
+			Log.d(TAG, "Got GPS Time of " + time);
+		}
 
 		@Override
 		public void onTrackFwd(){
@@ -448,21 +471,6 @@ public class MainControlFragment extends Fragment {
 			    	btnMusicMode.toggle();
 			    }
 			});
-		}
-
-		@Override
-		public void onUpdateGPSAltitude(final int altitude){
-			Log.d(TAG, "Setting GPS Alitude");
-			postToUI(new Runnable(){
-			    public void run(){
-			    	geoAltitudeField.setText(String.format("Altitude: %s", altitude));
-			    }
-			});
-		}
-
-		@Override
-		public void onUpdateGPSTime(final String time){
-			Log.d(TAG, "Got GPS Time of " + time);
 		}
 
 		@Override
@@ -520,7 +528,7 @@ public class MainControlFragment extends Fragment {
     				 */
     				new Thread(new Runnable() {
     					public void run() {
-    						lastRadioStatus = Calendar.getInstance().getTimeInMillis();
+    						lastRadioStatus = Calendar.getInstance().getTimeInMillis() - 8000;
     						while(mIBusBound){
     							try{
 	    							getActivity().runOnUiThread(new Runnable(){

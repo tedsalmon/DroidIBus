@@ -84,7 +84,6 @@ class RadioSystemCommand extends IBusSystemCommand{
 	 * Cstruct - Register destination systems
 	 */
 	RadioSystemCommand(){
-		// 68 04 3B 36 4F 2E Fade right?
 		IBusDestinationSystems.put(DeviceAddress.GraphicsNavigationDriver.toByte(), new GFXNavigationSystem());
 		IBusDestinationSystems.put(DeviceAddress.Broadcast.toByte(), new BroadcastSystem());
 	}
