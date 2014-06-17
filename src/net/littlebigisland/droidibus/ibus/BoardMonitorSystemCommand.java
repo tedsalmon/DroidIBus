@@ -149,6 +149,18 @@ public class BoardMonitorSystemCommand extends IBusSystemCommand {
 		};
 	}
 	
+	public byte[] sendTonePress(){
+		return new byte[]{
+			boardMonitor, 0x04, radioSystem, 0x48, 0x04, (byte)0xD0
+		};
+	}
+	
+	public byte[] sendToneRelease(){
+		return new byte[]{
+			boardMonitor, 0x04, radioSystem, 0x48, (byte)0x84, (byte)0x50
+		};
+	}
+	
 	public byte[] sendVolumeUp(){
 		return new byte[]{
 			boardMonitor, 0x04, radioSystem, 0x32, (byte)0x21, (byte)0x8F
