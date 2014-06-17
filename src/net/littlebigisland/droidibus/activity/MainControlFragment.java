@@ -461,17 +461,6 @@ public class MainControlFragment extends Fragment {
 			    }
 			});
 		}
-		
-		@Override
-		public void onRTBtnPress(){
-			// Repurpose this button to change modes
-			Log.d(TAG, "Changing Music mode in callback due to steering input!");
-			postToUI(new Runnable(){
-			    public void run(){
-			    	btnMusicMode.toggle();
-			    }
-			});
-		}
 
 		@Override
 		public void onUpdateRadioStatus(int status){
@@ -528,7 +517,7 @@ public class MainControlFragment extends Fragment {
     				 */
     				new Thread(new Runnable() {
     					public void run() {
-    						lastRadioStatus = Calendar.getInstance().getTimeInMillis() - 8000;
+    						lastRadioStatus = 0;
     						while(mIBusBound){
     							try{
 	    							getActivity().runOnUiThread(new Runnable(){
@@ -544,8 +533,8 @@ public class MainControlFragment extends Fragment {
 	    									
 	    									Log.d(TAG, String.format("Milliseconds since last Radio message: %s", statusDiff));
 	    									
-	    									if(statusDiff > 9000){
-	    										Log.d(TAG, "Requesting Radio Status");
+	    									if(statusDiff > 10000 && !currentRadioMode.equals("AUX")){
+	    										Log.d(TAG, "Requesting Radio Info");
 	    										try {
 	    											sendIBusCommand(IBusCommands.BMToRadioInfoPress);
 													Thread.sleep(500);

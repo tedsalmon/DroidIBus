@@ -29,8 +29,6 @@ public class SteeringWheelSystemCommand extends IBusSystemCommand{
 			if(currentMessage.get(3) == 0x3B){
 				if(currentMessage.get(4) == (byte) 0xA0) // Voice Btn
 					triggerCallback("onVoiceBtnPress");
-			}else if(currentMessage.get(3) == 0x01){ // RT Btn
-				triggerCallback("onRTBtnPress");
 			}
 		}
 		
