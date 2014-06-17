@@ -121,6 +121,6 @@ public class NavigationSystemCommand extends IBusSystemCommand {
 	 * Cstruct - Register destination systems
 	 */
 	NavigationSystemCommand(){
-		IBusDestinationSystems.put(DeviceAddress.Telephone.toByte(), new Telephone());
+		IBusDestinationSystems.put(DeviceAddressEnum.Telephone.toByte(), new Telephone());
 	}
 }

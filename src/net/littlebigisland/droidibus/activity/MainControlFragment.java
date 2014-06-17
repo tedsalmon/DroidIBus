@@ -7,7 +7,8 @@ package net.littlebigisland.droidibus.activity;
 import java.util.Calendar;
 
 import net.littlebigisland.droidibus.R;
-import net.littlebigisland.droidibus.ibus.IBusCommands;
+import net.littlebigisland.droidibus.ibus.IBusCommand;
+import net.littlebigisland.droidibus.ibus.IBusCommandsEnum;
 import net.littlebigisland.droidibus.ibus.IBusMessageReceiver;
 import net.littlebigisland.droidibus.ibus.IBusMessageService;
 import net.littlebigisland.droidibus.ibus.IBusMessageService.IOIOBinder;
@@ -469,9 +470,9 @@ public class MainControlFragment extends Fragment {
 				postToUI(new Runnable(){
 				    public void run(){
 				    	try {
-				    		sendIBusCommand(IBusCommands.BMToRadioPwrPress);
+				    		sendIBusCommand(IBusCommandsEnum.BMToRadioPwrPress);
 							Thread.sleep(500);
-							sendIBusCommand(IBusCommands.BMToRadioPwrRelease);
+							sendIBusCommand(IBusCommandsEnum.BMToRadioPwrRelease);
 						} catch (InterruptedException e) {
 							// First world anarchy
 						}
@@ -515,13 +516,13 @@ public class MainControlFragment extends Fragment {
     			// Send a "get" request to populate the values on screen
     			// Do it here because this is when the service methods come into scope
     			if(mIBusBound){
-    				sendIBusCommand(IBusCommands.BMToIKEGetTime);
-    				sendIBusCommand(IBusCommands.BMToIKEGetDate);
-    				sendIBusCommand(IBusCommands.BMToIKEGetFuel1);
-    				sendIBusCommand(IBusCommands.BMToIKEGetFuel2);
-    				sendIBusCommand(IBusCommands.BMToIKEGetRange);
-    				sendIBusCommand(IBusCommands.BMToIKEGetAvgSpeed);
-    				sendIBusCommand(IBusCommands.BMToIKEGetOutdoorTemp);
+    				sendIBusCommand(IBusCommandsEnum.BMToIKEGetTime);
+    				sendIBusCommand(IBusCommandsEnum.BMToIKEGetDate);
+    				sendIBusCommand(IBusCommandsEnum.BMToIKEGetFuel1);
+    				sendIBusCommand(IBusCommandsEnum.BMToIKEGetFuel2);
+    				sendIBusCommand(IBusCommandsEnum.BMToIKEGetRange);
+    				sendIBusCommand(IBusCommandsEnum.BMToIKEGetAvgSpeed);
+    				sendIBusCommand(IBusCommandsEnum.BMToIKEGetOutdoorTemp);
     				
     				/* This thread should make sure to send out and request
     				 * any IBus messages that the BM usually would.
@@ -549,9 +550,9 @@ public class MainControlFragment extends Fragment {
 	    									if(statusDiff > 10000 && !currentRadioMode.equals("AUX")){
 	    										Log.d(TAG, "Requesting Radio Info");
 	    										try {
-	    											sendIBusCommand(IBusCommands.BMToRadioInfoPress);
+	    											sendIBusCommand(IBusCommandsEnum.BMToRadioInfoPress);
 													Thread.sleep(500);
-													sendIBusCommand(IBusCommands.BMToRadioInfoRelease);
+													sendIBusCommand(IBusCommandsEnum.BMToRadioInfoRelease);
 												} catch (InterruptedException e) {
 													// First world anarchy
 												}
@@ -765,8 +766,8 @@ public class MainControlFragment extends Fragment {
 		timeField = (TextView) v.findViewById(R.id.timeField);
 
 		// Set the action of each button
-		btnVolUp.setTag(IBusCommands.BMToRadioVolumeUp.name());
-		btnVolDown.setTag(IBusCommands.BMToRadioVolumeDown.name());
+		btnVolUp.setTag(IBusCommandsEnum.BMToRadioVolumeUp.name());
+		btnVolDown.setTag(IBusCommandsEnum.BMToRadioVolumeDown.name());
 		btnRadioFM.setTag("BMToRadioFM");
 		btnRadioAM.setTag("BMToRadioAM");
 		btnPrev.setTag("BMToRadioTuneRev");
@@ -798,7 +799,7 @@ public class MainControlFragment extends Fragment {
 		OnLongClickListener valueResetter = new OnLongClickListener() {
 			@Override
 			public boolean onLongClick(View v) {
-				IBusCommands action = IBusCommands.valueOf(v.getTag().toString());
+				IBusCommandsEnum action = IBusCommandsEnum.valueOf(v.getTag().toString());
 				switch(action){
 					case BMToIKEResetFuel1:
 						showToast("Resetting Fuel 1 Value");
@@ -817,9 +818,9 @@ public class MainControlFragment extends Fragment {
 			}
 		};
 
-		fuel1Field.setTag(IBusCommands.BMToIKEResetFuel1.name());
-		fuel2Field.setTag(IBusCommands.BMToIKEResetFuel1.name());
-		avgSpeedField.setTag(IBusCommands.BMToIKEResetAvgSpeed.name());
+		fuel1Field.setTag(IBusCommandsEnum.BMToIKEResetFuel1.name());
+		fuel2Field.setTag(IBusCommandsEnum.BMToIKEResetFuel1.name());
+		avgSpeedField.setTag(IBusCommandsEnum.BMToIKEResetAvgSpeed.name());
 
 		fuel1Field.setOnLongClickListener(valueResetter);
 		fuel2Field.setOnLongClickListener(valueResetter);
@@ -829,7 +830,7 @@ public class MainControlFragment extends Fragment {
 		OnClickListener clickSingleAction = new OnClickListener() {
 			@Override
 			public void onClick(View v) {
-				sendIBusCommand(IBusCommands.valueOf(v.getTag().toString()));
+				sendIBusCommand(IBusCommandsEnum.valueOf(v.getTag().toString()));
 			}
 		};
 		
@@ -837,7 +838,7 @@ public class MainControlFragment extends Fragment {
 			@Override
 			public boolean onTouch(View v, MotionEvent event) {
 				String action = (event.getAction() == MotionEvent.ACTION_DOWN) ? "Press" : "Release";
-				sendIBusCommand(IBusCommands.valueOf(v.getTag().toString() + action));
+				sendIBusCommand(IBusCommandsEnum.valueOf(v.getTag().toString() + action));
 				return false;
 			}
 		};
@@ -861,9 +862,9 @@ public class MainControlFragment extends Fragment {
 							if(mode == radioModes.AUX){
 								if(!currentRadioMode.equals("AUX")){
 									Log.d(TAG, "Pressing Mode for AUX - Current Mode '" + currentRadioMode + "'");
-									sendIBusCommand(IBusCommands.BMToRadioModePress);
+									sendIBusCommand(IBusCommandsEnum.BMToRadioModePress);
 									Thread.sleep(250);
-									sendIBusCommand(IBusCommands.BMToRadioModeRelease);
+									sendIBusCommand(IBusCommandsEnum.BMToRadioModeRelease);
 									Thread.sleep(1000);
 									Log.d(TAG, "Mode now " + currentRadioMode);
 									changeRadioMode(mode);
@@ -871,9 +872,9 @@ public class MainControlFragment extends Fragment {
 							}else if(mode == radioModes.Radio){
 								if(currentRadioMode.equals("AUX") || currentRadioMode.equals("NO CD")){
 									Log.d(TAG, "Pressing Mode to get Radio - Current Mode '" + currentRadioMode + "'");
-									sendIBusCommand(IBusCommands.BMToRadioModePress);
+									sendIBusCommand(IBusCommandsEnum.BMToRadioModePress);
 									Thread.sleep(250);
-									sendIBusCommand(IBusCommands.BMToRadioModeRelease);
+									sendIBusCommand(IBusCommandsEnum.BMToRadioModeRelease);
 									Thread.sleep(1000);
 									Log.d(TAG, "Mode now " + currentRadioMode);
 									changeRadioMode(mode);
@@ -921,9 +922,9 @@ public class MainControlFragment extends Fragment {
 		Toast.makeText(appContext, toastText, Toast.LENGTH_LONG).show();
 	}
 	
-	private void sendIBusCommand(IBusCommands cmd){
+	private void sendIBusCommand(IBusCommandsEnum cmd, Object... args){
 		if(mIBusBound){
-			mIBusService.sendCommand(cmd);
+			mIBusService.sendCommand(new IBusCommand(cmd, args));
 		}
 	}
 	

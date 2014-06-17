@@ -27,18 +27,15 @@ import ioio.lib.util.IOIOLooper;
 import ioio.lib.util.android.IOIOService;
 import android.content.Intent;
 import android.os.Binder;
-import android.os.Handler;
 import android.os.IBinder;
 import android.util.Log;
 
 
 public class IBusMessageService extends IOIOService {
-
-	private final IBinder mBinder = new IOIOBinder();
-	@SuppressWarnings("unused")
-	private Handler mHandler;
-	private ArrayList<IBusCommands> actionQueue = new ArrayList<IBusCommands>();
+	
 	private String TAG = "DroidIBus";
+	private final IBinder mBinder = new IOIOBinder();
+	private ArrayList<IBusCommand> actionQueue = new ArrayList<IBusCommand>();
 	private IBusMessageReceiver mIBusCbListener = null;
 	private Map<Byte, String> DeviceLookup = new HashMap<Byte, String>(); // For logging
 	
@@ -77,8 +74,6 @@ public class IBusMessageService extends IOIOService {
 			private ArrayList<Byte> readBuffer;
 			
 			private Map<Byte, IBusSystemCommand> IBusSysMap = new HashMap<Byte, IBusSystemCommand>();
-			
-			private Map<IBusCommands, IBusMethodHolder> IBusCommandMap = new HashMap<IBusCommands, IBusMethodHolder>();
 			
 			/**
 			 * Called every time a connection with IOIO has been established.
@@ -176,15 +171,28 @@ public class IBusMessageService extends IOIOService {
 						// Wait at least 75ms between messages and then write out to the bus
 						if ((Calendar.getInstance().getTimeInMillis() - lastSend) > 75) {
 							Log.d(TAG, String.format("Sending %s Command out", actionQueue.get(0).toString()));
-							IBusMethodHolder command = IBusCommandMap.get(actionQueue.get(0));
+							
+							// Get the command enum
+							IBusCommandsEnum command = actionQueue.get(0).commandType;
+							// Get the instance of the class which implements the method we're looking for
+							IBusSystemCommand clsInstance = IBusSysMap.get(command.getSystem().toByte());
+							// Get the command Varargs to pass. Very possible that this is null and that's okay
+							Object cmdArgs = actionQueue.get(0).commandArgs;
+							
 							byte[] outboundMsg = new byte[] {};
 							try {
-								outboundMsg = (byte[]) command.methodReference.invoke(command.classInstance);
+								Method requestedMethod = clsInstance.getClass().getMethod(command.getMethodName());
+								if(cmdArgs == null)
+									outboundMsg = (byte[]) requestedMethod.invoke(clsInstance);
+								else
+									outboundMsg = (byte[]) requestedMethod.invoke(clsInstance, cmdArgs);
 							} catch (IllegalAccessException e) {
 								e.printStackTrace();
 							} catch (IllegalArgumentException e) {
 								e.printStackTrace();
 							} catch (InvocationTargetException e) {
+								e.printStackTrace();
+							} catch (NoSuchMethodException e) {
 								e.printStackTrace();
 							}
 							actionQueue.remove(0);
@@ -205,77 +213,16 @@ public class IBusMessageService extends IOIOService {
 				Thread.sleep(2);
 			}
 			
-			/**
-			 * This class is used to hold a class instance, method instance
-			 * and any possible optional arguments. These instances will be placed into
-			 * a map and called when a command execution request comes into the `actionQueue`
-			 *
-			 */
-			class IBusMethodHolder{
-				
-				public IBusSystemCommand classInstance = null;
-				public Method methodReference = null;
-				
-				IBusMethodHolder(IBusSystemCommand cls, Method mth){
-					classInstance = cls;
-					methodReference = mth;
-				}
-				
-			}
-			
 			private void initiateHandlers(){
 				// Map Device source Addresses with the respective handler class
-				IBusSysMap.put(DeviceAddress.Radio.toByte(), new RadioSystemCommand());
-				IBusSysMap.put(DeviceAddress.InstrumentClusterElectronics.toByte(), new IKESystemCommand());
-				IBusSysMap.put(DeviceAddress.NavigationEurope.toByte(), new NavigationSystemCommand());
-				IBusSysMap.put(DeviceAddress.MultiFunctionSteeringWheel.toByte(), new SteeringWheelSystemCommand());
-				IBusSysMap.put(DeviceAddress.GraphicsNavigationDriver.toByte(), new BoardMonitorSystemCommand());
+				IBusSysMap.put(DeviceAddressEnum.Radio.toByte(), new RadioSystemCommand());
+				IBusSysMap.put(DeviceAddressEnum.InstrumentClusterElectronics.toByte(), new IKESystemCommand());
+				IBusSysMap.put(DeviceAddressEnum.NavigationEurope.toByte(), new NavigationSystemCommand());
+				IBusSysMap.put(DeviceAddressEnum.MultiFunctionSteeringWheel.toByte(), new SteeringWheelSystemCommand());
+				IBusSysMap.put(DeviceAddressEnum.GraphicsNavigationDriver.toByte(), new BoardMonitorSystemCommand());
 				// Register the callback listener here ;)
 				for (Object key : IBusSysMap.keySet())
 					IBusSysMap.get(key).registerCallbacks(mIBusCbListener);
-				
-				// Register functions
-				IBusSystemCommand BM = IBusSysMap.get(DeviceAddress.GraphicsNavigationDriver.toByte());
-				try {
-					IBusCommandMap.put(IBusCommands.BMToIKEGetTime, new IBusMethodHolder(BM, BM.getClass().getMethod("getTime")));
-					IBusCommandMap.put(IBusCommands.BMToIKEGetDate, new IBusMethodHolder(BM, BM.getClass().getMethod("getDate")));
-					IBusCommandMap.put(IBusCommands.BMToIKEGetOutdoorTemp, new IBusMethodHolder(BM, BM.getClass().getMethod("getOutdoorTemp")));
-					IBusCommandMap.put(IBusCommands.BMToIKEGetFuel1, new IBusMethodHolder(BM, BM.getClass().getMethod("getFuel1")));
-					IBusCommandMap.put(IBusCommands.BMToIKEGetFuel2, new IBusMethodHolder(BM, BM.getClass().getMethod("getFuel2")));
-					IBusCommandMap.put(IBusCommands.BMToIKEGetRange, new IBusMethodHolder(BM, BM.getClass().getMethod("getRange")));
-					IBusCommandMap.put(IBusCommands.BMToIKEGetAvgSpeed, new IBusMethodHolder(BM, BM.getClass().getMethod("getAvgSpeed")));
-					IBusCommandMap.put(IBusCommands.BMToRadioGetStatus, new IBusMethodHolder(BM, BM.getClass().getMethod("getRadioStatus")));
-					
-					IBusCommandMap.put(IBusCommands.BMToIKEResetFuel1, new IBusMethodHolder(BM, BM.getClass().getMethod("resetFuel1")));
-					IBusCommandMap.put(IBusCommands.BMToIKEResetFuel2, new IBusMethodHolder(BM, BM.getClass().getMethod("resetFuel2")));
-					IBusCommandMap.put(IBusCommands.BMToIKEResetAvgSpeed, new IBusMethodHolder(BM, BM.getClass().getMethod("resetAvgSpeed")));
-					
-					IBusCommandMap.put(IBusCommands.BMToRadioPwrPress, new IBusMethodHolder(BM, BM.getClass().getMethod("sendRadioPwrPress")));
-					IBusCommandMap.put(IBusCommands.BMToRadioPwrRelease, new IBusMethodHolder(BM, BM.getClass().getMethod("sendRadioPwrRelease")));
-					
-					IBusCommandMap.put(IBusCommands.BMToRadioTonePress, new IBusMethodHolder(BM, BM.getClass().getMethod("sendTonePress")));
-					IBusCommandMap.put(IBusCommands.BMToRadioToneRelease, new IBusMethodHolder(BM, BM.getClass().getMethod("sendToneRelease")));
-					
-					IBusCommandMap.put(IBusCommands.BMToRadioModePress, new IBusMethodHolder(BM, BM.getClass().getMethod("sendModePress")));
-					IBusCommandMap.put(IBusCommands.BMToRadioModeRelease, new IBusMethodHolder(BM, BM.getClass().getMethod("sendModeRelease")));
-					IBusCommandMap.put(IBusCommands.BMToRadioVolumeUp, new IBusMethodHolder(BM, BM.getClass().getMethod("sendVolumeUp")));
-					IBusCommandMap.put(IBusCommands.BMToRadioVolumeDown, new IBusMethodHolder(BM, BM.getClass().getMethod("sendVolumeDown")));
-					
-					IBusCommandMap.put(IBusCommands.BMToRadioTuneFwdPress, new IBusMethodHolder(BM, BM.getClass().getMethod("sendSeekFwdPress")));
-					IBusCommandMap.put(IBusCommands.BMToRadioTuneFwdRelease, new IBusMethodHolder(BM, BM.getClass().getMethod("sendSeekFwdRelease")));
-					IBusCommandMap.put(IBusCommands.BMToRadioTuneRevPress, new IBusMethodHolder(BM, BM.getClass().getMethod("sendSeekRevPress")));
-					IBusCommandMap.put(IBusCommands.BMToRadioTuneRevRelease, new IBusMethodHolder(BM, BM.getClass().getMethod("sendSeekRevRelease")));
-					
-					IBusCommandMap.put(IBusCommands.BMToRadioFMPress, new IBusMethodHolder(BM, BM.getClass().getMethod("sendFMPress")));
-					IBusCommandMap.put(IBusCommands.BMToRadioFMRelease, new IBusMethodHolder(BM, BM.getClass().getMethod("sendFMRelease")));
-					IBusCommandMap.put(IBusCommands.BMToRadioAMPress, new IBusMethodHolder(BM, BM.getClass().getMethod("sendAMPress")));
-					IBusCommandMap.put(IBusCommands.BMToRadioAMRelease, new IBusMethodHolder(BM, BM.getClass().getMethod("sendAMRelease")));
-					
-					IBusCommandMap.put(IBusCommands.BMToRadioInfoPress, new IBusMethodHolder(BM, BM.getClass().getMethod("sendInfoPress")));
-					IBusCommandMap.put(IBusCommands.BMToRadioInfoRelease, new IBusMethodHolder(BM, BM.getClass().getMethod("sendInfoRelease")));
-				} catch (NoSuchMethodException e) {
-					Log.e(TAG, e.getMessage());
-				}
 				callbackRegistered = true;
 			}
 				
@@ -312,18 +259,9 @@ public class IBusMessageService extends IOIOService {
 	
 	/**
 	 * Add an action into the queue of message waiting to be sent
-	 * @param cmd	ENUM Action to be performed
+	 * @param cmd IBusCommand instance to be performed
 	 */
-	public void sendCommand(IBusCommands cmd){
-		actionQueue.add(cmd);
-	}
-	
-	/**
-	 * Add an action into the queue of message waiting to be sent
-	 * @param cmd	ENUM Action to be performed
-	 * @param param	The data to send to the method
-	 */
-	public void sendCommand(IBusCommands cmd, String param){
+	public void sendCommand(IBusCommand cmd){
 		actionQueue.add(cmd);
 	}
 	
@@ -355,8 +293,7 @@ public class IBusMessageService extends IOIOService {
 	 * @param intent Intent from onStart/onStartCommand
 	 */
 	private void handleStartup(Intent intent) {
-		mHandler = new Handler();
-		for(DeviceAddress d : DeviceAddress.values())
+		for(DeviceAddressEnum d : DeviceAddressEnum.values())
 			DeviceLookup.put(d.toByte(), d.name());
 	}
 	

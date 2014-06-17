@@ -8,10 +8,10 @@ package net.littlebigisland.droidibus.ibus;
 public class BoardMonitorSystemCommand extends IBusSystemCommand {
 
 	// Main Systems
-	private byte boardMonitor = DeviceAddress.OnBoardMonitor.toByte();
-	private byte gfxDriver = DeviceAddress.GraphicsNavigationDriver.toByte();
-	private byte IKESystem = DeviceAddress.InstrumentClusterElectronics.toByte();
-	private byte radioSystem = DeviceAddress.Radio.toByte();
+	private byte boardMonitor = DeviceAddressEnum.OnBoardMonitor.toByte();
+	private byte gfxDriver = DeviceAddressEnum.GraphicsNavigationDriver.toByte();
+	private byte IKESystem = DeviceAddressEnum.InstrumentClusterElectronics.toByte();
+	private byte radioSystem = DeviceAddressEnum.Radio.toByte();
 	
 	// OBC Functions
 	private byte OBCRequest = 0x41;

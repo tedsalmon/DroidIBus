@@ -93,7 +93,7 @@ class RadioSystemCommand extends IBusSystemCommand{
 	 * Cstruct - Register destination systems
 	 */
 	RadioSystemCommand(){
-		IBusDestinationSystems.put(DeviceAddress.GraphicsNavigationDriver.toByte(), new GFXNavigationSystem());
-		IBusDestinationSystems.put(DeviceAddress.OnBoardMonitor.toByte(), new OnBoardMonitorSystem());
+		IBusDestinationSystems.put(DeviceAddressEnum.GraphicsNavigationDriver.toByte(), new GFXNavigationSystem());
+		IBusDestinationSystems.put(DeviceAddressEnum.OnBoardMonitor.toByte(), new OnBoardMonitorSystem());
 	}
 }

@@ -38,7 +38,7 @@ public class SteeringWheelSystemCommand extends IBusSystemCommand{
 	 * Cstruct - Register destination systems
 	 */
 	SteeringWheelSystemCommand(){
-		IBusDestinationSystems.put(DeviceAddress.Radio.toByte(), new Radio());
-		IBusDestinationSystems.put(DeviceAddress.Telephone.toByte(), new Telephone());
+		IBusDestinationSystems.put(DeviceAddressEnum.Radio.toByte(), new Radio());
+		IBusDestinationSystems.put(DeviceAddressEnum.Telephone.toByte(), new Telephone());
 	}
 }

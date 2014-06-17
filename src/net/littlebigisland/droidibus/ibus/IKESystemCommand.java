@@ -80,7 +80,7 @@ public class IKESystemCommand extends IBusSystemCommand {
 	 * Cstruct - Bind all child classes to the object 
 	 */
 	IKESystemCommand(){
-		IBusDestinationSystems.put(DeviceAddress.Broadcast.toByte(), new IKEBroadcast());
-		IBusDestinationSystems.put(DeviceAddress.GlobalBroadcastAddress.toByte(), new IKEGlobalBroadcast());
+		IBusDestinationSystems.put(DeviceAddressEnum.Broadcast.toByte(), new IKEBroadcast());
+		IBusDestinationSystems.put(DeviceAddressEnum.GlobalBroadcastAddress.toByte(), new IKEGlobalBroadcast());
 	}
 }
