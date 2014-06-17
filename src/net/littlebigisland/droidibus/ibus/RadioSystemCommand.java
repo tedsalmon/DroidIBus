@@ -67,15 +67,24 @@ class RadioSystemCommand extends IBusSystemCommand{
 		
 	}
 	
-	/** 
-	 * Handle messages broadcast by the Radio
+	/**
+	 * Handle messages destined for the OnBoardMonitor
 	 */
-	class BroadcastSystem extends IBusSystemCommand{
+	class OnBoardMonitorSystem extends IBusSystemCommand{
 		
 		public void mapReceived(ArrayList<Byte> msg){
 			currentMessage = msg;
-			if(currentMessage.get(3) == 0x02)
-				triggerCallback("onUpdateRadioStatus", (int)currentMessage.get(4));
+
+			if(currentMessage.get(3) == 0x4A){ // Radio On/Off Status Message
+				// 68 04 F0 4A <data> <CRC>
+				// I believe 0x00 is the broadcasted state when the radio is coming online?
+				// Either way it's not something we want to catch as it'll throw off our states
+				if(currentMessage.get(4) != (byte) 0x00){
+					// 1 for on, 0 for off
+					int radioStatus = (currentMessage.get(4) == (byte)0xFF) ? 1 : 0;
+					triggerCallback("onUpdateRadioStatus", radioStatus);
+				}
+			}
 		}
 		
 	}
@@ -85,6 +94,6 @@ class RadioSystemCommand extends IBusSystemCommand{
 	 */
 	RadioSystemCommand(){
 		IBusDestinationSystems.put(DeviceAddress.GraphicsNavigationDriver.toByte(), new GFXNavigationSystem());
-		IBusDestinationSystems.put(DeviceAddress.Broadcast.toByte(), new BroadcastSystem());
+		IBusDestinationSystems.put(DeviceAddress.OnBoardMonitor.toByte(), new OnBoardMonitorSystem());
 	}
 }

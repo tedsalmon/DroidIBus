@@ -250,6 +250,12 @@ public class IBusMessageService extends IOIOService {
 					IBusCommandMap.put(IBusCommands.BMToIKEResetFuel2, new IBusMethodHolder(BM, BM.getClass().getMethod("resetFuel2")));
 					IBusCommandMap.put(IBusCommands.BMToIKEResetAvgSpeed, new IBusMethodHolder(BM, BM.getClass().getMethod("resetAvgSpeed")));
 					
+					IBusCommandMap.put(IBusCommands.BMToRadioPwrPress, new IBusMethodHolder(BM, BM.getClass().getMethod("sendRadioPwrPress")));
+					IBusCommandMap.put(IBusCommands.BMToRadioPwrRelease, new IBusMethodHolder(BM, BM.getClass().getMethod("sendRadioPwrRelease")));
+					
+					IBusCommandMap.put(IBusCommands.BMToRadioTonePress, new IBusMethodHolder(BM, BM.getClass().getMethod("sendTonePress")));
+					IBusCommandMap.put(IBusCommands.BMToRadioToneRelease, new IBusMethodHolder(BM, BM.getClass().getMethod("sendToneRelease")));
+					
 					IBusCommandMap.put(IBusCommands.BMToRadioModePress, new IBusMethodHolder(BM, BM.getClass().getMethod("sendModePress")));
 					IBusCommandMap.put(IBusCommands.BMToRadioModeRelease, new IBusMethodHolder(BM, BM.getClass().getMethod("sendModeRelease")));
 					IBusCommandMap.put(IBusCommands.BMToRadioVolumeUp, new IBusMethodHolder(BM, BM.getClass().getMethod("sendVolumeUp")));

@@ -137,6 +137,18 @@ public class BoardMonitorSystemCommand extends IBusSystemCommand {
 
 	// Radio Buttons
 	
+	public byte[] sendRadioPwrPress(){
+		return new byte[]{
+			boardMonitor, 0x04, radioSystem, 0x48, 0x06, (byte)0xD2	
+		};
+	}
+	
+	public byte[] sendRadioPwrRelease(){
+		return new byte[]{
+			boardMonitor, 0x04, radioSystem, 0x48, (byte) 0x86, (byte)0x52	
+		};
+	}
+	
 	public byte[] sendModePress(){
 		return new byte[]{
 			boardMonitor, 0x04, radioSystem, 0x48, 0x23, (byte)0xF7

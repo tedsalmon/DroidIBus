@@ -13,6 +13,10 @@ public enum IBusCommands {
 	BMToIKEResetFuel2,
 	BMToIKEResetAvgSpeed,
 	//BoardMonitor to Radio Commands
+	BMToRadioPwrPress,
+	BMToRadioPwrRelease,
+	BMToRadioTonePress,
+	BMToRadioToneRelease,
 	BMToRadioModePress,
 	BMToRadioModeRelease,
 	BMToRadioVolumeUp,

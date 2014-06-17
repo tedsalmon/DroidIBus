@@ -35,7 +35,6 @@ import android.view.View.OnTouchListener;
 import android.view.ViewGroup;
 import android.view.View.OnClickListener;
 import android.view.View.OnLongClickListener;
-import android.view.WindowManager;
 import android.widget.Button;
 import android.widget.CompoundButton;
 import android.widget.CompoundButton.OnCheckedChangeListener;
@@ -464,7 +463,21 @@ public class MainControlFragment extends Fragment {
 
 		@Override
 		public void onUpdateRadioStatus(int status){
-			// TODO Track status
+			Log.d(TAG, String.format("Radio is %s", status));
+			// Radio is off, turn it on
+			if(status == 0){
+				postToUI(new Runnable(){
+				    public void run(){
+				    	try {
+				    		sendIBusCommand(IBusCommands.BMToRadioPwrPress);
+							Thread.sleep(500);
+							sendIBusCommand(IBusCommands.BMToRadioPwrRelease);
+						} catch (InterruptedException e) {
+							// First world anarchy
+						}
+				    }
+				});
+			}
 		}
 		
 	};
@@ -881,7 +894,8 @@ public class MainControlFragment extends Fragment {
 	 */
 	@SuppressLint("Wakelock")
 	private void changeScreenState(boolean screenOn){
-		if(mPowerManager == null)
+		// The wake lock is causing Stack traces onDestroy()
+		/*if(mPowerManager == null)
 			mPowerManager = (PowerManager) getActivity().getSystemService(Context.POWER_SERVICE);
 		
 		if(screenWakeLock != null)
@@ -899,6 +913,7 @@ public class MainControlFragment extends Fragment {
 		int lockType = (screenOn == true) ? PowerManager.FULL_WAKE_LOCK : PowerManager.PARTIAL_WAKE_LOCK;
     	screenWakeLock = mPowerManager.newWakeLock(lockType, "screenWakeLock");
     	screenWakeLock.acquire();
+    	*/
 	}
 	
 	private void showToast(String toastText){
@@ -916,7 +931,9 @@ public class MainControlFragment extends Fragment {
     public void onDestroy() {
     	super.onDestroy();
     	Log.d(TAG, "onDestroy called");
-    	screenWakeLock.release();
+    	if(screenWakeLock != null)
+    		if(screenWakeLock.isHeld())
+    			screenWakeLock.release();
     	unbindServices();
     }
     
