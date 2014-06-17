@@ -91,8 +91,8 @@ public class IBusMessageService extends IOIOService {
 			 */
 			@Override
 			protected void setup() throws ConnectionLostException, InterruptedException {
-				for(DeviceAddress d : DeviceAddress.values())
-					DeviceLookup.put(d.toByte(), d.name());
+				//for(DeviceAddress d : DeviceAddress.values())
+				//	DeviceLookup.put(d.toByte(), d.name());
 				Log.d(TAG, "Running IOIO Setup");
 				IBusConn = ioio_.openUart(
 					IBusRXPinId, IBusTXPinId, 9600, Uart.Parity.EVEN, Uart.StopBits.ONE
@@ -179,10 +179,7 @@ public class IBusMessageService extends IOIOService {
 							IBusMethodHolder command = IBusCommandMap.get(actionQueue.get(0));
 							byte[] outboundMsg = new byte[] {};
 							try {
-								if(command.args  == null)
-									outboundMsg = (byte[]) command.methodReference.invoke(command.classInstance);
-								else
-									outboundMsg = (byte[]) command.methodReference.invoke(command.classInstance, command.args);
+								outboundMsg = (byte[]) command.methodReference.invoke(command.classInstance, command.args);
 							} catch (IllegalAccessException e) {
 								e.printStackTrace();
 							} catch (IllegalArgumentException e) {
@@ -216,6 +213,7 @@ public class IBusMessageService extends IOIOService {
 			 *
 			 */
 			class IBusMethodHolder{
+				
 				public IBusSystemCommand classInstance = null;
 				public Method methodReference = null;
 				public String args = null;
@@ -225,12 +223,6 @@ public class IBusMessageService extends IOIOService {
 					methodReference = mth;
 				}
 				
-				@SuppressWarnings("unused")
-				IBusMethodHolder(IBusSystemCommand cls, Method mth, String arg){
-					classInstance = cls;
-					methodReference = mth;
-					args = arg;
-				}
 			}
 			
 			private void initiateHandlers(){
@@ -322,6 +314,15 @@ public class IBusMessageService extends IOIOService {
 		actionQueue.add(cmd);
 	}
 	
+	/**
+	 * Add an action into the queue of message waiting to be sent
+	 * @param cmd	ENUM Action to be performed
+	 * @param param	The data to send to the method
+	 */
+	public void sendCommand(IBusCommands cmd, String param){
+		actionQueue.add(cmd);
+	}
+	
 	public void setCallbackListener(IBusMessageReceiver listener){
 		mIBusCbListener = listener;
 	}
@@ -343,14 +344,23 @@ public class IBusMessageService extends IOIOService {
 	public void onStart(Intent intent, int startId) {
 		super.onStart(intent, startId);
 		handleStartup(intent);
-	}	
+	}
 
+	/**
+	 * Take care of tasks to be done on every start up
+	 * @param intent Intent from onStart/onStartCommand
+	 */
 	private void handleStartup(Intent intent) {
 		mHandler = new Handler();
 		for(DeviceAddress d : DeviceAddress.values())
 			DeviceLookup.put(d.toByte(), d.name());
 	}
 	
+	@Override
+	public void onDestroy(){
+		super.onDestroy();
+		Log.d(TAG, "IBusMessageService stopping");
+	}
 	/** 
 	 * A class to create our IOIO service.
 	 */
