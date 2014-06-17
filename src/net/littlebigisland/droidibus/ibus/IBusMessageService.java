@@ -129,7 +129,6 @@ public class IBusMessageService extends IOIOService {
 				/*
 				 * This is the main logic loop where we communicate with the IBus
 				 */
-				statusLED.write(true);
 				// Timeout the buffer if we don't get data for 30ms
 				if ((Calendar.getInstance().getTimeInMillis() - lastRead) > 30) {
 					readBuffer.clear();
@@ -143,6 +142,7 @@ public class IBusMessageService extends IOIOService {
 					 * Skip if there's nothing to read.
 					 */
 					if (busIn.available() > 0) {
+						statusLED.write(true);
 						lastRead = Calendar.getInstance().getTimeInMillis();
 						readBuffer.add((byte) busIn.read());
 						/* Set message size to a large number (256) if we haven't gotten the message
@@ -170,7 +170,9 @@ public class IBusMessageService extends IOIOService {
 							}
 							readBuffer.clear();
 						}
+						statusLED.write(false);
 					}else if(actionQueue.size() > 0){
+						statusLED.write(true);
 						// Wait at least 75ms between messages and then write out to the bus
 						if ((Calendar.getInstance().getTimeInMillis() - lastSend) > 75) {
 							Log.d(TAG, String.format("Sending %s Command out", actionQueue.get(0).toString()));
@@ -194,13 +196,12 @@ public class IBusMessageService extends IOIOService {
 							}
 							Log.d(TAG, out);
 							lastSend = Calendar.getInstance().getTimeInMillis();
-							
+							statusLED.write(false);
 						}
 					}
 				} catch (IOException e) {
 					Log.e(TAG, String.format("IOIO IOException [%s] in IBusService.loop()", e.getMessage()));
 				}
-				statusLED.write(false);
 				Thread.sleep(2);
 			}
 			
