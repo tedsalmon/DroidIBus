@@ -5,6 +5,7 @@ package net.littlebigisland.droidibus.activity;
  * @package net.littlebigisland.droidibus.activity
  */
 import java.util.Calendar;
+
 import net.littlebigisland.droidibus.R;
 import net.littlebigisland.droidibus.ibus.IBusCommands;
 import net.littlebigisland.droidibus.ibus.IBusMessageReceiver;
@@ -34,7 +35,7 @@ import android.view.View.OnTouchListener;
 import android.view.ViewGroup;
 import android.view.View.OnClickListener;
 import android.view.View.OnLongClickListener;
-import android.view.WindowManager.LayoutParams;
+import android.view.WindowManager;
 import android.widget.Button;
 import android.widget.CompoundButton;
 import android.widget.CompoundButton.OnCheckedChangeListener;
@@ -76,8 +77,6 @@ public class MainControlFragment extends Fragment {
 
 	protected boolean mIsPlaying = false;
 	protected long mSongDuration = 1;
-	
-	protected Calendar time = Calendar.getInstance();
 	
 	protected PowerManager mPowerManager = null;
 	protected WakeLock screenWakeLock;
@@ -194,7 +193,7 @@ public class MainControlFragment extends Fragment {
 			Log.d(TAG, "Setting station text - '" + text + "'");
 			postToUI(new Runnable() {
 			    public void run() {
-			    	lastRadioStatus = time.getTimeInMillis();
+			    	lastRadioStatus = Calendar.getInstance().getTimeInMillis();
 			    	currentRadioMode = text;
 			    	stationText.setText(text);
 			    }
@@ -206,7 +205,7 @@ public class MainControlFragment extends Fragment {
 			Log.d(TAG, "Setting Radio Broadcast Type");
 			postToUI(new Runnable(){
 			    public void run(){
-			    	lastRadioStatus = time.getTimeInMillis();
+			    	lastRadioStatus = Calendar.getInstance().getTimeInMillis();
 			    	radioBroadcastField.setText(broadcastType);
 			    }
 			});
@@ -218,7 +217,7 @@ public class MainControlFragment extends Fragment {
 			postToUI(new Runnable(){
 			    public void run(){
 			    	if(radioLayout.getVisibility() == View.VISIBLE){
-			    		lastRadioStatus = time.getTimeInMillis();
+			    		lastRadioStatus = Calendar.getInstance().getTimeInMillis();
 			    		int visibility = (stereoIndicator.equals("")) ? View.GONE : View.VISIBLE;
 			    		radioStereoIndicatorField.setVisibility(visibility);
 			    	}
@@ -231,7 +230,7 @@ public class MainControlFragment extends Fragment {
 			Log.d(TAG, "Setting RDS Indicator - '" + rdsIndicator + "'");
 			postToUI(new Runnable(){
 			    public void run(){
-			    	lastRadioStatus = time.getTimeInMillis();
+			    	lastRadioStatus = Calendar.getInstance().getTimeInMillis();
 			    	if(radioLayout.getVisibility() == View.VISIBLE){
 			    		int visibility = (rdsIndicator.equals("")) ? View.GONE : View.VISIBLE;
 			    		radioRDSIndicatorField.setVisibility(visibility);
@@ -245,7 +244,7 @@ public class MainControlFragment extends Fragment {
 			Log.d(TAG, "Setting Radio Program Type");
 			postToUI(new Runnable(){
 			    public void run(){
-			    	lastRadioStatus = time.getTimeInMillis();
+			    	lastRadioStatus = Calendar.getInstance().getTimeInMillis();
 			    	radioProgramField.setText(currentProgram);
 			    }
 			});
@@ -521,7 +520,7 @@ public class MainControlFragment extends Fragment {
     				 */
     				new Thread(new Runnable() {
     					public void run() {
-    						lastRadioStatus = time.getTimeInMillis();
+    						lastRadioStatus = Calendar.getInstance().getTimeInMillis();
     						while(mIBusBound){
     							try{
 	    							getActivity().runOnUiThread(new Runnable(){
@@ -533,14 +532,16 @@ public class MainControlFragment extends Fragment {
 	    									// TODO Every 10 seconds send a RadioStatusRequest
 	    									// TODO Respond to CD requests from Radio to support AUX
 	    									
-	    									Log.d(TAG, String.format("Milliseconds since last Radio message: %s", lastRadioStatus));
+	    									long statusDiff = Calendar.getInstance().getTimeInMillis() - lastRadioStatus;
 	    									
-	    									if( (time.getTimeInMillis() - lastRadioStatus) > 10000 ){
+	    									Log.d(TAG, String.format("Milliseconds since last Radio message: %s", statusDiff));
+	    									
+	    									if(statusDiff > 9000){
 	    										Log.d(TAG, "Requesting Radio Status");
 	    										try {
 	    											sendIBusCommand(IBusCommands.BMToRadioInfoPress);
 													Thread.sleep(500);
-													sendIBusCommand(IBusCommands.BMToRadioInfoPress);
+													sendIBusCommand(IBusCommands.BMToRadioInfoRelease);
 												} catch (InterruptedException e) {
 													// First world anarchy
 												}
@@ -763,6 +764,7 @@ public class MainControlFragment extends Fragment {
 
 		btnMusicMode.setOnCheckedChangeListener(new OnCheckedChangeListener(){
 		    public void onCheckedChanged(CompoundButton buttonView, boolean isChecked){
+		    	Log.d(TAG, "Changing Music Mode");
 		        // Tablet Mode if checked, else Radio
 		    	if(isChecked){
 		    		radioLayout.setVisibility(View.GONE);
@@ -876,7 +878,7 @@ public class MainControlFragment extends Fragment {
 		}).start();
 	}
 	
-	/**
+	/** TODO Make this actually work
 	 * Acquire a screen wake lock to either turn the screen on or off
 	 * @param screenOn if true, turn the screen on, else turn it off
 	 */
@@ -890,6 +892,13 @@ public class MainControlFragment extends Fragment {
 				screenWakeLock.release();
 		String state = (screenOn == true) ? "on" : "off";
 		Log.d(TAG, "Screen is being turned " + state);
+		
+		float brightness = (screenOn == true) ? 75 : 0 / (float) 255;
+		WindowManager.LayoutParams lp = getActivity().getWindow().getAttributes();
+		lp.screenBrightness = brightness;
+		getActivity().getWindow().setAttributes(lp);
+		
+		@SuppressWarnings("deprecation")
 		int lockType = (screenOn == true) ? PowerManager.FULL_WAKE_LOCK : PowerManager.PARTIAL_WAKE_LOCK;
     	screenWakeLock = mPowerManager.newWakeLock(lockType, "screenWakeLock");
     	screenWakeLock.acquire();
