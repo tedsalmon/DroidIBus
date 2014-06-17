@@ -64,4 +64,8 @@ public abstract interface IBusMessageReceiver{
 	
 	public void onTrackPrev();
 	
+	public void onVoiceBtnPress();
+	
+	public void onRTBtnPress();
+	
 }

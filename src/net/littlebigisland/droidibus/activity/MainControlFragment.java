@@ -5,13 +5,13 @@ package net.littlebigisland.droidibus.activity;
  * @package net.littlebigisland.droidibus.activity
  */
 import java.util.Calendar;
-
 import net.littlebigisland.droidibus.R;
 import net.littlebigisland.droidibus.ibus.IBusCommands;
 import net.littlebigisland.droidibus.ibus.IBusMessageReceiver;
 import net.littlebigisland.droidibus.ibus.IBusMessageService;
 import net.littlebigisland.droidibus.ibus.IBusMessageService.IOIOBinder;
 import net.littlebigisland.droidibus.music.MusicControllerService;
+import android.annotation.SuppressLint;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
@@ -67,6 +67,8 @@ public class MainControlFragment extends Fragment {
 	protected TextView mPlayerArtistText, mPlayerTitleText, mPlayerAlbumText;
 	protected SeekBar mPlayerScrubBar;
 	protected ImageView mPlayerArtwork;
+	protected Switch btnMusicMode;
+	
 	protected MusicControllerService mPlayerService;
 	protected boolean mPlayerBound = false;
 	
@@ -420,6 +422,34 @@ public class MainControlFragment extends Fragment {
 			    }
 			});
 		}
+		
+		@Override
+		public void onVoiceBtnPress(){
+			// Repurpose this button to pause/play music
+			Log.d(TAG, "Changing playback state in callback due to steering input!");
+			postToUI(new Runnable(){
+			    public void run(){
+			    	if(mPlayerBound && currentRadioMode.equals("AUX")){
+			    		Log.d(TAG, "Firing off playback change as we are in AUX mode");
+			    		if(mIsPlaying)
+							mPlayerService.sendPauseKey();
+						else
+							mPlayerService.sendPlayKey();
+			    	}
+			    }
+			});
+		}
+		
+		@Override
+		public void onRTBtnPress(){
+			// Repurpose this button to change modes
+			Log.d(TAG, "Changing Music mode in callback due to steering input!");
+			postToUI(new Runnable(){
+			    public void run(){
+			    	btnMusicMode.toggle();
+			    }
+			});
+		}
 
 		@Override
 		public void onUpdateGPSAltitude(final int altitude){
@@ -501,6 +531,8 @@ public class MainControlFragment extends Fragment {
 	    									// BM Emulation
 	    									// TODO Every 10 seconds send a RadioStatusRequest
 	    									// TODO Respond to CD requests from Radio to support AUX
+	    									
+	    									Log.d(TAG, String.format("Milliseconds since last Radio message: %s", lastRadioStatus));
 	    									
 	    									if( (time.getTimeInMillis() - lastRadioStatus) > 10000 ){
 	    										Log.d(TAG, "Requesting Radio Status");
@@ -683,7 +715,7 @@ public class MainControlFragment extends Fragment {
 		ImageButton btnVolDown = (ImageButton) v.findViewById(R.id.btnVolDown);
 		Button btnRadioFM = (Button) v.findViewById(R.id.btnRadioFM);
 		Button btnRadioAM = (Button) v.findViewById(R.id.btnRadioAM);
-		Switch btnMusicMode = (Switch) v.findViewById(R.id.btnMusicMode);
+		btnMusicMode = (Switch) v.findViewById(R.id.btnMusicMode);
 		ImageButton btnPrev = (ImageButton) v.findViewById(R.id.btnPrev);
 		ImageButton btnNext = (ImageButton) v.findViewById(R.id.btnNext);
 		
@@ -847,6 +879,7 @@ public class MainControlFragment extends Fragment {
 	 * Acquire a screen wake lock to either turn the screen on or off
 	 * @param screenOn if true, turn the screen on, else turn it off
 	 */
+	@SuppressLint("Wakelock")
 	private void changeScreenState(boolean screenOn){
 		if(mPowerManager == null)
 			mPowerManager = (PowerManager) getActivity().getSystemService(Context.POWER_SERVICE);
