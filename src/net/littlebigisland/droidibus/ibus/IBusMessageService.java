@@ -300,7 +300,7 @@ public class IBusMessageService extends IOIOService {
 	@Override
 	public void onDestroy(){
 		super.onDestroy();
-		Log.d(TAG, "IBusMessageService stopping");
+		Log.d(TAG, "IBusMessageService stopping via onDestroy");
 	}
 	/** 
 	 * A class to create our IOIO service.

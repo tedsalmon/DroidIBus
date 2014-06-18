@@ -136,7 +136,7 @@ public class MainControlFragment extends Fragment {
 		@Override
 		public void onClientPlaybackStateUpdate(int state) {
 			// @TODO Merge with previous function, this is stupid
-			switch(state) {
+			switch(state){
 				case RemoteControlClient.PLAYSTATE_PLAYING:
 					if(mScrubbingSupported) mPlayerHandler.post(mUpdateSeekBar);
 					mIsPlaying = true;
@@ -498,7 +498,7 @@ public class MainControlFragment extends Fragment {
 
 		@Override
 		public void onServiceDisconnected(ComponentName name) {
-        	Log.e("DroidIBus", "MusicPlayerService is disconnected");
+        	Log.e(TAG, "MusicPlayerService is disconnected");
         	mPlayerBound = false;
 		}
     };
@@ -511,7 +511,7 @@ public class MainControlFragment extends Fragment {
             mIBusService = binder.getService();
     		if(mIBusService != null) {
     			mIBusBound = true;
-    			Log.d("DroidIBus", "mIBusService is NOT NULL");
+    			Log.d(TAG, "mIBusService is NOT NULL");
     			mIBusService.setCallbackListener(mIBusUpdateListener);
     			// Send a "get" request to populate the values on screen
     			// Do it here because this is when the service methods come into scope
@@ -573,7 +573,7 @@ public class MainControlFragment extends Fragment {
 
         @Override
         public void onServiceDisconnected(ComponentName name) {
-        	Log.e("DroidIBus", "mIBusService is disconnected");
+        	Log.e(TAG, "mIBusService is disconnected");
             mIBusBound = false;
         }
     };

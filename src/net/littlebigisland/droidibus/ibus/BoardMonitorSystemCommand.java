@@ -17,6 +17,8 @@ public class BoardMonitorSystemCommand extends IBusSystemCommand {
 	private byte OBCRequest = 0x41;
 	private byte OBCRequestGet = 0x01;
 	private byte OBCRequestReset = 0x10;
+	private byte OBCRequestSet = 0x40;
+	private byte OBCUnitSet = 0x15;
 	
 	/**
 	 * Generate an IKE message requesting a value reset for the given system.
@@ -134,6 +136,69 @@ public class BoardMonitorSystemCommand extends IBusSystemCommand {
 	public byte[] resetAvgSpeed(){
 		return IKEResetRequest(0x0A, 0xE5);
 	}
+	
+	/**
+	 * Send a new time setting to the IKE
+	 * IBus message: 3B 06 80 40 01 <Hours> <Mins> <CRC>
+	 * @param args Two ints MUST be provided
+	 *  int hours, int minutes
+	 * @return Byte array of composed message to send to IBus
+	 */
+	public byte[] setTime(Object... args){
+		int hours = (Integer) args[0];
+		int minutes = (Integer) args[1];
+		byte[] completedMessage = new byte[]{
+			gfxDriver, 0x06, IKESystem, OBCRequestSet, (byte)hours, (byte)minutes, 0x00
+		};
+		completedMessage[6] = genMessageCRC(completedMessage);
+		return completedMessage;
+	}
+	
+	/**
+	 * Send a new date setting to the IKE
+	 * IBus message: 3B 06 80 40 02 <Day> <Month> <Year> <CRC>
+	 * @param args Three ints MUST be provided
+	 * 	int day, int month, int year
+	 * @return Byte array of composed message to send to IBus
+	 */
+	public byte[] setDate(Object... args){
+		int day = (Integer) args[0];
+		int month = (Integer) args[1];
+		int year = (Integer) args[2];
+		
+		byte[] completedMessage = new byte[]{
+			gfxDriver, 0x07, IKESystem, OBCRequestSet, (byte)day, (byte)month, (byte)year, 0x00
+		};
+		completedMessage[7] = genMessageCRC(completedMessage);
+		return completedMessage;
+	}
+	
+	/**
+	 * Send a new unit setting to the IKE
+	 * All units must be set at once, oh well.
+	 * IBus message: 3B 07 80 15 <Vehicle Type/Language> <Units> <Consumption Units> <Engine Type> <CRC>
+	 * @param args Three ints MUST be provided
+	 * 	int day, int month, int year
+	 * @return Byte array of composed message to send to IBus
+	 */
+	public byte[] setUnits(Object... args){
+		int speedUnit = (Integer) args[0]; // 0 = KM/Km/h 1= Miles/MPH
+		int tempUnit = (Integer) args[1]; // 0 = C 1 = F
+		int dateTimeUnit = (Integer) args[2]; // 0 = 24h 1 = 12h
+		
+		// TODO Finish implementation
+		short allUnits = Short.parseShort(
+			String.format("%s%s00%s%s%s%s",dateTimeUnit, tempUnit, speedUnit, speedUnit, speedUnit, dateTimeUnit ), 2
+		);
+		short consumptionUnits = Short.parseShort("", 2);
+		
+		byte[] completedMessage = new byte[]{
+			gfxDriver, 0x07, IKESystem, OBCUnitSet, 0x00, 0x00, 0x00, 0x00, 0x00
+		};
+		completedMessage[7] = genMessageCRC(completedMessage);
+		return completedMessage;
+	}
+	
 
 	// Radio Buttons
 	

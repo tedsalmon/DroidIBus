@@ -76,6 +76,16 @@ public abstract class IBusSystemCommand {
 		}
 	}
 	
+	/**
+	 * Generate CRC for the message
+	 */
+	public byte genMessageCRC(byte[] msg){
+		byte crc = 0x00;
+		for(int i = 0; i < msg.length; i++)
+			crc = (byte) (crc ^ msg[i]);
+		return crc;
+	}
+	
 	/** 
 	 * Use the implementations destination system Map to lookup
 	 * the instance class that handles the given message. In some instances
