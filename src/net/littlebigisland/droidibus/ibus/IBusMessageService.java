@@ -171,14 +171,12 @@ public class IBusMessageService extends IOIOService {
 						// Wait at least 75ms between messages and then write out to the bus
 						if ((Calendar.getInstance().getTimeInMillis() - lastSend) > 75) {
 							Log.d(TAG, String.format("Sending %s Command out", actionQueue.get(0).toString()));
-							
 							// Get the command enum
 							IBusCommandsEnum command = actionQueue.get(0).commandType;
 							// Get the instance of the class which implements the method we're looking for
 							IBusSystemCommand clsInstance = IBusSysMap.get(command.getSystem().toByte());
 							// Get the command Varargs to pass. Very possible that this is null and that's okay
 							Object cmdArgs = actionQueue.get(0).commandArgs;
-							
 							byte[] outboundMsg = new byte[] {};
 							try {
 								Method requestedMethod = clsInstance.getClass().getMethod(command.getMethodName());
@@ -204,8 +202,8 @@ public class IBusMessageService extends IOIOService {
 							}
 							Log.d(TAG, out);
 							lastSend = Calendar.getInstance().getTimeInMillis();
-							statusLED.write(false);
 						}
+						statusLED.write(false);
 					}
 				} catch (IOException e) {
 					Log.e(TAG, String.format("IOIO IOException [%s] in IBusService.loop()", e.getMessage()));
@@ -219,7 +217,7 @@ public class IBusMessageService extends IOIOService {
 				IBusSysMap.put(DeviceAddressEnum.InstrumentClusterElectronics.toByte(), new IKESystemCommand());
 				IBusSysMap.put(DeviceAddressEnum.NavigationEurope.toByte(), new NavigationSystemCommand());
 				IBusSysMap.put(DeviceAddressEnum.MultiFunctionSteeringWheel.toByte(), new SteeringWheelSystemCommand());
-				IBusSysMap.put(DeviceAddressEnum.GraphicsNavigationDriver.toByte(), new BoardMonitorSystemCommand());
+				IBusSysMap.put(DeviceAddressEnum.OnBoardMonitor.toByte(), new BoardMonitorSystemCommand());
 				// Register the callback listener here ;)
 				for (Object key : IBusSysMap.keySet())
 					IBusSysMap.get(key).registerCallbacks(mIBusCbListener);
