@@ -12,7 +12,7 @@ public class IKESystemCommand extends IBusSystemCommand {
 		public void mapReceived(ArrayList<Byte> msg){
 			switch(msg.get(3)){
 				case 0x11: // Ignition State
-					int state = (msg.get(3) < 3) ? msg.get(3) : (0x02 & msg.get(3));
+					int state = (msg.get(4) < 3) ? msg.get(4) : (0x02 & msg.get(4));
 					triggerCallback("onUpdateIgnitionSate", state);
 					break;
 				case 0x18: // Speed and RPM
