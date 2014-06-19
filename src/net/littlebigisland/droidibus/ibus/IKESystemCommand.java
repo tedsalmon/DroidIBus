@@ -31,6 +31,7 @@ public class IKESystemCommand extends IBusSystemCommand {
 		
 		/**
 		 * Handle OBC messages sent from IKE
+		 * IBus Message: 80 0C FF 24 <System> 00 32 31 3A 31 30 20 20 6E 
 		 */
 		private void OBCData(){
 			// Minus two because the array starts at zero and we need to ignore the last byte (XOR Checksum)

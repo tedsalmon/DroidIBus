@@ -178,6 +178,7 @@ public class BoardMonitorSystemCommand extends IBusSystemCommand {
 	/**
 	 * Send a new unit setting to the IKE
 	 * All units must be set at once, oh well.
+	 * 3B 07 80 15 F2 72 1A 00 33
 	 * IBus message: 3B 07 80 15 <Vehicle Type/Language> <Units> <Consumption Units> <Engine Type> <CRC>
 	 * @param args Three ints MUST be provided
 	 * 	int day, int month, int year
@@ -198,7 +199,7 @@ public class BoardMonitorSystemCommand extends IBusSystemCommand {
 		2).toByteArray();
 
 		byte[] completedMessage = new byte[]{
-			gfxDriver, 0x07, IKESystem, OBCUnitSet, 0x00, allUnits[1], consumptionUnits[1], 0x00, 0x00
+			gfxDriver, 0x07, IKESystem, OBCUnitSet, (byte)0xF2, allUnits[1], consumptionUnits[1], 0x00, 0x00
 		};
 		
 		completedMessage[8] = genMessageCRC(completedMessage);

@@ -285,21 +285,21 @@ public class MainControlFragment extends Fragment {
 		}
 		
 		@Override
-		public void onUpdateRange(final int range){
+		public void onUpdateRange(final String range){
 			Log.d(TAG, "Setting Gas Range in Callback!");
 			postToUI(new Runnable() {
 			    public void run() {
-			    	rangeField.setText(Integer.toString(range));
+			    	rangeField.setText(range);
 			    }
 			});
 		}
 		
 		@Override
-		public void onUpdateOutdoorTemp(final int temp){
+		public void onUpdateOutdoorTemp(final String temp){
 			Log.d(TAG, "Setting Outdoor Temp in Callback!");
 			postToUI(new Runnable() {
 			    public void run() {
-			    	outTempField.setText(Integer.toString(temp));
+			    	outTempField.setText(temp);
 			    }
 			});
 		}

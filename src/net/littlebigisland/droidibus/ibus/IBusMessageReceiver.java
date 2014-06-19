@@ -26,9 +26,9 @@ public abstract interface IBusMessageReceiver{
 	public void onUpdateRadioProgramIndicator(final String currentProgram);
 	
 	// IKE System
-	public void onUpdateRange(final int range);
+	public void onUpdateRange(final String range);
 		
-	public void onUpdateOutdoorTemp(final int temp);
+	public void onUpdateOutdoorTemp(final String temp);
 
 	public void onUpdateFuel1(final String mpg);
 
