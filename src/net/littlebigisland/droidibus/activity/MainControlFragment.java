@@ -36,6 +36,8 @@ import android.view.View.OnTouchListener;
 import android.view.ViewGroup;
 import android.view.View.OnClickListener;
 import android.view.View.OnLongClickListener;
+import android.view.WindowManager;
+import android.view.WindowManager.LayoutParams;
 import android.widget.Button;
 import android.widget.CompoundButton;
 import android.widget.CompoundButton.OnCheckedChangeListener;
@@ -81,11 +83,13 @@ public class MainControlFragment extends Fragment {
 	protected PowerManager mPowerManager = null;
 	protected WakeLock screenWakeLock;
 	
-	protected String currentRadioMode = ""; // Current Radio Text
+	protected radioModes currentRadioMode = null; // Current Radio Text
 	protected long lastRadioStatus = 0; // Epoch of last time we got a status message from the Radio
+	protected long timeInCurrentMode = 0;
 
 	private enum radioModes{
 		AUX,
+		CD,
 		Radio
 	}
 	
@@ -135,7 +139,7 @@ public class MainControlFragment extends Fragment {
 		 */
 		@Override
 		public void onClientPlaybackStateUpdate(int state) {
-			// @TODO Merge with previous function, this is stupid
+			// TODO Merge with previous function, this is stupid
 			switch(state){
 				case RemoteControlClient.PLAYSTATE_PLAYING:
 					if(mScrubbingSupported) mPlayerHandler.post(mUpdateSeekBar);
@@ -193,16 +197,31 @@ public class MainControlFragment extends Fragment {
 			Log.d(TAG, "Setting station text - '" + text + "'");
 			postToUI(new Runnable() {
 			    public void run() {
+			    	radioModes lastState = currentRadioMode; 
+			    	switch(text){
+			    		case "AUX":
+			    			currentRadioMode = radioModes.AUX;
+			    			break;
+			    		case "NO CD":
+			    			currentRadioMode = radioModes.CD;
+			    			break;
+			    		default:
+			    			currentRadioMode = radioModes.Radio;
+			    	}
+			    	if(lastState != currentRadioMode)
+			    		Log.d(TAG, "Mode change registered, resetting counter");
+			    		timeInCurrentMode = Calendar.getInstance().getTimeInMillis();
 			    	// We're not in the right mode, sync with the car
-			    	if(!text.equals("NO CD")){
-			    		if(text.equals("AUX") && tabletLayout.getVisibility() == View.GONE)
+			    	// Make sure this isn't CD mode and that we're not in the middle of a mode change
+			    	// by making sure we've been in the current mode for at least 750ms
+			    	if(!(currentRadioMode == radioModes.CD) && timeInCurrentMode > 750){
+			    		if(currentRadioMode == radioModes.AUX && tabletLayout.getVisibility() == View.GONE)
 			    			btnMusicMode.toggle();
-			    		if(!text.equals("AUX") && tabletLayout.getVisibility() == View.VISIBLE)
+			    		if(!(currentRadioMode == radioModes.AUX) && tabletLayout.getVisibility() == View.VISIBLE)
 			    			btnMusicMode.toggle();
 			    	}
 			    	
 			    	lastRadioStatus = Calendar.getInstance().getTimeInMillis();
-			    	currentRadioMode = text;
 			    	stationText.setText(text);
 			    }
 			});
@@ -365,17 +384,31 @@ public class MainControlFragment extends Fragment {
 		}
 
 		@Override
-		public void onUpdateIgnitionSate(int state) {
+		public void onUpdateIgnitionSate(final int state) {
 			Log.d(TAG, "Ignition state is " + state);
-			switch(state){
-				case 0:
-					changeScreenState(false);
-					break;
-				case 1:
-					changeScreenState(true);
-					break;
-			}
-			
+			postToUI(new Runnable() {
+			    public void run() {
+			    	switch(state){
+			    		case 0:
+			    			// Pause the music as we exit the vehicle
+			    			if(mPlayerBound && currentRadioMode == radioModes.AUX && mIsPlaying)
+			    				mPlayerService.sendPauseKey();
+			    			changeScreenState(false);
+			    			break;
+			    		case 1:
+			    			changeScreenState(true);
+			    			if(mPlayerBound && currentRadioMode == radioModes.AUX && !mIsPlaying)
+			    				// Sleep for a second and then play the music again
+								try {
+									Thread.sleep(1000);
+				    				mPlayerService.sendPauseKey();
+								} catch (InterruptedException e) {
+									e.printStackTrace();
+								}
+			    			break;
+			    	}
+			    }
+			});
 		}
 
 		@Override
@@ -451,7 +484,7 @@ public class MainControlFragment extends Fragment {
 			Log.d(TAG, "Changing playback state in callback due to steering input!");
 			postToUI(new Runnable(){
 			    public void run(){
-			    	if(mPlayerBound && currentRadioMode.equals("AUX")){
+			    	if(mPlayerBound && currentRadioMode == radioModes.AUX){
 			    		Log.d(TAG, "Firing off playback change as we are in AUX mode");
 			    		if(mIsPlaying)
 							mPlayerService.sendPauseKey();
@@ -520,9 +553,9 @@ public class MainControlFragment extends Fragment {
     				sendIBusCommand(IBusCommandsEnum.BMToIKEGetDate);
     				sendIBusCommand(IBusCommandsEnum.BMToIKEGetFuel1);
     				sendIBusCommand(IBusCommandsEnum.BMToIKEGetFuel2);
+    				sendIBusCommand(IBusCommandsEnum.BMToIKEGetOutdoorTemp);
     				sendIBusCommand(IBusCommandsEnum.BMToIKEGetRange);
     				sendIBusCommand(IBusCommandsEnum.BMToIKEGetAvgSpeed);
-    				sendIBusCommand(IBusCommandsEnum.BMToIKEGetOutdoorTemp);
     				
     				/* This thread should make sure to send out and request
     				 * any IBus messages that the BM usually would.
@@ -547,7 +580,7 @@ public class MainControlFragment extends Fragment {
 	    									
 	    									Log.d(TAG, String.format("Milliseconds since last Radio message: %s", statusDiff));
 	    									
-	    									if(statusDiff > 10000 && !currentRadioMode.equals("AUX")){
+	    									if(statusDiff > 10000 && ! (currentRadioMode == radioModes.AUX)){
 	    										Log.d(TAG, "Requesting Radio Info");
 	    										try {
 	    											sendIBusCommand(IBusCommandsEnum.BMToRadioInfoPress);
@@ -781,7 +814,7 @@ public class MainControlFragment extends Fragment {
 		    		radioLayout.setVisibility(View.GONE);
 		    		tabletLayout.setVisibility(View.VISIBLE);
 		    		// Send IBus Message
-		    		if(!currentRadioMode.equals("AUX"))
+		    		if(! (currentRadioMode == radioModes.AUX))
 		    			changeRadioMode(radioModes.AUX);
 		        }else{
 		        	if(mIsPlaying)
@@ -789,7 +822,7 @@ public class MainControlFragment extends Fragment {
 		    		radioLayout.setVisibility(View.VISIBLE);
 		    		tabletLayout.setVisibility(View.GONE);
 		    		// Send IBus Message
-		    		if(currentRadioMode.equals("AUX") || currentRadioMode.equals("NO CD"))
+		    		if(currentRadioMode == radioModes.AUX || currentRadioMode == radioModes.CD)
 		    			changeRadioMode(radioModes.Radio);
 		        }
 		    }
@@ -859,26 +892,22 @@ public class MainControlFragment extends Fragment {
 					@Override
 					public void run(){
 						try {
-							if(mode == radioModes.AUX){
-								if(!currentRadioMode.equals("AUX")){
-									Log.d(TAG, "Pressing Mode for AUX - Current Mode '" + currentRadioMode + "'");
-									sendIBusCommand(IBusCommandsEnum.BMToRadioModePress);
-									Thread.sleep(250);
-									sendIBusCommand(IBusCommandsEnum.BMToRadioModeRelease);
-									Thread.sleep(1000);
-									Log.d(TAG, "Mode now " + currentRadioMode);
-									changeRadioMode(mode);
-								}
-							}else if(mode == radioModes.Radio){
-								if(currentRadioMode.equals("AUX") || currentRadioMode.equals("NO CD")){
-									Log.d(TAG, "Pressing Mode to get Radio - Current Mode '" + currentRadioMode + "'");
-									sendIBusCommand(IBusCommandsEnum.BMToRadioModePress);
-									Thread.sleep(250);
-									sendIBusCommand(IBusCommandsEnum.BMToRadioModeRelease);
-									Thread.sleep(1000);
-									Log.d(TAG, "Mode now " + currentRadioMode);
-									changeRadioMode(mode);
-								}
+							if(mode == radioModes.AUX && !(currentRadioMode== radioModes.AUX)){
+								Log.d(TAG, "Pressing Mode for AUX - Current Mode '" + currentRadioMode + "'");
+								sendIBusCommand(IBusCommandsEnum.BMToRadioModePress);
+								Thread.sleep(250);
+								sendIBusCommand(IBusCommandsEnum.BMToRadioModeRelease);
+								Thread.sleep(1000);
+								Log.d(TAG, "Mode now " + currentRadioMode.toString());
+								changeRadioMode(mode);
+							}else if(mode == radioModes.Radio && (currentRadioMode != radioModes.Radio)){
+								Log.d(TAG, "Pressing Mode to get Radio - Current Mode '" + currentRadioMode + "'");
+								sendIBusCommand(IBusCommandsEnum.BMToRadioModePress);
+								Thread.sleep(250);
+								sendIBusCommand(IBusCommandsEnum.BMToRadioModeRelease);
+								Thread.sleep(1000);
+								Log.d(TAG, "Mode now " + currentRadioMode.toString());
+								changeRadioMode(mode);
 							}
 						} catch (InterruptedException e){
 							// First world anarchy
@@ -895,8 +924,7 @@ public class MainControlFragment extends Fragment {
 	 */
 	@SuppressLint("Wakelock")
 	private void changeScreenState(boolean screenOn){
-		// The wake lock is causing Stack traces onDestroy()
-		/*if(mPowerManager == null)
+		if(mPowerManager == null)
 			mPowerManager = (PowerManager) getActivity().getSystemService(Context.POWER_SERVICE);
 		
 		if(screenWakeLock != null)
@@ -904,17 +932,19 @@ public class MainControlFragment extends Fragment {
 				screenWakeLock.release();
 		String state = (screenOn == true) ? "on" : "off";
 		Log.d(TAG, "Screen is being turned " + state);
-		
-		float brightness = (screenOn == true) ? 75 : 0 / (float) 255;
-		WindowManager.LayoutParams lp = getActivity().getWindow().getAttributes();
-		lp.screenBrightness = brightness;
-		getActivity().getWindow().setAttributes(lp);
-		
+		WindowManager.LayoutParams layoutP = getActivity().getWindow().getAttributes();
+		if(screenOn){
+			layoutP.flags = LayoutParams.FLAG_KEEP_SCREEN_ON;
+			layoutP.screenBrightness = 1;
+		}else{
+			layoutP.flags |= LayoutParams.FLAG_KEEP_SCREEN_ON;
+			layoutP.screenBrightness = 0;
+		}
+		//getActivity().getWindow().setAttributes(layoutP);
 		@SuppressWarnings("deprecation")
 		int lockType = (screenOn == true) ? PowerManager.FULL_WAKE_LOCK : PowerManager.PARTIAL_WAKE_LOCK;
     	screenWakeLock = mPowerManager.newWakeLock(lockType, "screenWakeLock");
     	screenWakeLock.acquire();
-    	*/
 	}
 	
 	private void showToast(String toastText){
