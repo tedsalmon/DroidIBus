@@ -108,7 +108,9 @@ public class IBusMessageService extends IOIOService {
 				// Timeout stuff 
 				time = Calendar.getInstance();
 				lastRead = time.getTimeInMillis();
-				lastSend = time.getTimeInMillis();
+				// Add 250ms so that we don't spam the buffer
+				// when the view starts asking IKE for data 
+				lastSend = time.getTimeInMillis() + 250;
 			}
 			
 			/**
@@ -168,9 +170,9 @@ public class IBusMessageService extends IOIOService {
 						statusLED.write(false);
 					}else if(actionQueue.size() > 0){
 						statusLED.write(true);
-						// Wait at least 75ms between messages and then write out to the bus
-						if ((Calendar.getInstance().getTimeInMillis() - lastSend) > 75) {
-							Log.d(TAG, String.format("Sending %s Command out", actionQueue.get(0).toString()));
+						// Wait at least 100ms between messages and then write out to the bus to avoid collisions
+						if ((Calendar.getInstance().getTimeInMillis() - lastSend) > 100) {
+							Log.d(TAG, String.format("Sending %s Command out", actionQueue.get(0).commandType.toString()));
 							// Get the command enum
 							IBusCommandsEnum command = actionQueue.get(0).commandType;
 							// Get the instance of the class which implements the method we're looking for
