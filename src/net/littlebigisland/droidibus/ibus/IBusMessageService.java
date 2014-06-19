@@ -184,13 +184,7 @@ public class IBusMessageService extends IOIOService {
 									outboundMsg = (byte[]) requestedMethod.invoke(clsInstance);
 								else
 									outboundMsg = (byte[]) requestedMethod.invoke(clsInstance, cmdArgs);
-							} catch (IllegalAccessException e) {
-								e.printStackTrace();
-							} catch (IllegalArgumentException e) {
-								e.printStackTrace();
-							} catch (InvocationTargetException e) {
-								e.printStackTrace();
-							} catch (NoSuchMethodException e) {
+							} catch (IllegalAccessException | IllegalArgumentException | InvocationTargetException | NoSuchMethodException e){
 								e.printStackTrace();
 							}
 							actionQueue.remove(0);

@@ -6,7 +6,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import android.util.Log;
 
 /** 
  * Handle messages from the Navi System
@@ -106,12 +105,8 @@ public class NavigationSystemCommand extends IBusSystemCommand {
 				if(msg.get(3) == locationData || msg.get(3) == gpsData){
 					IBusTelephoneMap.get(msg.get(5)).invoke(this);
 				}
-			}catch(IllegalArgumentException e){
-				Log.d("DroidIBus", "Illegal Argument to Navi Method");
-			}catch(InvocationTargetException e){
-				Log.d("DroidIBus", "Invocation Target Exception to Navi Method");
-			}catch(IllegalAccessException e){
-				Log.d("DroidIBus", "Illegal Access to Navi Method");
+			}catch(IllegalArgumentException | InvocationTargetException | IllegalAccessException e){
+				e.printStackTrace();
 			}
 		}
 		

@@ -125,13 +125,7 @@ public abstract class IBusSystemCommand {
 			try {
 				Method cb = mCallbackReceiver.getClass().getMethod(callback);
 				cb.invoke(mCallbackReceiver);
-			} catch (NoSuchMethodException e) {
-				e.printStackTrace();
-			} catch (IllegalAccessException e) {
-				e.printStackTrace();
-			} catch (IllegalArgumentException e) {
-				e.printStackTrace();
-			} catch (InvocationTargetException e) {
+			} catch (NoSuchMethodException | IllegalAccessException | IllegalArgumentException | InvocationTargetException e) {
 				e.printStackTrace();
 			}
 		}
@@ -149,13 +143,7 @@ public abstract class IBusSystemCommand {
 			try {
 				Method cb = mCallbackReceiver.getClass().getMethod(callback, String.class);
 				cb.invoke(mCallbackReceiver, value);
-			} catch (NoSuchMethodException e) {
-				e.printStackTrace();
-			} catch (IllegalAccessException e) {
-				e.printStackTrace();
-			} catch (IllegalArgumentException e) {
-				e.printStackTrace();
-			} catch (InvocationTargetException e) {
+			} catch (NoSuchMethodException | IllegalAccessException | IllegalArgumentException | InvocationTargetException e) {
 				e.printStackTrace();
 			}
 		}
@@ -173,13 +161,7 @@ public abstract class IBusSystemCommand {
 			try {
 				Method cb = mCallbackReceiver.getClass().getMethod(callback, int.class);
 				cb.invoke(mCallbackReceiver, value);
-			} catch (NoSuchMethodException e) {
-				e.printStackTrace();
-			} catch (IllegalAccessException e) {
-				e.printStackTrace();
-			} catch (IllegalArgumentException e) {
-				e.printStackTrace();
-			} catch (InvocationTargetException e) {
+			} catch (NoSuchMethodException | IllegalAccessException | IllegalArgumentException | InvocationTargetException e) {
 				e.printStackTrace();
 			}
 		}

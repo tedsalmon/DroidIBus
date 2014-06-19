@@ -1,5 +1,7 @@
 package net.littlebigisland.droidibus.ibus;
 
+import java.math.BigInteger;
+
 /**
  * Implements functions of the BoardMonitor. For the most part 
  * we won't be doing any message parsing here since the BoardMonitor
@@ -187,15 +189,19 @@ public class BoardMonitorSystemCommand extends IBusSystemCommand {
 		int dateTimeUnit = (Integer) args[2]; // 0 = 24h 1 = 12h
 		
 		// TODO Finish implementation
-		short allUnits = Short.parseShort(
-			String.format("%s%s00%s%s%s%s",dateTimeUnit, tempUnit, speedUnit, speedUnit, speedUnit, dateTimeUnit ), 2
-		);
-		short consumptionUnits = Short.parseShort("", 2);
-		
+		byte[] allUnits = new BigInteger(
+			String.format("%s%s00%s%s%s%s",dateTimeUnit, tempUnit, speedUnit, speedUnit, speedUnit, dateTimeUnit ),
+		2).toByteArray();
+		String consumptionType = (speedUnit == 0) ? "11" : "01";
+		byte[] consumptionUnits = new BigInteger(
+			String.format("0000%s%s", consumptionType, consumptionType),
+		2).toByteArray();
+
 		byte[] completedMessage = new byte[]{
-			gfxDriver, 0x07, IKESystem, OBCUnitSet, 0x00, 0x00, 0x00, 0x00, 0x00
+			gfxDriver, 0x07, IKESystem, OBCUnitSet, 0x00, allUnits[1], consumptionUnits[1], 0x00, 0x00
 		};
-		completedMessage[7] = genMessageCRC(completedMessage);
+		
+		completedMessage[8] = genMessageCRC(completedMessage);
 		return completedMessage;
 	}
 	
