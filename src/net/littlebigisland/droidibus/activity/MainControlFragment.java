@@ -446,7 +446,7 @@ public class MainControlFragment extends Fragment {
 			Log.d(TAG, "Setting GPS Alitude");
 			postToUI(new Runnable(){
 			    public void run(){
-			    	geoAltitudeField.setText(String.format("Altitude: %sm", altitude));
+			    	geoAltitudeField.setText(String.format("Alt.: %sm", altitude));
 			    }
 			});
 		}
@@ -922,28 +922,32 @@ public class MainControlFragment extends Fragment {
 	 * Acquire a screen wake lock to either turn the screen on or off
 	 * @param screenOn if true, turn the screen on, else turn it off
 	 */
+	@SuppressWarnings("deprecation")
 	@SuppressLint("Wakelock")
 	private void changeScreenState(boolean screenOn){
 		if(mPowerManager == null)
 			mPowerManager = (PowerManager) getActivity().getSystemService(Context.POWER_SERVICE);
-		
+
 		if(screenWakeLock != null)
 			if(screenWakeLock.isHeld())
 				screenWakeLock.release();
+		
 		String state = (screenOn == true) ? "on" : "off";
 		Log.d(TAG, "Screen is being turned " + state);
 		WindowManager.LayoutParams layoutP = getActivity().getWindow().getAttributes();
 		if(screenOn){
 			layoutP.flags = LayoutParams.FLAG_KEEP_SCREEN_ON;
-			layoutP.screenBrightness = 1;
+			layoutP.screenBrightness = -1;
+			screenWakeLock = mPowerManager.newWakeLock(
+				PowerManager.FULL_WAKE_LOCK | PowerManager.ACQUIRE_CAUSES_WAKEUP,
+				"screenWakeLock"
+			);
 		}else{
 			layoutP.flags |= LayoutParams.FLAG_KEEP_SCREEN_ON;
-			layoutP.screenBrightness = 0;
+			layoutP.screenBrightness = 0.1f;
+			screenWakeLock = mPowerManager.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "screenWakeLock"); 
 		}
-		//getActivity().getWindow().setAttributes(layoutP);
-		@SuppressWarnings("deprecation")
-		int lockType = (screenOn == true) ? PowerManager.FULL_WAKE_LOCK : PowerManager.PARTIAL_WAKE_LOCK;
-    	screenWakeLock = mPowerManager.newWakeLock(lockType, "screenWakeLock");
+		getActivity().getWindow().setAttributes(layoutP);
     	screenWakeLock.acquire();
 	}
 	

@@ -16,11 +16,11 @@ public class IKESystemCommand extends IBusSystemCommand {
 					triggerCallback("onUpdateIgnitionSate", state);
 					break;
 				case 0x18: // Speed and RPM
-					triggerCallback("onUpdateSpeed", (int) msg.get(4));
-					triggerCallback("onUpdateRPM", (int) msg.get(5) * 100);
+					triggerCallback("onUpdateSpeed", (int)msg.get(4));
+					triggerCallback("onUpdateRPM", (int)msg.get(5) * 100);
 					break;
 				case 0x19: // Coolant Temperature
-					triggerCallback("onUpdateCoolantTemp", (int) msg.get(5));
+					triggerCallback("onUpdateCoolantTemp", (int)msg.get(5));
 					break;
 			}
 		}
