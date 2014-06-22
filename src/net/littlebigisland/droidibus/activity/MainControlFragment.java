@@ -86,7 +86,7 @@ public class MainControlFragment extends Fragment {
 	protected radioModes currentRadioMode = null; // Current Radio Text
 	protected long lastRadioStatus = 0; // Epoch of last time we got a status message from the Radio
 	protected long timeInCurrentMode = 0;
-
+	
 	private enum radioModes{
 		AUX,
 		CD,
@@ -401,7 +401,7 @@ public class MainControlFragment extends Fragment {
 			    				// Sleep for a second and then play the music again
 								try {
 									Thread.sleep(1000);
-				    				mPlayerService.sendPauseKey();
+				    				mPlayerService.sendPlayKey();
 								} catch (InterruptedException e) {
 									e.printStackTrace();
 								}
