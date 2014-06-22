@@ -44,6 +44,7 @@ enum DeviceAddressEnum {
 	RainLightSensor((byte) 0xE8),
 	Television((byte) 0xED),
 	OnBoardMonitor((byte) 0xF0),
+	CSU((byte) 0xF5),
 	Broadcast((byte) 0xFF),
 	Unset((byte) 0x100),
 	Unknown((byte) 0x101);

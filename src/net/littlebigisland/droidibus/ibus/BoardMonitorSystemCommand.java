@@ -14,6 +14,9 @@ public class BoardMonitorSystemCommand extends IBusSystemCommand {
 	private byte gfxDriver = DeviceAddressEnum.GraphicsNavigationDriver.toByte();
 	private byte IKESystem = DeviceAddressEnum.InstrumentClusterElectronics.toByte();
 	private byte radioSystem = DeviceAddressEnum.Radio.toByte();
+	private byte globalSystem = DeviceAddressEnum.GlobalBroadcastAddress.toByte();
+	private byte lightControlSystem = DeviceAddressEnum.LightControlModule.toByte();
+	private byte generalModuleSystem = DeviceAddressEnum.BodyModule.toByte();
 	
 	// OBC Functions
 	private byte OBCRequest = 0x41;
@@ -112,6 +115,51 @@ public class BoardMonitorSystemCommand extends IBusSystemCommand {
 	public byte[] getRadioStatus(){
 		return new byte[]{
 			boardMonitor, 0x03, radioSystem, 0x01, (byte)0x9A	
+		};
+	}
+	
+	/**
+	 * Get Door/Flaps Request
+	 * IBus Message:  F0 03 00 79 8A 
+	 * @return Byte array of message to send to IBus
+	 */
+	public byte[] getDoorsRequest(){
+		return new byte[]{
+			boardMonitor, 0x03, generalModuleSystem, 0x79, (byte) 0x8A
+		};
+	}
+	
+	/**
+	 * Request the current ignition state
+	 * IBus Message: F0 03 80 10 63
+	 * @return Byte array of message to send to IBus
+	 */
+	public byte[] getIgnitionStatus(){
+		return new byte[]{
+			boardMonitor, 0x03, IKESystem, 0x10, 0x63
+		};
+	}
+	
+	/**
+	 * Request the light dimmer status.
+	 * Don't ask me how to interpret the results though...
+	 * IBus Message: F0 03 D0 5D 7E 
+	 * @return Byte array of message to send to IBus
+	 */
+	public byte[] getLightDimmerStatus(){
+		return new byte[]{
+			boardMonitor, 0x03, lightControlSystem, 0x5D, 0x7E
+		};
+	}
+	
+	/**
+	 * Broadcast BM Alive message. This is the first message sent on boot
+	 * IBus Message: F0 04 BF 02 70 39
+	 * @return Byte array of message to send to IBus
+	 */
+	public byte[] sendAliveMessage(){
+		return new byte[] {
+			boardMonitor, 0x04, globalSystem, 0x02, 0x70, 0x39
 		};
 	}
 	
