@@ -35,9 +35,9 @@ public class IBusMessageService extends IOIOService {
 	
 	private String TAG = "DroidIBus";
 	private final IBinder mBinder = new IOIOBinder();
-	private ArrayList<IBusCommand> actionQueue = new ArrayList<IBusCommand>();
+	private ArrayList<IBusCommand> mCommandQueue = new ArrayList<IBusCommand>();
 	private IBusMessageReceiver mIBusCbListener = null;
-	private Map<Byte, String> DeviceLookup = new HashMap<Byte, String>(); // For logging
+	private Map<Byte, String> mDeviceLookup = new HashMap<Byte, String>(); // For logging
 	
 	/**
 	 * This is the thread on which all the IOIO activity happens. It will be run
@@ -50,7 +50,7 @@ public class IBusMessageService extends IOIOService {
 	@Override
 	protected IOIOLooper createIOIOLooper() {
 		return new BaseIOIOLooper() {
-			private boolean callbackRegistered = false;
+			private boolean mCallbackRegistered = false;
 			
 			private Uart IBusConn;
 			private InputStream busIn;
@@ -131,7 +131,7 @@ public class IBusMessageService extends IOIOService {
 					readBuffer.clear();
 				}
 				// If we have callbacks setup we can start handling messages
-				if(!callbackRegistered && mIBusCbListener != null)
+				if(!mCallbackRegistered && mIBusCbListener != null)
 					initiateHandlers();
 				try {
 					/* Handle incoming IBus data.
@@ -162,8 +162,8 @@ public class IBusMessageService extends IOIOService {
 									data = String.format("%s%02X ", data, readBuffer.get(i));
 								Log.d(TAG, String.format(
 									"Received Message (%s -> %s): %s",
-									DeviceLookup.get(readBuffer.get(0)),
-									DeviceLookup.get(readBuffer.get(2)),
+									mDeviceLookup.get(readBuffer.get(0)),
+									mDeviceLookup.get(readBuffer.get(2)),
 									data
 								));
 								handleMessage(readBuffer);
@@ -171,17 +171,17 @@ public class IBusMessageService extends IOIOService {
 							readBuffer.clear();
 						}
 						statusLED.write(false);
-					}else if(actionQueue.size() > 0){
+					}else if(mCommandQueue.size() > 0){
 						statusLED.write(true);
 						// Wait at least 100ms between messages and then write out to the bus to avoid collisions
 						if ((Calendar.getInstance().getTimeInMillis() - lastSend) > 100) {
-							Log.d(TAG, String.format("Sending %s Command out", actionQueue.get(0).commandType.toString()));
+							Log.d(TAG, String.format("Sending %s Command out", mCommandQueue.get(0).commandType.toString()));
 							// Get the command enum
-							IBusCommandsEnum command = actionQueue.get(0).commandType;
+							IBusCommandsEnum command = mCommandQueue.get(0).commandType;
 							// Get the instance of the class which implements the method we're looking for
 							IBusSystemCommand clsInstance = IBusSysMap.get(command.getSystem().toByte());
 							// Get the command Varargs to pass. Very possible that this is null and that's okay
-							Object cmdArgs = actionQueue.get(0).commandArgs;
+							Object cmdArgs = mCommandQueue.get(0).commandArgs;
 							byte[] outboundMsg = new byte[] {};
 							try {
 								Method requestedMethod = clsInstance.getClass().getMethod(command.getMethodName());
@@ -192,7 +192,7 @@ public class IBusMessageService extends IOIOService {
 							} catch (IllegalAccessException | IllegalArgumentException | InvocationTargetException | NoSuchMethodException e){
 								e.printStackTrace();
 							}
-							actionQueue.remove(0);
+							mCommandQueue.remove(0);
 							// Write the message out to the bus byte by byte
 							String out = "Sending: ";
 							for(int i = 0; i < outboundMsg.length; i++){
@@ -220,7 +220,7 @@ public class IBusMessageService extends IOIOService {
 				// Register the callback listener here ;)
 				for (Object key : IBusSysMap.keySet())
 					IBusSysMap.get(key).registerCallbacks(mIBusCbListener);
-				callbackRegistered = true;
+				mCallbackRegistered = true;
 			}
 				
 			/**
@@ -259,7 +259,7 @@ public class IBusMessageService extends IOIOService {
 	 * @param cmd IBusCommand instance to be performed
 	 */
 	public void sendCommand(IBusCommand cmd){
-		actionQueue.add(cmd);
+		mCommandQueue.add(cmd);
 	}
 	
 	public void setCallbackListener(IBusMessageReceiver listener){
@@ -291,7 +291,7 @@ public class IBusMessageService extends IOIOService {
 	 */
 	private void handleStartup(Intent intent) {
 		for(DeviceAddressEnum d : DeviceAddressEnum.values())
-			DeviceLookup.put(d.toByte(), d.name());
+			mDeviceLookup.put(d.toByte(), d.name());
 	}
 	
 	@Override
