@@ -26,6 +26,8 @@ public class NavigationSystemCommand extends IBusSystemCommand {
 			// Parse out coordinate data
 			List<String> coordData = new ArrayList<String>();
 			for (int i = 6; i < currentMessage.size(); i++) {
+				// 36 01 36 60 01 15 09 02 71 06 81 00 07 17 29
+				// 36 00 11 00 01 15 06 34 81 07 10 00 23 18 29
 				// Convert to int to rid ourselves of preceding zeros. Yes, this is bad.
 				coordData.add(
 					String.valueOf(
@@ -35,6 +37,8 @@ public class NavigationSystemCommand extends IBusSystemCommand {
 					)
 				);
 			}
+			String latitudeNorthSouth = (String.format("%s", currentMessage.get(9)).charAt(1) == '0') ? "N" : "S";
+			String longitudeEastWest = (String.format("%s", currentMessage.get(14)).charAt(1) == '0') ? "E" : "W";
 			triggerCallback("onUpdateGPSCoordinates",
 				String.format(
 					"%s%s%s'%s.%s\"%s %s%s%s'%s.%s\"%s", 
@@ -44,14 +48,14 @@ public class NavigationSystemCommand extends IBusSystemCommand {
 					coordData.get(1), 
 					coordData.get(2),
 					coordData.get(3).charAt(0),
-					(coordData.get(3).charAt(1) == '0') ? "N" : "S",
+					latitudeNorthSouth,
 					//Longitude
 					Integer.parseInt(coordData.get(4) + coordData.get(5)),
 					(char) 0x00B0,
 					coordData.get(6),
 					coordData.get(7),
 					coordData.get(8).charAt(0),
-					(coordData.get(8).charAt(1) == '0') ? "E" : "W"
+					longitudeEastWest
 				)
 			);
 		
