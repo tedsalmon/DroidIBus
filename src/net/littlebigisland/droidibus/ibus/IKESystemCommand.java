@@ -44,7 +44,9 @@ public class IKESystemCommand extends IBusSystemCommand {
 					triggerCallback("onUpdateDate", decodeMessage(currentMessage, 6, endByte));
 					break;
 				case 0x03: //Outdoor Temperature
-					triggerCallback("onUpdateOutdoorTemp", decodeMessage(currentMessage, 7, endByte));
+					// Handle triple digit temperature
+					int startByte = (currentMessage.get(6) != 0x20) ? 6 : 7;
+					triggerCallback("onUpdateOutdoorTemp", decodeMessage(currentMessage, startByte, endByte));
 					break;
 				case 0x04: // Fuel 1
 					triggerCallback("onUpdateFuel1", decodeMessage(currentMessage, 6, endByte));
