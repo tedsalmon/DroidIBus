@@ -13,7 +13,6 @@ import net.littlebigisland.droidibus.ibus.IBusMessageReceiver;
 import net.littlebigisland.droidibus.ibus.IBusMessageService;
 import net.littlebigisland.droidibus.ibus.IBusMessageService.IOIOBinder;
 import net.littlebigisland.droidibus.music.MusicControllerService;
-import android.annotation.SuppressLint;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
@@ -37,7 +36,6 @@ import android.view.ViewGroup;
 import android.view.View.OnClickListener;
 import android.view.View.OnLongClickListener;
 import android.view.WindowManager;
-import android.view.WindowManager.LayoutParams;
 import android.widget.Button;
 import android.widget.CompoundButton;
 import android.widget.CompoundButton.OnCheckedChangeListener;
@@ -51,7 +49,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 public class MainControlFragment extends Fragment {
-	private String TAG = "DroidIBus";
+	public String TAG = "DroidIBus";
 	
 	protected IBusMessageService mIBusService;
     protected boolean mIBusBound = false;
@@ -70,7 +68,7 @@ public class MainControlFragment extends Fragment {
 	protected TextView mPlayerArtistText, mPlayerTitleText, mPlayerAlbumText;
 	protected SeekBar mPlayerScrubBar;
 	protected ImageView mPlayerArtwork;
-	protected Switch btnMusicMode;
+	protected Switch mBtnMusicMode;
 	
 	protected MusicControllerService mPlayerService;
 	protected boolean mPlayerBound = false;
@@ -83,11 +81,11 @@ public class MainControlFragment extends Fragment {
 	protected PowerManager mPowerManager = null;
 	protected WakeLock screenWakeLock;
 	
-	protected radioModes currentRadioMode = null; // Current Radio Text
-	protected long lastRadioStatus = 0; // Epoch of last time we got a status message from the Radio
-	protected long timeInCurrentMode = 0;
+	protected RadioModes mCurrentRadioMode = null; // Current Radio Text
+	protected long mLastRadioStatus = 0; // Epoch of last time we got a status message from the Radio
+	protected long mTimeInCurrentMode = 0;
 	
-	private enum radioModes{
+	private enum RadioModes{
 		AUX,
 		CD,
 		Radio
@@ -197,31 +195,31 @@ public class MainControlFragment extends Fragment {
 			Log.d(TAG, "Setting station text - '" + text + "'");
 			postToUI(new Runnable() {
 			    public void run() {
-			    	radioModes lastState = currentRadioMode; 
+			    	RadioModes lastState = mCurrentRadioMode; 
 			    	switch(text){
 			    		case "AUX":
-			    			currentRadioMode = radioModes.AUX;
+			    			mCurrentRadioMode = RadioModes.AUX;
 			    			break;
 			    		case "NO CD":
-			    			currentRadioMode = radioModes.CD;
+			    			mCurrentRadioMode = RadioModes.CD;
 			    			break;
 			    		default:
-			    			currentRadioMode = radioModes.Radio;
+			    			mCurrentRadioMode = RadioModes.Radio;
 			    	}
-			    	if(lastState != currentRadioMode)
+			    	if(lastState != mCurrentRadioMode)
 			    		Log.d(TAG, "Mode change registered, resetting counter");
-			    		timeInCurrentMode = Calendar.getInstance().getTimeInMillis();
+			    		mTimeInCurrentMode = Calendar.getInstance().getTimeInMillis();
 			    	// We're not in the right mode, sync with the car
 			    	// Make sure this isn't CD mode and that we're not in the middle of a mode change
-			    	// by making sure we've been in the current mode for at least 750ms
-			    	if(!(currentRadioMode == radioModes.CD) && timeInCurrentMode > 750){
-			    		if(currentRadioMode == radioModes.AUX && tabletLayout.getVisibility() == View.GONE)
-			    			btnMusicMode.toggle();
-			    		if(!(currentRadioMode == radioModes.AUX) && tabletLayout.getVisibility() == View.VISIBLE)
-			    			btnMusicMode.toggle();
+			    	// by making sure we've been in the current mode for at least 1 second
+			    	if(!(mCurrentRadioMode == RadioModes.CD) && mTimeInCurrentMode > 1000){
+			    		if(mCurrentRadioMode == RadioModes.AUX && tabletLayout.getVisibility() == View.GONE)
+			    			mBtnMusicMode.toggle();
+			    		if(!(mCurrentRadioMode == RadioModes.AUX) && tabletLayout.getVisibility() == View.VISIBLE)
+			    			mBtnMusicMode.toggle();
 			    	}
 			    	
-			    	lastRadioStatus = Calendar.getInstance().getTimeInMillis();
+			    	mLastRadioStatus = Calendar.getInstance().getTimeInMillis();
 			    	stationText.setText(text);
 			    }
 			});
@@ -232,7 +230,7 @@ public class MainControlFragment extends Fragment {
 			Log.d(TAG, "Setting Radio Broadcast Type");
 			postToUI(new Runnable(){
 			    public void run(){
-			    	lastRadioStatus = Calendar.getInstance().getTimeInMillis();
+			    	mLastRadioStatus = Calendar.getInstance().getTimeInMillis();
 			    	radioBroadcastField.setText(broadcastType);
 			    }
 			});
@@ -244,7 +242,7 @@ public class MainControlFragment extends Fragment {
 			postToUI(new Runnable(){
 			    public void run(){
 			    	if(radioLayout.getVisibility() == View.VISIBLE){
-			    		lastRadioStatus = Calendar.getInstance().getTimeInMillis();
+			    		mLastRadioStatus = Calendar.getInstance().getTimeInMillis();
 			    		int visibility = (stereoIndicator.equals("")) ? View.GONE : View.VISIBLE;
 			    		radioStereoIndicatorField.setVisibility(visibility);
 			    	}
@@ -257,7 +255,7 @@ public class MainControlFragment extends Fragment {
 			Log.d(TAG, "Setting RDS Indicator - '" + rdsIndicator + "'");
 			postToUI(new Runnable(){
 			    public void run(){
-			    	lastRadioStatus = Calendar.getInstance().getTimeInMillis();
+			    	mLastRadioStatus = Calendar.getInstance().getTimeInMillis();
 			    	if(radioLayout.getVisibility() == View.VISIBLE){
 			    		int visibility = (rdsIndicator.equals("")) ? View.GONE : View.VISIBLE;
 			    		radioRDSIndicatorField.setVisibility(visibility);
@@ -271,7 +269,7 @@ public class MainControlFragment extends Fragment {
 			Log.d(TAG, "Setting Radio Program Type");
 			postToUI(new Runnable(){
 			    public void run(){
-			    	lastRadioStatus = Calendar.getInstance().getTimeInMillis();
+			    	mLastRadioStatus = Calendar.getInstance().getTimeInMillis();
 			    	radioProgramField.setText(currentProgram);
 			    }
 			});
@@ -391,13 +389,13 @@ public class MainControlFragment extends Fragment {
 			    	switch(state){
 			    		case 0:
 			    			// Pause the music as we exit the vehicle
-			    			if(mPlayerBound && currentRadioMode == radioModes.AUX && mIsPlaying)
+			    			if(mPlayerBound && mCurrentRadioMode == RadioModes.AUX && mIsPlaying)
 			    				mPlayerService.sendPauseKey();
 			    			changeScreenState(false);
 			    			break;
 			    		case 1:
 			    			changeScreenState(true);
-			    			if(mPlayerBound && currentRadioMode == radioModes.AUX && !mIsPlaying)
+			    			if(mPlayerBound && mCurrentRadioMode == RadioModes.AUX && !mIsPlaying)
 			    				// Sleep for a second and then play the music again
 								try {
 									Thread.sleep(1000);
@@ -484,7 +482,7 @@ public class MainControlFragment extends Fragment {
 			Log.d(TAG, "Changing playback state in callback due to steering input!");
 			postToUI(new Runnable(){
 			    public void run(){
-			    	if(mPlayerBound && currentRadioMode == radioModes.AUX){
+			    	if(mPlayerBound && mCurrentRadioMode == RadioModes.AUX){
 			    		Log.d(TAG, "Firing off playback change as we are in AUX mode");
 			    		if(mIsPlaying)
 							mPlayerService.sendPauseKey();
@@ -564,7 +562,7 @@ public class MainControlFragment extends Fragment {
     				 */
     				new Thread(new Runnable() {
     					public void run() {
-    						lastRadioStatus = 0;
+    						mLastRadioStatus = 0;
     						while(mIBusBound){
     							try{
 	    							getActivity().runOnUiThread(new Runnable(){
@@ -576,11 +574,11 @@ public class MainControlFragment extends Fragment {
 	    									// TODO Every 10 seconds send a RadioStatusRequest
 	    									// TODO Respond to CD requests from Radio to support AUX
 	    									
-	    									long statusDiff = Calendar.getInstance().getTimeInMillis() - lastRadioStatus;
+	    									long statusDiff = Calendar.getInstance().getTimeInMillis() - mLastRadioStatus;
 	    									
 	    									Log.d(TAG, String.format("Milliseconds since last Radio message: %s", statusDiff));
 	    									
-	    									if(statusDiff > 10000 && ! (currentRadioMode == radioModes.AUX)){
+	    									if(statusDiff > 10000 && ! (mCurrentRadioMode == RadioModes.AUX)){
 	    										Log.d(TAG, "Requesting Radio Info");
 	    										try {
 	    											sendIBusCommand(IBusCommandsEnum.BMToRadioInfoPress);
@@ -761,7 +759,7 @@ public class MainControlFragment extends Fragment {
 		ImageButton btnVolDown = (ImageButton) v.findViewById(R.id.btnVolDown);
 		Button btnRadioFM = (Button) v.findViewById(R.id.btnRadioFM);
 		Button btnRadioAM = (Button) v.findViewById(R.id.btnRadioAM);
-		btnMusicMode = (Switch) v.findViewById(R.id.btnMusicMode);
+		mBtnMusicMode = (Switch) v.findViewById(R.id.btnMusicMode);
 		ImageButton btnPrev = (ImageButton) v.findViewById(R.id.btnPrev);
 		ImageButton btnNext = (ImageButton) v.findViewById(R.id.btnNext);
 		
@@ -806,7 +804,7 @@ public class MainControlFragment extends Fragment {
 		btnPrev.setTag("BMToRadioTuneRev");
 		btnNext.setTag("BMToRadioTuneFwd");
 
-		btnMusicMode.setOnCheckedChangeListener(new OnCheckedChangeListener(){
+		mBtnMusicMode.setOnCheckedChangeListener(new OnCheckedChangeListener(){
 		    public void onCheckedChanged(CompoundButton buttonView, boolean isChecked){
 		    	Log.d(TAG, "Changing Music Mode");
 		        // Tablet Mode if checked, else Radio
@@ -814,16 +812,16 @@ public class MainControlFragment extends Fragment {
 		    		radioLayout.setVisibility(View.GONE);
 		    		tabletLayout.setVisibility(View.VISIBLE);
 		    		// Send IBus Message
-		    		if(! (currentRadioMode == radioModes.AUX))
-		    			changeRadioMode(radioModes.AUX);
+		    		if(! (mCurrentRadioMode == RadioModes.AUX))
+		    			changeRadioMode(RadioModes.AUX);
 		        }else{
 		        	if(mIsPlaying)
 		        		mPlayerService.sendPauseKey();
 		    		radioLayout.setVisibility(View.VISIBLE);
 		    		tabletLayout.setVisibility(View.GONE);
 		    		// Send IBus Message
-		    		if(currentRadioMode == radioModes.AUX || currentRadioMode == radioModes.CD)
-		    			changeRadioMode(radioModes.Radio);
+		    		if(mCurrentRadioMode == RadioModes.AUX || mCurrentRadioMode == RadioModes.CD)
+		    			changeRadioMode(RadioModes.Radio);
 		        }
 		    }
 		});
@@ -885,28 +883,28 @@ public class MainControlFragment extends Fragment {
 		return v;
 	}
 	
-	private void changeRadioMode(final radioModes mode){
+	private void changeRadioMode(final RadioModes mode){
 		new Thread(new Runnable() {
 			public void run() {
 				getActivity().runOnUiThread(new Runnable(){
 					@Override
 					public void run(){
 						try {
-							if(mode == radioModes.AUX && !(currentRadioMode== radioModes.AUX)){
-								Log.d(TAG, "Pressing Mode for AUX - Current Mode '" + currentRadioMode + "'");
+							if(mode == RadioModes.AUX && !(mCurrentRadioMode== RadioModes.AUX)){
+								Log.d(TAG, "Pressing Mode for AUX - Current Mode '" + mCurrentRadioMode + "'");
 								sendIBusCommand(IBusCommandsEnum.BMToRadioModePress);
 								Thread.sleep(250);
 								sendIBusCommand(IBusCommandsEnum.BMToRadioModeRelease);
 								Thread.sleep(1000);
-								Log.d(TAG, "Mode now " + currentRadioMode.toString());
+								Log.d(TAG, "Mode now " + mCurrentRadioMode.toString());
 								changeRadioMode(mode);
-							}else if(mode == radioModes.Radio && (currentRadioMode != radioModes.Radio)){
-								Log.d(TAG, "Pressing Mode to get Radio - Current Mode '" + currentRadioMode + "'");
+							}else if(mode == RadioModes.Radio && (mCurrentRadioMode != RadioModes.Radio)){
+								Log.d(TAG, "Pressing Mode to get Radio - Current Mode '" + mCurrentRadioMode + "'");
 								sendIBusCommand(IBusCommandsEnum.BMToRadioModePress);
 								Thread.sleep(250);
 								sendIBusCommand(IBusCommandsEnum.BMToRadioModeRelease);
 								Thread.sleep(1000);
-								Log.d(TAG, "Mode now " + currentRadioMode.toString());
+								Log.d(TAG, "Mode now " + mCurrentRadioMode.toString());
 								changeRadioMode(mode);
 							}
 						} catch (InterruptedException e){
@@ -923,32 +921,33 @@ public class MainControlFragment extends Fragment {
 	 * @param screenOn if true, turn the screen on, else turn it off
 	 */
 	@SuppressWarnings("deprecation")
-	@SuppressLint("Wakelock")
 	private void changeScreenState(boolean screenOn){
-		if(mPowerManager == null)
-			mPowerManager = (PowerManager) getActivity().getSystemService(Context.POWER_SERVICE);
-
-		if(screenWakeLock != null)
-			if(screenWakeLock.isHeld())
-				screenWakeLock.release();
+		if(mPowerManager == null) mPowerManager = (PowerManager) getActivity().getSystemService(Context.POWER_SERVICE);
+		
+		releaseWakelock();
 		
 		String state = (screenOn == true) ? "on" : "off";
 		Log.d(TAG, "Screen is being turned " + state);
 		WindowManager.LayoutParams layoutP = getActivity().getWindow().getAttributes();
-		if(screenOn){
-			layoutP.flags = LayoutParams.FLAG_KEEP_SCREEN_ON;
+		if(!screenOn){
+			//layoutP.flags = LayoutParams.FLAG_KEEP_SCREEN_ON;
 			layoutP.screenBrightness = -1;
 			screenWakeLock = mPowerManager.newWakeLock(
-				PowerManager.FULL_WAKE_LOCK | PowerManager.ACQUIRE_CAUSES_WAKEUP,
+			PowerManager.FULL_WAKE_LOCK | PowerManager.ACQUIRE_CAUSES_WAKEUP,
 				"screenWakeLock"
 			);
+			screenWakeLock.acquire();
 		}else{
-			layoutP.flags |= LayoutParams.FLAG_KEEP_SCREEN_ON;
-			layoutP.screenBrightness = 0.1f;
+			layoutP.screenBrightness = 0;
 			screenWakeLock = mPowerManager.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "screenWakeLock"); 
 		}
 		getActivity().getWindow().setAttributes(layoutP);
-    	screenWakeLock.acquire();
+	}
+	
+	private void releaseWakelock(){
+    	if(screenWakeLock != null){
+    		if(screenWakeLock.isHeld()) screenWakeLock.release();
+    	}
 	}
 	
 	private void showToast(String toastText){
@@ -966,9 +965,7 @@ public class MainControlFragment extends Fragment {
     public void onDestroy() {
     	super.onDestroy();
     	Log.d(TAG, "onDestroy called");
-    	if(screenWakeLock != null)
-    		if(screenWakeLock.isHeld())
-    			screenWakeLock.release();
+    	releaseWakelock();
     	unbindServices();
     }
     
@@ -976,6 +973,7 @@ public class MainControlFragment extends Fragment {
     public void onPause() {
     	super.onPause();
     	Log.d(TAG, "onPause called");
+    	releaseWakelock();
     	unbindServices();
     }
     
