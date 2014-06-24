@@ -153,7 +153,10 @@ public class IBusMessageService extends IOIOService {
 						}
 						// Read until readBuffer contains msgLength plus two more bytes for the full message
 						if (readBuffer.size() == msgLength + 2) {
-							if(checksumMessage(readBuffer)) {
+							// Make sure the message checksum checks out and that it's at least 3 bytes in length
+							// otherwise it's invalid and should be discarded. 0x00 0x00 will pass a XOR
+							// and the prior test BUT is NOT valid and shouldn't be processed.
+							if(checksumMessage(readBuffer) && readBuffer.size() >= 3) {
 								String data = "";
 								for(int i = 0; i<readBuffer.size(); i++)
 									data = String.format("%s%02X ", data, readBuffer.get(i));
