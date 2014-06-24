@@ -30,7 +30,7 @@ Disclaimer: I'm a Pythonista and this is my first Android app and the first time
 * Steering wheel next/previous Music control (for Play Music)
 
 # Planned Features
-* Ability to control the built-in amp EQ from within the App
+* Ability to control the built-in amp EQ from within the App [Probably impossible as the BoardMonitor has the Nav unit do this directly and not over IBus :( ]
 * Built in Google Maps Navigation
 * G-Sensor Display
 
