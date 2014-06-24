@@ -25,9 +25,7 @@ public class NavigationSystemCommand extends IBusSystemCommand {
 		public void parseGPSData(){
 			// Parse out coordinate data
 			List<String> coordData = new ArrayList<String>();
-			for (int i = 6; i < currentMessage.size(); i++) {
-				// 36 01 36 60 01 15 09 02 71 06 81 00 07 17 29
-				// 36 00 11 00 01 15 06 34 81 07 10 00 23 18 29
+			for (int i = 6; i < currentMessage.size(); i++){
 				// Convert to int to rid ourselves of preceding zeros. Yes, this is bad.
 				coordData.add(
 					String.valueOf(
