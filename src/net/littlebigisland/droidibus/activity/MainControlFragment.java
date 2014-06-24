@@ -35,7 +35,9 @@ import android.view.View.OnTouchListener;
 import android.view.ViewGroup;
 import android.view.View.OnClickListener;
 import android.view.View.OnLongClickListener;
+import android.view.Window;
 import android.view.WindowManager;
+import android.view.WindowManager.LayoutParams;
 import android.widget.Button;
 import android.widget.CompoundButton;
 import android.widget.CompoundButton.OnCheckedChangeListener;
@@ -80,6 +82,7 @@ public class MainControlFragment extends Fragment {
 	
 	protected PowerManager mPowerManager = null;
 	protected WakeLock screenWakeLock;
+	protected boolean mScreenOn = true; // Screen on = true  Screen off = false
 	
 	protected RadioModes mCurrentRadioMode = null; // Current Radio Text
 	protected long mLastRadioStatus = 0; // Epoch of last time we got a status message from the Radio
@@ -916,32 +919,39 @@ public class MainControlFragment extends Fragment {
 		}).start();
 	}
 	
-	/** TODO Make this actually work
+	/**
 	 * Acquire a screen wake lock to either turn the screen on or off
-	 * @param screenOn if true, turn the screen on, else turn it off
+	 * @param screenState if true, turn the screen on, else turn it off
 	 */
 	@SuppressWarnings("deprecation")
-	private void changeScreenState(boolean screenOn){
+	private void changeScreenState(boolean screenState){
 		if(mPowerManager == null) mPowerManager = (PowerManager) getActivity().getSystemService(Context.POWER_SERVICE);
-		
-		releaseWakelock();
-		
-		String state = (screenOn == true) ? "on" : "off";
+		boolean modeChange = false;
+		String state = (screenState == true) ? "on" : "off";
 		Log.d(TAG, "Screen is being turned " + state);
-		WindowManager.LayoutParams layoutP = getActivity().getWindow().getAttributes();
-		if(!screenOn){
-			//layoutP.flags = LayoutParams.FLAG_KEEP_SCREEN_ON;
+		Window window = getActivity().getWindow();
+		WindowManager.LayoutParams layoutP = window.getAttributes();
+		if(screenState && !mScreenOn){
+			modeChange = true;
+			mScreenOn = true;
 			layoutP.screenBrightness = -1;
-			screenWakeLock = mPowerManager.newWakeLock(
-			PowerManager.FULL_WAKE_LOCK | PowerManager.ACQUIRE_CAUSES_WAKEUP,
-				"screenWakeLock"
-			);
-			screenWakeLock.acquire();
+			screenWakeLock = mPowerManager.newWakeLock(PowerManager.FULL_WAKE_LOCK | PowerManager.ACQUIRE_CAUSES_WAKEUP, "screenWakeLock");
+			window.addFlags(LayoutParams.FLAG_DISMISS_KEYGUARD); 
 		}else{
-			layoutP.screenBrightness = 0;
-			screenWakeLock = mPowerManager.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "screenWakeLock"); 
+			if(mScreenOn){
+				modeChange = true;
+				mScreenOn = false;
+				layoutP.screenBrightness = 0;
+				screenWakeLock = mPowerManager.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "screenWakeLock");
+			}
 		}
-		getActivity().getWindow().setAttributes(layoutP);
+		
+		if(modeChange){
+			// Release the previous wakeLock before acquiring the next one
+			releaseWakelock();
+			window.setAttributes(layoutP); // Set the given layout
+			screenWakeLock.acquire();
+		}
 	}
 	
 	private void releaseWakelock(){
@@ -973,8 +983,6 @@ public class MainControlFragment extends Fragment {
     public void onPause() {
     	super.onPause();
     	Log.d(TAG, "onPause called");
-    	releaseWakelock();
-    	unbindServices();
     }
     
     @Override
