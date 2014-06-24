@@ -41,19 +41,17 @@ public class NavigationSystemCommand extends IBusSystemCommand {
 			String longitudeEastWest = (String.format("%s", currentMessage.get(14)).charAt(1) == '0') ? "E" : "W";
 			triggerCallback("onUpdateGPSCoordinates",
 				String.format(
-					"%s%s%s'%s.%s\"%s %s%s%s'%s.%s\"%s", 
+					"%s%s%s'%s\"%s %s%s%s'%s\"%s", 
 					//Latitude
 					coordData.get(0),
 					(char) 0x00B0,
-					coordData.get(1), 
-					coordData.get(2),
+					(int) Math.round(Double.parseDouble(coordData.get(1)+coordData.get(2))),
 					coordData.get(3).charAt(0),
 					latitudeNorthSouth,
 					//Longitude
 					Integer.parseInt(coordData.get(4) + coordData.get(5)),
 					(char) 0x00B0,
-					coordData.get(6),
-					coordData.get(7),
+					(int) Math.round(Double.parseDouble(coordData.get(6)+coordData.get(7))),
 					coordData.get(8).charAt(0),
 					longitudeEastWest
 				)
