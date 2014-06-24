@@ -163,6 +163,12 @@ public class BoardMonitorSystemCommand extends IBusSystemCommand {
 		};
 	}
 	
+	public byte[] sendCDPlayerMessage(){
+		return new byte[]{
+			// TODO Implement
+		};
+	}
+	
 	/**
 	 * Reset the "Consumption 1" IKE metric
 	 * @return Byte array of message to send to IBus
@@ -237,7 +243,6 @@ public class BoardMonitorSystemCommand extends IBusSystemCommand {
 		int tempUnit = (Integer) args[1]; // 0 = C 1 = F
 		int dateTimeUnit = (Integer) args[2]; // 0 = 24h 1 = 12h
 		
-		// TODO Finish implementation
 		byte[] allUnits = new BigInteger(
 			String.format("%s%s00%s%s%s%s",dateTimeUnit, tempUnit, speedUnit, speedUnit, speedUnit, dateTimeUnit ),
 		2).toByteArray();
