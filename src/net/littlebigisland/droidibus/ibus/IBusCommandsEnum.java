@@ -1,7 +1,8 @@
 package net.littlebigisland.droidibus.ibus;
 
 public enum IBusCommandsEnum {
-	//BoardMonitor to IKE Commands
+	// BoardMonitor to IKE Commands
+	BMToIKEGetIgnition(DeviceAddressEnum.OnBoardMonitor, "getIgnitionStatus"),
 	BMToIKEGetTime(DeviceAddressEnum.OnBoardMonitor, "getTime"),
 	BMToIKEGetDate(DeviceAddressEnum.OnBoardMonitor, "getDate"),
 	BMToIKEGetOutdoorTemp(DeviceAddressEnum.OnBoardMonitor, "getOutdoorTemp"),
@@ -12,7 +13,7 @@ public enum IBusCommandsEnum {
 	BMToIKEResetFuel1(DeviceAddressEnum.OnBoardMonitor, "resetFuel1"),
 	BMToIKEResetFuel2(DeviceAddressEnum.OnBoardMonitor, "resetFuel2"),
 	BMToIKEResetAvgSpeed(DeviceAddressEnum.OnBoardMonitor, "resetAvgSpeed"),
-	//BoardMonitor to Radio Commands
+	// BoardMonitor to Radio Commands
 	BMToRadioGetStatus(DeviceAddressEnum.OnBoardMonitor, "getRadioStatus"),
 	BMToRadioPwrPress(DeviceAddressEnum.OnBoardMonitor, "sendRadioPwrPress"),
 	BMToRadioPwrRelease(DeviceAddressEnum.OnBoardMonitor, "sendRadioPwrRelease"),
@@ -31,7 +32,13 @@ public enum IBusCommandsEnum {
 	BMToRadioAMPress(DeviceAddressEnum.OnBoardMonitor, "sendAMPress"),
 	BMToRadioAMRelease(DeviceAddressEnum.OnBoardMonitor, "sendAMRelease"),
 	BMToRadioInfoPress(DeviceAddressEnum.OnBoardMonitor, "sendInfoPress"),
-	BMToRadioInfoRelease(DeviceAddressEnum.OnBoardMonitor, "sendInfoRelease");	
+	BMToRadioInfoRelease(DeviceAddressEnum.OnBoardMonitor, "sendInfoRelease"),
+	// BoardMonitor to Light Control Module Commands
+	BMToLCMGetDimmerStatus(DeviceAddressEnum.OnBoardMonitor, "getLightDimmerStatus"),
+	// BoardMonitor to General Module Commands
+	BMToGMGetDoorStatus(DeviceAddressEnum.OnBoardMonitor, "getDoorsRequest"),
+	// BoardMonitor to Global Broadcast Address Commands
+	BMToGlobalBroadcastAliveMessage(DeviceAddressEnum.OnBoardMonitor, "sendAliveMessage");
 	
 	private final DeviceAddressEnum system;
 	private final String methodName;

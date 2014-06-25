@@ -87,6 +87,7 @@ public class MainControlFragment extends Fragment {
 	protected RadioModes mCurrentRadioMode = null; // Current Radio Text
 	protected long mLastRadioStatus = 0; // Epoch of last time we got a status message from the Radio
 	protected long mLastModeChange = 0; // Time that the radio mode last changed
+	protected long mLastRadioStatusRequest = 0; // Time we last requested the Radio's status
 	
 	private enum RadioModes{
 		AUX,
@@ -544,63 +545,67 @@ public class MainControlFragment extends Fragment {
             mIBusService = binder.getService();
     		if(mIBusService != null) {
     			mIBusBound = true;
-    			Log.d(TAG, "mIBusService is NOT NULL");
+    			Log.d(TAG, "mIBusService is bound");
     			mIBusService.setCallbackListener(mIBusUpdateListener);
+    			// Emulate BM Boot Up
+    			sendIBusCommand(IBusCommandsEnum.BMToGlobalBroadcastAliveMessage);
+    			sendIBusCommand(IBusCommandsEnum.BMToIKEGetIgnition);
+    			sendIBusCommand(IBusCommandsEnum.BMToLCMGetDimmerStatus);
+    			sendIBusCommand(IBusCommandsEnum.BMToGMGetDoorStatus);
     			// Send a "get" request to populate the values on screen
     			// Do it here because this is when the service methods come into scope
-    			if(mIBusBound){
-    				sendIBusCommand(IBusCommandsEnum.BMToIKEGetTime);
-    				sendIBusCommand(IBusCommandsEnum.BMToIKEGetDate);
-    				sendIBusCommand(IBusCommandsEnum.BMToIKEGetFuel1);
-    				sendIBusCommand(IBusCommandsEnum.BMToIKEGetFuel2);
-    				sendIBusCommand(IBusCommandsEnum.BMToIKEGetOutdoorTemp);
-    				sendIBusCommand(IBusCommandsEnum.BMToIKEGetRange);
-    				sendIBusCommand(IBusCommandsEnum.BMToIKEGetAvgSpeed);
+				sendIBusCommand(IBusCommandsEnum.BMToIKEGetTime);
+				sendIBusCommand(IBusCommandsEnum.BMToIKEGetDate);
+				sendIBusCommand(IBusCommandsEnum.BMToIKEGetFuel1);
+				sendIBusCommand(IBusCommandsEnum.BMToIKEGetFuel2);
+				sendIBusCommand(IBusCommandsEnum.BMToIKEGetOutdoorTemp);
+				sendIBusCommand(IBusCommandsEnum.BMToIKEGetRange);
+				sendIBusCommand(IBusCommandsEnum.BMToIKEGetAvgSpeed);
     				
-    				/* This thread should make sure to send out and request
-    				 * any IBus messages that the BM usually would.
-    				 * We should also make sure to keep the radio in "Info"
-    				 * mode at all times here. 
-    				 */
-    				new Thread(new Runnable() {
-    					public void run() {
-    						mLastRadioStatus = 0;
-    						while(mIBusBound){
-    							try{
-	    							getActivity().runOnUiThread(new Runnable(){
-	    								@Override
-	    								public void run(){
-	    									// When did the radio last update us? If more than ten seconds, ask info
-	    									
-	    									// BM Emulation
-	    									// TODO Every 10 seconds send a RadioStatusRequest
-	    									// TODO Respond to CD requests from Radio to support AUX
-	    									
-	    									long statusDiff = Calendar.getInstance().getTimeInMillis() - mLastRadioStatus;
-	    									
-	    									Log.d(TAG, String.format("Milliseconds since last Radio message: %s", statusDiff));
-	    									
-	    									if(statusDiff > 10000 && ! (mCurrentRadioMode == RadioModes.AUX)){
-	    										Log.d(TAG, "Requesting Radio Info");
-	    										try {
-	    											sendIBusCommand(IBusCommandsEnum.BMToRadioInfoPress);
-													Thread.sleep(500);
-													sendIBusCommand(IBusCommandsEnum.BMToRadioInfoRelease);
-												} catch (InterruptedException e) {
-													// First world anarchy
-												}
-	    										
-	    									}
-	    								}
-	    							});
-	    							Thread.sleep(5000);
-    							}catch(InterruptedException e){
-    								// First world anarchy
-    							}
-    						}
-    					}
-    				}).start();
-    			}
+				/* This thread should make sure to send out and request
+				 * any IBus messages that the BM usually would.
+				 * We should also make sure to keep the radio in "Info"
+				 * mode at all times here. 
+				 */
+				new Thread(new Runnable() {
+					public void run() {
+						mLastRadioStatus = 0;
+						while(mIBusBound){
+							try{
+    							getActivity().runOnUiThread(new Runnable(){
+    								@Override
+    								public void run(){
+    									long currentTime = Calendar.getInstance().getTimeInMillis();
+    									
+    									// BM Emulation
+    									
+    									// Ask the radio for it's status
+    									if((currentTime - mLastRadioStatusRequest) >= 10000){
+    										sendIBusCommand(IBusCommandsEnum.BMToRadioGetStatus);
+    										mLastRadioStatusRequest = currentTime;
+    									}
+    									
+    									long statusDiff = currentTime - mLastRadioStatus;
+    									if(statusDiff > 10000 && ! (mCurrentRadioMode == RadioModes.AUX)){
+    										Log.d(TAG, "Requesting Radio Info");
+    										try {
+    											sendIBusCommand(IBusCommandsEnum.BMToRadioInfoPress);
+												Thread.sleep(500);
+												sendIBusCommand(IBusCommandsEnum.BMToRadioInfoRelease);
+											} catch (InterruptedException e) {
+												// First world anarchy
+											}
+    										
+    									}
+    								}
+    							});
+    							Thread.sleep(5000);
+							}catch(InterruptedException e){
+								// First world anarchy
+							}
+						}
+					}
+				}).start();
     		}
         }
 

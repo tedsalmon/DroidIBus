@@ -154,6 +154,7 @@ public class BoardMonitorSystemCommand extends IBusSystemCommand {
 	
 	/**
 	 * Broadcast BM Alive message. This is the first message sent on boot
+	 * I believe we register with the Global Master?
 	 * IBus Message: F0 04 BF 02 70 39
 	 * @return Byte array of message to send to IBus
 	 */
