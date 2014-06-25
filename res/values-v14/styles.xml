@@ -21,7 +21,7 @@
         <item name="android:layout_height">wrap_content</item>
     </style>
     <style name="majorStatItemValueText">
-        <item name="android:textSize">25sp</item>
+        <item name="android:textSize">28sp</item>
         <item name="android:layout_marginTop">5dp</item>
         <item name="android:layout_marginLeft">5dp</item>
         <item name="android:layout_width">wrap_content</item>
@@ -35,18 +35,27 @@
         <item name="android:orientation">horizontal</item>
     </style>
     <style name="statItemLabelText">
-        <item name="android:textSize">20sp</item>
+        <item name="android:textSize">25sp</item>
         <item name="android:layout_marginTop">10dp</item>
         <item name="android:layout_width">wrap_content</item>
         <item name="android:layout_height">wrap_content</item>
     </style>
     <style name="statItemValueText">
-        <item name="android:textSize">17.5sp</item>
+        <item name="android:textSize">25sp</item>
         <item name="android:layout_marginTop">10dp</item>
         <item name="android:layout_marginLeft">5dp</item>
         <item name="android:layout_width">wrap_content</item>
         <item name="android:layout_height">wrap_content</item>
         <item name="android:layout_centerVertical">true</item>
 	    <item name="android:paddingRight">10dp</item>
+    </style>
+        <style name="geoItemText">
+        <item name="android:textSize">22.5sp</item>
+        <item name="android:layout_marginTop">10dp</item>
+        <item name="android:layout_marginLeft">2.5dp</item>
+        <item name="android:layout_width">wrap_content</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:layout_centerVertical">true</item>
+	    <item name="android:paddingRight">2.5dp</item>
     </style>
 </resources>

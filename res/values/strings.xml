@@ -5,11 +5,10 @@
     <string name="rpmFieldLbl">RPM:</string>
     <string name="rangeFieldLbl">Range:</string>
     <string name="locationFieldLbl">Location: </string>
-    <string name="currentObcStatsLbl">Current Stats:</string>
-    <string name="historicalObcStatsLbl">Historical Stats:</string>
-    <string name="consumptionLbl">Fuel Consumption:</string>
+    <string name="currentObcStatsLbl">Fuel Economy Stats</string>
+    <string name="consumptionLbl1">Fuel Consumption 1:</string>
+    <string name="consumptionLbl2">Fuel Consumption 2:</string>
     <string name="avgSpeedLbl">Avg. Speed</string>
-    <string name="topSpeedLbl">Top Speed</string>
     <string name="outdoorTempFieldLbl">Outdoor:</string>
     <string name="coolantTempFieldLbl">Coolant:</string>
     <string name="defaultText">----</string>
