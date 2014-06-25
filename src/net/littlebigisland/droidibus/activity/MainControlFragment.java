@@ -82,11 +82,11 @@ public class MainControlFragment extends Fragment {
 	
 	protected PowerManager mPowerManager = null;
 	protected WakeLock screenWakeLock;
-	protected boolean mScreenOn = true; // Screen on = true  Screen off = false
+	protected boolean mScreenOn = false; // Screen on = true  Screen off = false
 	
 	protected RadioModes mCurrentRadioMode = null; // Current Radio Text
 	protected long mLastRadioStatus = 0; // Epoch of last time we got a status message from the Radio
-	protected long mTimeInCurrentMode = 0;
+	protected long mLastModeChange = 0; // Time that the radio mode last changed
 	
 	private enum RadioModes{
 		AUX,
@@ -211,15 +211,13 @@ public class MainControlFragment extends Fragment {
 			    	}
 			    	if(lastState != mCurrentRadioMode)
 			    		Log.d(TAG, "Mode change registered, resetting counter");
-			    		mTimeInCurrentMode = Calendar.getInstance().getTimeInMillis();
+			    		mLastModeChange = Calendar.getInstance().getTimeInMillis();
 			    	// We're not in the right mode, sync with the car
 			    	// Make sure this isn't CD mode and that we're not in the middle of a mode change
-			    	// by making sure we've been in the current mode for at least 1 second
-			    	if(!(mCurrentRadioMode == RadioModes.CD) && mTimeInCurrentMode > 1000){
-			    		if(mCurrentRadioMode == RadioModes.AUX && tabletLayout.getVisibility() == View.GONE)
-			    			mBtnMusicMode.toggle();
-			    		if(!(mCurrentRadioMode == RadioModes.AUX) && tabletLayout.getVisibility() == View.VISIBLE)
-			    			mBtnMusicMode.toggle();
+			    	// by making sure we've been in the current mode for at least 1.5 seconds
+			    	if(!(mCurrentRadioMode == RadioModes.CD) && (Calendar.getInstance().getTimeInMillis() - mLastModeChange) > 1500){
+			    		if(mCurrentRadioMode == RadioModes.AUX && tabletLayout.getVisibility() == View.GONE) mBtnMusicMode.toggle();
+			    		if(!(mCurrentRadioMode == RadioModes.AUX) && tabletLayout.getVisibility() == View.VISIBLE) mBtnMusicMode.toggle();
 			    	}
 			    	
 			    	mLastRadioStatus = Calendar.getInstance().getTimeInMillis();
@@ -401,7 +399,7 @@ public class MainControlFragment extends Fragment {
 			    			if(mPlayerBound && mCurrentRadioMode == RadioModes.AUX && !mIsPlaying)
 			    				// Sleep for a second and then play the music again
 								try {
-									Thread.sleep(1000);
+									Thread.sleep(5000);
 				    				mPlayerService.sendPlayKey();
 								} catch (InterruptedException e) {
 									e.printStackTrace();
@@ -447,7 +445,7 @@ public class MainControlFragment extends Fragment {
 			Log.d(TAG, "Setting GPS Alitude");
 			postToUI(new Runnable(){
 			    public void run(){
-			    	geoAltitudeField.setText(String.format("Alt.: %sm", altitude));
+			    	geoAltitudeField.setText(String.format("Alt: %s'", (int) Math.round(altitude * 3.28084)));
 			    }
 			});
 		}
@@ -462,8 +460,7 @@ public class MainControlFragment extends Fragment {
 			Log.d(TAG, "Changing the track fwd in callback due to steering input!");
 			postToUI(new Runnable(){
 			    public void run(){
-					if(mPlayerBound)
-						mPlayerService.sendNextKey();
+					if(mPlayerBound) mPlayerService.sendNextKey();
 			    }
 			});
 		}
@@ -473,8 +470,7 @@ public class MainControlFragment extends Fragment {
 			Log.d(TAG, "Changing the track fwd in callback due to steering input!");
 			postToUI(new Runnable(){
 			    public void run(){
-					if(mPlayerBound)
-						mPlayerService.sendPreviousKey();
+					if(mPlayerBound) mPlayerService.sendPreviousKey();
 			    }
 			});
 		}
@@ -487,10 +483,11 @@ public class MainControlFragment extends Fragment {
 			    public void run(){
 			    	if(mPlayerBound && mCurrentRadioMode == RadioModes.AUX){
 			    		Log.d(TAG, "Firing off playback change as we are in AUX mode");
-			    		if(mIsPlaying)
+			    		if(mIsPlaying){
 							mPlayerService.sendPauseKey();
-						else
+			    		}else{
 							mPlayerService.sendPlayKey();
+			    		}
 			    	}
 			    }
 			});
@@ -815,16 +812,17 @@ public class MainControlFragment extends Fragment {
 		    		radioLayout.setVisibility(View.GONE);
 		    		tabletLayout.setVisibility(View.VISIBLE);
 		    		// Send IBus Message
-		    		if(! (mCurrentRadioMode == RadioModes.AUX))
+		    		if(! (mCurrentRadioMode == RadioModes.AUX)){
 		    			changeRadioMode(RadioModes.AUX);
+		    		}
 		        }else{
-		        	if(mIsPlaying)
-		        		mPlayerService.sendPauseKey();
+		        	if(mIsPlaying) mPlayerService.sendPauseKey();
 		    		radioLayout.setVisibility(View.VISIBLE);
 		    		tabletLayout.setVisibility(View.GONE);
 		    		// Send IBus Message
-		    		if(mCurrentRadioMode == RadioModes.AUX || mCurrentRadioMode == RadioModes.CD)
+		    		if(mCurrentRadioMode == RadioModes.AUX || mCurrentRadioMode == RadioModes.CD){
 		    			changeRadioMode(RadioModes.Radio);
+		    		}
 		        }
 		    }
 		});
@@ -859,7 +857,6 @@ public class MainControlFragment extends Fragment {
 		fuel1Field.setOnLongClickListener(valueResetter);
 		fuel2Field.setOnLongClickListener(valueResetter);
 		avgSpeedField.setOnLongClickListener(valueResetter);
-		//historicalAvgSpeedField.setOnLongClickListener(valueResetter);
 		
 		OnClickListener clickSingleAction = new OnClickListener() {
 			@Override
@@ -927,23 +924,24 @@ public class MainControlFragment extends Fragment {
 	private void changeScreenState(boolean screenState){
 		if(mPowerManager == null) mPowerManager = (PowerManager) getActivity().getSystemService(Context.POWER_SERVICE);
 		boolean modeChange = false;
-		String state = (screenState == true) ? "on" : "off";
-		Log.d(TAG, "Screen is being turned " + state);
 		Window window = getActivity().getWindow();
 		WindowManager.LayoutParams layoutP = window.getAttributes();
+		
 		if(screenState && !mScreenOn){
+			Log.d(TAG, "*** Screen is being turned on ***");
 			modeChange = true;
 			mScreenOn = true;
 			layoutP.screenBrightness = -1;
 			screenWakeLock = mPowerManager.newWakeLock(PowerManager.FULL_WAKE_LOCK | PowerManager.ACQUIRE_CAUSES_WAKEUP, "screenWakeLock");
 			window.addFlags(LayoutParams.FLAG_DISMISS_KEYGUARD); 
-		}else{
-			if(mScreenOn){
-				modeChange = true;
-				mScreenOn = false;
-				layoutP.screenBrightness = 0;
-				screenWakeLock = mPowerManager.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "screenWakeLock");
-			}
+		}
+		
+		if(!screenState && mScreenOn){
+			modeChange = true;
+			mScreenOn = false;
+			Log.d(TAG, "*** Screen is being turned off ***");
+			layoutP.screenBrightness = 0;
+			screenWakeLock = mPowerManager.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "screenWakeLock");
 		}
 		
 		if(modeChange){
