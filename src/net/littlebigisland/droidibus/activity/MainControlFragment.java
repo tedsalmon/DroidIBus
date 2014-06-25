@@ -396,14 +396,16 @@ public class MainControlFragment extends Fragment {
 			    			break;
 			    		case 1:
 			    			changeScreenState(true);
-			    			if(mPlayerBound && mCurrentRadioMode == RadioModes.AUX && !mIsPlaying)
-			    				// Sleep for a second and then play the music again
-								try {
-									Thread.sleep(5000);
-				    				mPlayerService.sendPlayKey();
-								} catch (InterruptedException e) {
-									e.printStackTrace();
-								}
+			    			if(mPlayerBound && mCurrentRadioMode == RadioModes.AUX && !mIsPlaying){
+			    				// Post a runnable to play the last song in 5 seconds
+			    				Handler mainHandler = new Handler(getActivity().getMainLooper());
+			    				mainHandler.postDelayed(new Runnable(){
+									@Override
+									public void run() {
+										mPlayerService.sendPlayKey();
+									}
+			    				}, 5000);
+			    			}
 			    			break;
 			    	}
 			    }
