@@ -12,7 +12,7 @@ public class IKESystemCommand extends IBusSystemCommand {
 		public void mapReceived(ArrayList<Byte> msg){
 			switch(msg.get(3)){
 				case 0x11: // Ignition State
-					int state = (msg.get(4) < 3) ? msg.get(4) : (0x02 & msg.get(4));
+					int state = (msg.get(4) < 2) ? msg.get(4) : (0x02 & msg.get(4));
 					triggerCallback("onUpdateIgnitionSate", state);
 					break;
 				case 0x18: // Speed and RPM
@@ -27,7 +27,7 @@ public class IKESystemCommand extends IBusSystemCommand {
 	}
 	
 	class IKEBroadcast extends IBusSystemCommand{
-		private final byte OBCData = 0x24;
+		private final byte mOBCData = 0x24;
 		
 		/**
 		 * Handle OBC messages sent from IKE
@@ -74,7 +74,7 @@ public class IKESystemCommand extends IBusSystemCommand {
 		public void mapReceived(ArrayList<Byte> msg){
 			currentMessage = msg;
 			byte operation = msg.get(3);
-			if(operation == OBCData)
+			if(operation == mOBCData)
 				OBCData();
 		}
 	}
