@@ -2,7 +2,7 @@ package net.littlebigisland.droidibus.ibus;
 
 public enum IBusCommandsEnum {
 	// BoardMonitor to IKE Commands
-	BMToIKEGetIgnition(DeviceAddressEnum.OnBoardMonitor, "getIgnitionStatus"),
+	BMToIKEGetIgnitionStatus(DeviceAddressEnum.OnBoardMonitor, "getIgnitionStatus"),
 	BMToIKEGetTime(DeviceAddressEnum.OnBoardMonitor, "getTime"),
 	BMToIKEGetDate(DeviceAddressEnum.OnBoardMonitor, "getDate"),
 	BMToIKEGetOutdoorTemp(DeviceAddressEnum.OnBoardMonitor, "getOutdoorTemp"),
