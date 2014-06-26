@@ -185,9 +185,18 @@ public class MainControlFragment extends Fragment {
 		 * @param code
 		 */
 		private void postToUI(Runnable code){
-			Context appContext = getActivity();
-			Handler mainHandler = new Handler(appContext.getMainLooper());
+			Handler mainHandler = new Handler(getActivity().getMainLooper());
 			mainHandler.post(code);
+		}
+		
+		/**
+		 * Send shit back to the UI Context with a delay
+		 * @param code Runnable with code
+		 * @param delayMillisecs Time to delay this message in the event loop
+		 */
+		private void postToUIDelayed(Runnable code, long delayMillisecs){
+			Handler mainHandler = new Handler(getActivity().getMainLooper());
+			mainHandler.postDelayed(code, delayMillisecs);
 		}
 		
 		/**
@@ -399,8 +408,7 @@ public class MainControlFragment extends Fragment {
 			    			changeScreenState(true);
 			    			if(mPlayerBound && mCurrentRadioMode == RadioModes.AUX && !mIsPlaying){
 			    				// Post a runnable to play the last song in 5 seconds
-			    				Handler mainHandler = new Handler(getActivity().getMainLooper());
-			    				mainHandler.postDelayed(new Runnable(){
+			    				postToUIDelayed(new Runnable(){
 									@Override
 									public void run() {
 										mPlayerService.sendPlayKey();
@@ -503,15 +511,15 @@ public class MainControlFragment extends Fragment {
 			if(status == 0){
 				postToUI(new Runnable(){
 				    public void run(){
-				    	try {
-				    		sendIBusCommand(IBusCommandsEnum.BMToRadioPwrPress);
-							Thread.sleep(500);
-							sendIBusCommand(IBusCommandsEnum.BMToRadioPwrRelease);
-						} catch (InterruptedException e) {
-							// First world anarchy
-						}
+			    		sendIBusCommand(IBusCommandsEnum.BMToRadioPwrPress);
 				    }
 				});
+				postToUIDelayed(new Runnable(){
+					@Override
+					public void run(){
+						sendIBusCommand(IBusCommandsEnum.BMToRadioPwrRelease);
+					}
+				}, 500);
 			}
 		}
 		
@@ -549,7 +557,7 @@ public class MainControlFragment extends Fragment {
     			mIBusService.setCallbackListener(mIBusUpdateListener);
     			// Emulate BM Boot Up
     			sendIBusCommand(IBusCommandsEnum.BMToGlobalBroadcastAliveMessage);
-    			sendIBusCommand(IBusCommandsEnum.BMToIKEGetIgnition);
+    			sendIBusCommand(IBusCommandsEnum.BMToIKEGetIgnitionStatus);
     			sendIBusCommand(IBusCommandsEnum.BMToLCMGetDimmerStatus);
     			sendIBusCommand(IBusCommandsEnum.BMToGMGetDoorStatus);
     			// Send a "get" request to populate the values on screen
@@ -572,34 +580,31 @@ public class MainControlFragment extends Fragment {
 						mLastRadioStatus = 0;
 						while(mIBusBound){
 							try{
-    							getActivity().runOnUiThread(new Runnable(){
-    								@Override
-    								public void run(){
-    									long currentTime = Calendar.getInstance().getTimeInMillis();
-    									
-    									// BM Emulation
-    									
-    									// Ask the radio for it's status
-    									if((currentTime - mLastRadioStatusRequest) >= 10000){
-    										sendIBusCommand(IBusCommandsEnum.BMToRadioGetStatus);
-    										mLastRadioStatusRequest = currentTime;
-    									}
-    									
-    									long statusDiff = currentTime - mLastRadioStatus;
-    									if(statusDiff > 10000 && ! (mCurrentRadioMode == RadioModes.AUX)){
-    										Log.d(TAG, "Requesting Radio Info");
-    										try {
-    											sendIBusCommand(IBusCommandsEnum.BMToRadioInfoPress);
-												Thread.sleep(500);
-												sendIBusCommand(IBusCommandsEnum.BMToRadioInfoRelease);
-											} catch (InterruptedException e) {
-												// First world anarchy
-											}
-    										
-    									}
-    								}
-    							});
-    							Thread.sleep(5000);
+								if(mIBusService.isIBusActive()){
+	    							getActivity().runOnUiThread(new Runnable(){
+	    								@Override
+	    								public void run(){
+	    									long currentTime = Calendar.getInstance().getTimeInMillis();
+	    									// BM Emulation
+	    									
+	    									// Ask the radio for it's status
+	    									if((currentTime - mLastRadioStatusRequest) >= 10000){
+	    										sendIBusCommand(IBusCommandsEnum.BMToRadioGetStatus);
+	    										mLastRadioStatusRequest = currentTime;
+	    									}
+	    									
+	    									long statusDiff = currentTime - mLastRadioStatus;
+	    									if(statusDiff > 10000 && ! (mCurrentRadioMode == RadioModes.AUX)){
+	    										Log.d(TAG, "Requesting Radio Info");
+												sendIBusCommand(IBusCommandsEnum.BMToRadioInfoPress);
+												sendIBusCommandDelayed(IBusCommandsEnum.BMToRadioInfoRelease, 500);
+	    									}
+	    								}
+	    							});
+	    							Thread.sleep(5000);
+								}else{
+									Thread.sleep(500); // More aggressive since the IOIO could connect at any time
+								}
 							}catch(InterruptedException e){
 								// First world anarchy
 							}
@@ -693,8 +698,7 @@ public class MainControlFragment extends Fragment {
 		// Layouts
     	radioLayout = (LinearLayout) v.findViewById(R.id.radioAudio);
     	tabletLayout = (LinearLayout) v.findViewById(R.id.tabletAudio);
-    	
-    	
+
 		// Keep a wake lock
     	changeScreenState(true);
 		
@@ -816,20 +820,20 @@ public class MainControlFragment extends Fragment {
 		    	Log.d(TAG, "Changing Music Mode");
 		        // Tablet Mode if checked, else Radio
 		    	if(isChecked){
-		    		radioLayout.setVisibility(View.GONE);
-		    		tabletLayout.setVisibility(View.VISIBLE);
 		    		// Send IBus Message
 		    		if(! (mCurrentRadioMode == RadioModes.AUX)){
 		    			changeRadioMode(RadioModes.AUX);
 		    		}
+		    		radioLayout.setVisibility(View.GONE);
+		    		tabletLayout.setVisibility(View.VISIBLE);
 		        }else{
 		        	if(mIsPlaying) mPlayerService.sendPauseKey();
-		    		radioLayout.setVisibility(View.VISIBLE);
-		    		tabletLayout.setVisibility(View.GONE);
 		    		// Send IBus Message
 		    		if(mCurrentRadioMode == RadioModes.AUX || mCurrentRadioMode == RadioModes.CD){
 		    			changeRadioMode(RadioModes.Radio);
 		    		}
+		    		radioLayout.setVisibility(View.VISIBLE);
+		    		tabletLayout.setVisibility(View.GONE);
 		        }
 		    }
 		});
@@ -891,34 +895,25 @@ public class MainControlFragment extends Fragment {
 	}
 	
 	private void changeRadioMode(final RadioModes mode){
-		new Thread(new Runnable() {
-			public void run() {
-				getActivity().runOnUiThread(new Runnable(){
-					@Override
-					public void run(){
-						try {
-							if(mode == RadioModes.AUX && !(mCurrentRadioMode== RadioModes.AUX)){
-								Log.d(TAG, "Pressing Mode for AUX - Current Mode '" + mCurrentRadioMode + "'");
-								sendIBusCommand(IBusCommandsEnum.BMToRadioModePress);
-								Thread.sleep(250);
-								sendIBusCommand(IBusCommandsEnum.BMToRadioModeRelease);
-								Thread.sleep(1000);
-								Log.d(TAG, "Mode now " + mCurrentRadioMode.toString());
-								changeRadioMode(mode);
-							}else if(mode == RadioModes.Radio && (mCurrentRadioMode != RadioModes.Radio)){
-								Log.d(TAG, "Pressing Mode to get Radio - Current Mode '" + mCurrentRadioMode + "'");
-								sendIBusCommand(IBusCommandsEnum.BMToRadioModePress);
-								Thread.sleep(250);
-								sendIBusCommand(IBusCommandsEnum.BMToRadioModeRelease);
-								Thread.sleep(1000);
-								Log.d(TAG, "Mode now " + mCurrentRadioMode.toString());
-								changeRadioMode(mode);
-							}
-						} catch (InterruptedException e){
-							// First world anarchy
-						}
+		new Thread(new Runnable(){
+			public void run(){
+				//getActivity().runOnUiThread(new Runnable(){
+				//	public void run(){
+				//	}
+				//});
+				try{
+					Log.d(TAG, String.format("Current mode = %s, desired mode = %s", mCurrentRadioMode.toString(), mode.toString() ));
+					if( (mode == RadioModes.AUX && !(mCurrentRadioMode== RadioModes.AUX)) ||  
+						(mode == RadioModes.Radio && (mCurrentRadioMode != RadioModes.Radio)) ){
+						sendIBusCommand(IBusCommandsEnum.BMToRadioModePress);
+						sendIBusCommandDelayed(IBusCommandsEnum.BMToRadioModeRelease, 250);
+						Log.d(TAG, "Mode now " + mCurrentRadioMode.toString());
+						Thread.sleep(1000);
+						changeRadioMode(mode);
 					}
-				});
+				}catch(InterruptedException e){
+					// Who cares? Yeah I probably should. I will later on, I promise!
+				}
 			}
 		}).start();
 	}
@@ -935,7 +930,6 @@ public class MainControlFragment extends Fragment {
 		WindowManager.LayoutParams layoutP = window.getAttributes();
 		
 		if(screenState && !mScreenOn){
-			Log.d(TAG, "*** Screen is being turned on ***");
 			modeChange = true;
 			mScreenOn = true;
 			layoutP.screenBrightness = -1;
@@ -946,7 +940,6 @@ public class MainControlFragment extends Fragment {
 		if(!screenState && mScreenOn){
 			modeChange = true;
 			mScreenOn = false;
-			Log.d(TAG, "*** Screen is being turned off ***");
 			layoutP.screenBrightness = 0;
 			screenWakeLock = mPowerManager.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "screenWakeLock");
 		}
@@ -971,9 +964,17 @@ public class MainControlFragment extends Fragment {
 	}
 	
 	private void sendIBusCommand(IBusCommandsEnum cmd, Object... args){
-		if(mIBusBound){
+		if(mIBusBound && mIBusService.isIBusActive()){
 			mIBusService.sendCommand(new IBusCommand(cmd, args));
 		}
+	}
+	
+	private void sendIBusCommandDelayed(final IBusCommandsEnum cmd, final long delayMillis, final Object... args){
+		new Handler(getActivity().getMainLooper()).postDelayed(new Runnable(){
+			public void run(){
+				sendIBusCommand(cmd, args);
+			}
+		}, delayMillis);
 	}
 	
     @Override
