@@ -38,6 +38,7 @@ public class IBusMessageService extends IOIOService {
 	private ArrayList<IBusCommand> mCommandQueue = new ArrayList<IBusCommand>();
 	private IBusMessageReceiver mIBusCbListener = null;
 	private Map<Byte, String> mDeviceLookup = new HashMap<Byte, String>(); // For logging
+	private boolean mIsIOIOConnected = false;
 	
 	/**
 	 * This is the thread on which all the IOIO activity happens. It will be run
@@ -111,6 +112,7 @@ public class IBusMessageService extends IOIOService {
 				// Add 250ms so that we don't spam the buffer
 				// when the view starts asking IKE for data 
 				lastSend = time.getTimeInMillis() + 250;
+				mIsIOIOConnected = true;
 			}
 			
 			/**
@@ -210,6 +212,11 @@ public class IBusMessageService extends IOIOService {
 				Thread.sleep(2);
 			}
 			
+			@Override
+			public void disconnected(){
+				mIsIOIOConnected = false;
+			}
+			
 			private void initiateHandlers(){
 				// Map Device source Addresses with the respective handler class
 				IBusSysMap.put(DeviceAddressEnum.Radio.toByte(), new RadioSystemCommand());
@@ -268,6 +275,10 @@ public class IBusMessageService extends IOIOService {
 	
 	public void disable(){
 		stopSelf();
+	}
+	
+	public boolean isIBusActive(){
+		return mIsIOIOConnected;
 	}
 	
 	@Override
