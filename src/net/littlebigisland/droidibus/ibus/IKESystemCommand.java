@@ -37,11 +37,16 @@ public class IKESystemCommand extends IBusSystemCommand {
 			// Minus two because the array starts at zero and we need to ignore the last byte (XOR Checksum)
 			int endByte = currentMessage.size() - 2;
 			switch(currentMessage.get(4)){
-				case 0x01: //Time
-					triggerCallback("onUpdateTime", decodeMessage(currentMessage, 6, endByte));
+				case 0x01: // Time
+					// The time contains spaces instead of zeros for hours less than 10
+					String curTime = decodeMessage(currentMessage, 6, endByte - 2).replace(" ", "0");
+					triggerCallback("onUpdateTime", curTime);
 					break;
-				case 0x02: //Date
-					triggerCallback("onUpdateDate", decodeMessage(currentMessage, 6, endByte));
+				case 0x02: // Date
+					// Dots are retarded and even though this is personal preference I'm coding all
+					// The way down here where it doesn't belong (outside of the view) SUE ME.
+					String curDate = decodeMessage(currentMessage, 6, endByte).replace(".", "/");
+					triggerCallback("onUpdateDate", curDate);
 					break;
 				case 0x03: //Outdoor Temperature
 					// Handle triple digit temperature
