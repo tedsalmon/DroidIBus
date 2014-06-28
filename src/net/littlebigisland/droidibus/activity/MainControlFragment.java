@@ -160,7 +160,7 @@ public class MainControlFragment extends Fragment {
 		public void onClientMetadataUpdate(MetadataEditor editor) {
 			// Some players write artist name to METADATA_KEY_ALBUMARTIST instead of METADATA_KEY_ARTIST, so we should double-check it
 			mPlayerArtistText.setText(editor.getString(MediaMetadataRetriever.METADATA_KEY_ARTIST, 
-					editor.getString(MediaMetadataRetriever.METADATA_KEY_ALBUMARTIST, getString(R.string.defaultText))
+				editor.getString(MediaMetadataRetriever.METADATA_KEY_ALBUMARTIST, getString(R.string.defaultText))
 			));
 			
 			mPlayerTitleText.setText(editor.getString(MediaMetadataRetriever.METADATA_KEY_TITLE, getString(R.string.defaultText)));
@@ -219,13 +219,18 @@ public class MainControlFragment extends Fragment {
 			    		default:
 			    			mCurrentRadioMode = RadioModes.Radio;
 			    	}
-			    	if(lastState != mCurrentRadioMode)
-			    		Log.d(TAG, "Mode change registered, resetting counter");
-			    		mLastModeChange = Calendar.getInstance().getTimeInMillis();
-			    	// We're not in the right mode, sync with the car
-			    	// Make sure this isn't CD mode and that we're not in the middle of a mode change
-			    	// by making sure we've been in the current mode for at least 1.5 seconds
-			    	if(!(mCurrentRadioMode == RadioModes.CD) && (Calendar.getInstance().getTimeInMillis() - mLastModeChange) > 1500){
+			    	
+			    	if(lastState != mCurrentRadioMode) mLastModeChange = Calendar.getInstance().getTimeInMillis();
+			    	
+			    	/* 
+			    	 We're not in the right mode, sync with the car
+			    	 Make sure this isn't CD mode and that we're not in the middle of a mode change
+			    	 by making sure we've been in the current mode for at least 1.5 seconds
+			    	 If lastState is null then we should also check as this is the first bit of data
+			    	 see about radio mode 
+			    	 */
+			    	if((!(mCurrentRadioMode == RadioModes.CD) && (Calendar.getInstance().getTimeInMillis() - mLastModeChange) > 1500) || lastState == null){
+			    		Log.d(TAG, "Maybe the state is wrong?");
 			    		if(mCurrentRadioMode == RadioModes.AUX && tabletLayout.getVisibility() == View.GONE) mBtnMusicMode.toggle();
 			    		if(!(mCurrentRadioMode == RadioModes.AUX) && tabletLayout.getVisibility() == View.VISIBLE) mBtnMusicMode.toggle();
 			    	}
@@ -521,6 +526,15 @@ public class MainControlFragment extends Fragment {
 					}
 				}, 500);
 			}
+		}
+
+		@Override
+		public void onRadioCDStatusRequest() {
+			// TODO Finish implementation
+			// 					    F0 0B 68 39 00 02 00 01 00 01 08 00 A0
+			// Typical BM response: F0 0B 68 39 0B 02 10 01 00 00 00 00 B2
+			// Tell the Radio we have a CD on track 1
+			//sendIBusCommand(IBusCommandsEnum.BMToRadioCDStatusUpdate, 1, 1);
 		}
 		
 	};
