@@ -15,8 +15,6 @@ public abstract interface IBusMessageReceiver{
 	// Radio System
 	public void onUpdateRadioStation(final String text);
 	
-	public void onUpdateRadioStatus(final int status);
-	
 	public void onUpdateRadioBrodcasts(final String broadcastType);
 	
 	public void onUpdateRadioStereoIndicator(final String stereoIndicator);
@@ -24,6 +22,10 @@ public abstract interface IBusMessageReceiver{
 	public void onUpdateRadioRDSIndicator(final String rdsIndicator);
 	
 	public void onUpdateRadioProgramIndicator(final String currentProgram);
+	
+	public void onUpdateRadioStatus(final int status);
+	
+	public void onRadioCDStatusRequest();
 	
 	// IKE System
 	public void onUpdateRange(final String range);
