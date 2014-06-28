@@ -15,6 +15,7 @@ public enum IBusCommandsEnum {
 	BMToIKEResetAvgSpeed(DeviceAddressEnum.OnBoardMonitor, "resetAvgSpeed"),
 	// BoardMonitor to Radio Commands
 	BMToRadioGetStatus(DeviceAddressEnum.OnBoardMonitor, "getRadioStatus"),
+	BMToRadioCDStatus(DeviceAddressEnum.OnBoardMonitor, "sendCDPlayerMessage"),
 	BMToRadioPwrPress(DeviceAddressEnum.OnBoardMonitor, "sendRadioPwrPress"),
 	BMToRadioPwrRelease(DeviceAddressEnum.OnBoardMonitor, "sendRadioPwrRelease"),
 	BMToRadioTonePress(DeviceAddressEnum.OnBoardMonitor, "sendTonePress"),

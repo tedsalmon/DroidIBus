@@ -88,6 +88,7 @@ public class MainControlFragment extends Fragment {
 	protected long mLastRadioStatus = 0; // Epoch of last time we got a status message from the Radio
 	protected long mLastModeChange = 0; // Time that the radio mode last changed
 	protected long mLastRadioStatusRequest = 0; // Time we last requested the Radio's status
+	protected boolean mCDPlayerPlaying = false;
 	
 	private enum RadioModes{
 		AUX,
@@ -530,11 +531,20 @@ public class MainControlFragment extends Fragment {
 
 		@Override
 		public void onRadioCDStatusRequest() {
-			// TODO Finish implementation
-			// 					    F0 0B 68 39 00 02 00 01 00 01 08 00 A0
-			// Typical BM response: F0 0B 68 39 0B 02 10 01 00 00 00 00 B2
 			// Tell the Radio we have a CD on track 1
-			//sendIBusCommand(IBusCommandsEnum.BMToRadioCDStatusUpdate, 1, 1);
+			if(!mCDPlayerPlaying){
+				sendIBusCommand(IBusCommandsEnum.BMToRadioCDStatus, 0, 0x01, 0x01);
+			}else{
+				sendIBusCommand(IBusCommandsEnum.BMToRadioCDStatus, 1, 0x01, 0x01);
+			}
+			// 2 seconds later we should say it's playing
+			postToUIDelayed(new Runnable(){
+				@Override
+				public void run(){
+					sendIBusCommand(IBusCommandsEnum.BMToRadioCDStatus, 2, 0x01, 0x01);
+					mCDPlayerPlaying = true;
+				}
+			}, 3000);
 		}
 		
 	};

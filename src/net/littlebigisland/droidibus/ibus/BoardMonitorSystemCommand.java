@@ -164,10 +164,27 @@ public class BoardMonitorSystemCommand extends IBusSystemCommand {
 		};
 	}
 	
-	public byte[] sendCDPlayerMessage(){
-		return new byte[]{
-			// TODO Implement
+	public byte[] sendCDPlayerMessage(Object... args){
+		//F0 0B 68 39 00 02 00 01 00 01 08 00 A0
+		byte cdNum = (byte)args[1];
+		byte trackNum = (byte)args[2];
+		int status = (int)args[0];
+		byte function = 0x00;
+		byte playAvailable = 0x02; // 0x02 is will not play
+		switch(status){
+			case 1: // Will play
+				playAvailable = 0x09;
+				break;
+			case 2: // Begin play
+				function = 0x02;
+				playAvailable = 0x09;
+				break;
+		}
+		byte[] cdStatus = new byte[]{
+			boardMonitor, 0x0B, radioSystem, 0x39, function, playAvailable, 0x00, cdNum, trackNum, 0x00, 0x00
 		};
+		cdStatus[10] = genMessageCRC(cdStatus);
+		return cdStatus;
 	}
 	
 	/**
