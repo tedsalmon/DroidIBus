@@ -409,6 +409,10 @@ public class MainControlFragment extends Fragment {
 			    			if(mPlayerBound && mCurrentRadioMode == RadioModes.AUX && mIsPlaying)
 			    				mPlayerService.sendPauseKey();
 			    			changeScreenState(false);
+			    			// Blank out values that aren't set while the car isn't on
+			    			speedField.setText(R.string.defaultText);
+			    			rpmField.setText(R.string.defaultText);
+			    			coolantTempField.setText(R.string.defaultText);
 			    			break;
 			    		case 1:
 			    			changeScreenState(true);
@@ -419,7 +423,7 @@ public class MainControlFragment extends Fragment {
 									public void run() {
 										mPlayerService.sendPlayKey();
 									}
-			    				}, 5000);
+			    				}, 2500);
 			    			}
 			    			break;
 			    	}
