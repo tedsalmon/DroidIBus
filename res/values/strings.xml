@@ -9,6 +9,9 @@
     <string name="consumptionLbl1">Fuel Consumption 1:</string>
     <string name="consumptionLbl2">Fuel Consumption 2:</string>
     <string name="avgSpeedLbl">Avg. Speed</string>
+    <string name="geo_stats_lbl">Geo Stats</string>
+    <string name="geo_altitude_lbl">Altitude</string>
+    <string name="geo_latlong_lbl">Lat / Long:</string>
     <string name="outdoorTempFieldLbl">Outdoor:</string>
     <string name="coolantTempFieldLbl">Coolant:</string>
     <string name="defaultText">----</string>

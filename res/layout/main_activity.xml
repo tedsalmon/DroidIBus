@@ -266,7 +266,7 @@
 	    <RelativeLayout
 	        android:layout_width="250dp"
 	        android:layout_height="wrap_content"
-	        android:layout_marginLeft="250dp" >
+	        android:layout_marginLeft="80dp" >
 
 	        <TextView
 	            android:id="@+id/currentObcStatsLbl"
@@ -326,9 +326,43 @@
 	    </RelativeLayout>
 	    
 	    <RelativeLayout
+	        android:layout_width="225dp"
+	        android:layout_height="wrap_content"
+	        android:layout_marginLeft="80dp" >
+	        <TextView
+	            android:id="@+id/geo_stats_lbl"
+	            style="?android:listSeparatorTextViewStyle"
+	            android:text="@string/geo_stats_lbl" />
+	        
+	        <TextView
+	            android:id="@+id/geo_latlong_lbl"
+	            style="@style/majorStatItemLabelText"
+	            android:layout_below="@+id/geo_stats_lbl"
+	            android:text="@string/geo_latlong_lbl" />
+
+	        <TextView
+	            android:id="@+id/geoCoordinatesField"
+	            style="@style/majorStatItemValueText"
+	            android:layout_below="@+id/geo_latlong_lbl"
+	            android:text="@string/defaultText" />
+
+	        <TextView
+	            android:id="@+id/geo_altitude_lbl"
+	            style="@style/majorStatItemLabelText"
+	            android:layout_below="@+id/geoCoordinatesField"
+	            android:text="@string/geo_altitude_lbl" />
+
+	        <TextView
+	            android:id="@+id/geoAltitudeField"
+	            style="@style/majorStatItemValueText"
+	            android:layout_below="@+id/geo_altitude_lbl"
+	            android:text="@string/defaultText" />
+	    </RelativeLayout>
+	    
+	    <RelativeLayout
 	        android:layout_width="100dp"
 	        android:layout_height="wrap_content"
-	        android:layout_marginLeft="220dp" >
+	        android:layout_marginLeft="80dp" >
 	        <TextView
 	            android:id="@+id/temperatureStatLbl"
 	            style="?android:listSeparatorTextViewStyle"
@@ -394,17 +428,6 @@
 		    <TextView
 	            android:id="@+id/geoLocaleField"
 	            style="@style/geoItemText"
-	            android:text="@string/defaultText" />
-			<TextView
-	            android:id="@+id/geoAltitudeField"
-	            style="@style/geoItemText"
-	            android:textSize="15sp"
-	            android:text="@string/defaultText" />
-			
-			<TextView
-	            android:id="@+id/geoCoordinatesField"
-	           	style="@style/geoItemText"
-	           	android:textSize="15sp"
 	            android:text="@string/defaultText" />
 		</LinearLayout>
 	</LinearLayout>
