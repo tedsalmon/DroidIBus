@@ -148,9 +148,9 @@ public class IBusMessageService extends IOIOService {
 						 * length from the second byte of the IBus Message, else set message length to 
 						 * the length provided by IBus.
 						 */
-						if (readBuffer.size() == 1) {
+						if (readBuffer.size() == 1){
 							msgLength = 256;
-						} else if (readBuffer.size() == 2) {
+						}else if (readBuffer.size() == 2){
 							msgLength = (int) readBuffer.get(1);
 						}
 						// Read until readBuffer contains msgLength plus two more bytes for the full message
@@ -176,8 +176,7 @@ public class IBusMessageService extends IOIOService {
 					}else if(mCommandQueue.size() > 0){
 						statusLED.write(true);
 						// Wait at least 100ms between messages and then write out to the bus to avoid collisions
-						if ((Calendar.getInstance().getTimeInMillis() - lastSend) > 100) {
-							Log.d(TAG, String.format("Sending %s Command out", mCommandQueue.get(0).commandType.toString()));
+						if ((Calendar.getInstance().getTimeInMillis() - lastSend) > 100){
 							// Get the command enum
 							IBusCommandsEnum command = mCommandQueue.get(0).commandType;
 							// Get the instance of the class which implements the method we're looking for
@@ -185,18 +184,20 @@ public class IBusMessageService extends IOIOService {
 							// Get the command Varargs to pass. Very possible that this is null and that's okay
 							Object cmdArgs = mCommandQueue.get(0).commandArgs;
 							byte[] outboundMsg = new byte[] {};
-							try {
-								Method requestedMethod = clsInstance.getClass().getMethod(command.getMethodName());
-								if(cmdArgs == null)
+							try{
+								if(cmdArgs == null){
+									Method requestedMethod = clsInstance.getClass().getMethod(command.getMethodName());
 									outboundMsg = (byte[]) requestedMethod.invoke(clsInstance);
-								else
+								}else{
+									Method requestedMethod = clsInstance.getClass().getMethod(command.getMethodName(), Object[].class);
 									outboundMsg = (byte[]) requestedMethod.invoke(clsInstance, cmdArgs);
-							} catch (IllegalAccessException | IllegalArgumentException | InvocationTargetException | NoSuchMethodException e){
-								e.printStackTrace();
+								}
+							}catch(IllegalAccessException | IllegalArgumentException | InvocationTargetException | NoSuchMethodException e){
+								Log.d(TAG, "Error invoking method in IBus outbound queue: " + e.getMessage());
 							}
 							mCommandQueue.remove(0);
 							// Write the message out to the bus byte by byte
-							String out = "Sending: ";
+							String out = String.format("Sending %s Command out: ", mCommandQueue.get(0).commandType.toString());
 							for(int i = 0; i < outboundMsg.length; i++){
 								out = String.format("%s %02X", out, outboundMsg[i]);
 								busOut.write(outboundMsg[i]);
@@ -206,7 +207,7 @@ public class IBusMessageService extends IOIOService {
 						}
 						statusLED.write(false);
 					}
-				} catch (IOException e) {
+				}catch (IOException e){
 					Log.e(TAG, String.format("IOIO IOException [%s] in IBusService.loop()", e.getMessage()));
 				}
 				Thread.sleep(2);
