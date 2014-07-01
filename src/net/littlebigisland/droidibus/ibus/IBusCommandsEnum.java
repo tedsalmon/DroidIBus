@@ -1,5 +1,11 @@
 package net.littlebigisland.droidibus.ibus;
 
+/**
+ * This should be better explained. Basically, we hold an enum with two values,
+ * the source system and the method name that actually creates the data for the method
+ * we want. Of course the Source system tells you which class you'll find these methods in.
+ * e.x. OnBoardMonitor == BoardMonitorSystemCommand
+ */
 public enum IBusCommandsEnum {
 	// BoardMonitor to IKE Commands
 	BMToIKEGetIgnitionStatus(DeviceAddressEnum.OnBoardMonitor, "getIgnitionStatus"),
