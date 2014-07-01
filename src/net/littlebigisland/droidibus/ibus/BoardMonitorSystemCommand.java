@@ -181,9 +181,9 @@ public class BoardMonitorSystemCommand extends IBusSystemCommand {
 				break;
 		}
 		byte[] cdStatus = new byte[]{
-			boardMonitor, 0x0B, radioSystem, 0x39, function, playAvailable, 0x00, cdNum, trackNum, 0x00, 0x00
+			boardMonitor, 0x0B, radioSystem, 0x39, function, playAvailable, 0x00, 0x01, 0x00, cdNum, trackNum, 0x00, 0x00
 		};
-		cdStatus[10] = genMessageCRC(cdStatus);
+		cdStatus[12] = genMessageCRC(cdStatus);
 		return cdStatus;
 	}
 	
