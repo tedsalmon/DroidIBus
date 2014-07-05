@@ -177,32 +177,34 @@ public class IBusMessageService extends IOIOService {
 						statusLED.write(true);
 						// Wait at least 100ms between messages and then write out to the bus to avoid collisions
 						if ((Calendar.getInstance().getTimeInMillis() - lastSend) > 100){
-							// Get the command enum
-							IBusCommandsEnum command = mCommandQueue.get(0).commandType;
+							// Pop out the command from the Array
+							IBusCommand command = mCommandQueue.get(0);
+							// Get the command type enum
+							IBusCommandsEnum cmdType = command.commandType;
 							// Get the instance of the class which implements the method we're looking for
-							IBusSystemCommand clsInstance = IBusSysMap.get(command.getSystem().toByte());
+							IBusSystemCommand clsInstance = IBusSysMap.get(cmdType.getSystem().toByte());
 							// Get the command Varargs to pass. Very possible that this is null and that's okay
-							Object cmdArgs = mCommandQueue.get(0).commandArgs;
+							Object cmdArgs = command.commandArgs;
 							byte[] outboundMsg = new byte[] {};
 							try{
 								if(cmdArgs == null){
-									Method requestedMethod = clsInstance.getClass().getMethod(command.getMethodName());
+									Method requestedMethod = clsInstance.getClass().getMethod(cmdType.getMethodName());
 									outboundMsg = (byte[]) requestedMethod.invoke(clsInstance);
 								}else{
-									Method requestedMethod = clsInstance.getClass().getMethod(command.getMethodName(), Object[].class);
+									Method requestedMethod = clsInstance.getClass().getMethod(cmdType.getMethodName(), Object[].class);
 									outboundMsg = (byte[]) requestedMethod.invoke(clsInstance, cmdArgs);
 								}
 							}catch(IllegalAccessException | IllegalArgumentException | InvocationTargetException | NoSuchMethodException e){
 								Log.d(TAG, "Error invoking method in IBus outbound queue: " + e.getMessage());
 							}
-							mCommandQueue.remove(0);
 							// Write the message out to the bus byte by byte
-							String out = String.format("Sending %s Command out: ", mCommandQueue.get(0).commandType.toString());
+							String out = String.format("Sending %s Command out: ", cmdType.toString());
 							for(int i = 0; i < outboundMsg.length; i++){
 								out = String.format("%s %02X", out, outboundMsg[i]);
 								busOut.write(outboundMsg[i]);
 							}
 							Log.d(TAG, out);
+							mCommandQueue.remove(0);
 							lastSend = Calendar.getInstance().getTimeInMillis();
 						}
 						statusLED.write(false);
