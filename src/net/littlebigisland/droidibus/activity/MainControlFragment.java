@@ -107,9 +107,7 @@ public class MainControlFragment extends Fragment {
 		@Override
 		public void onClientTransportControlUpdate(int transportControlFlags) {
 			mScrubbingSupported = isScrubbingSupported(transportControlFlags);
-			/*
-			 * If we can update the seek bar, set that up, else disable it
-			 */
+			// If we can update the seek bar, set that up, else disable it
 			if(mScrubbingSupported) {
 				mPlayerScrubBar.setEnabled(true);
 				mPlayerHandler.post(mUpdateSeekBar);
@@ -121,28 +119,19 @@ public class MainControlFragment extends Fragment {
 
 		@Override
 		public void onClientPlaybackStateUpdate(int state, long stateChangeTimeMs, long currentPosMs, float speed) {
-			switch(state) {
-				case RemoteControlClient.PLAYSTATE_PLAYING:
-					if(mScrubbingSupported) mPlayerHandler.post(mUpdateSeekBar);
-					mIsPlaying = true;
-					mPlayerControlBtn.setImageResource(android.R.drawable.ic_media_pause);
-					break;
-				default:
-					mPlayerHandler.removeCallbacks(mUpdateSeekBar);
-					mIsPlaying = false;
-					mPlayerControlBtn.setImageResource(android.R.drawable.ic_media_play);
-					break;
-			}
-			
+			stateUpdate(state);
 			mPlayerScrubBar.setProgress((int) (currentPosMs * mPlayerScrubBar.getMax() / mSongDuration));
 		}
 		
 		/**
-		 * Evaluate the player state and enable/disable view items as needed
+		 * Evaluate the player state and update play/pause button as needed
 		 */
 		@Override
 		public void onClientPlaybackStateUpdate(int state) {
-			// TODO Merge with previous function, this is stupid
+			stateUpdate(state);
+		}
+		
+		private void stateUpdate(int state){
 			switch(state){
 				case RemoteControlClient.PLAYSTATE_PLAYING:
 					if(mScrubbingSupported) mPlayerHandler.post(mUpdateSeekBar);
@@ -156,7 +145,7 @@ public class MainControlFragment extends Fragment {
 					break;
 			}
 		}
-
+		
 		@Override
 		public void onClientMetadataUpdate(MetadataEditor editor) {
 			// Some players write artist name to METADATA_KEY_ALBUMARTIST instead of METADATA_KEY_ARTIST, so we should double-check it
@@ -211,14 +200,17 @@ public class MainControlFragment extends Fragment {
 			    public void run() {
 			    	RadioModes lastState = mCurrentRadioMode; 
 			    	switch(text){
-			    		case "AUX":
+			    		case "TR 01 ":
+			    		case "TR 01":
+			    		case "NO CD":
 			    			mCurrentRadioMode = RadioModes.AUX;
 			    			break;
-			    		case "NO CD":
+			    		case "AUX":
 			    			mCurrentRadioMode = RadioModes.CD;
 			    			break;
 			    		default:
 			    			mCurrentRadioMode = RadioModes.Radio;
+			    			break;
 			    	}
 			    	
 			    	if(lastState != mCurrentRadioMode) mLastModeChange = Calendar.getInstance().getTimeInMillis();
@@ -231,9 +223,10 @@ public class MainControlFragment extends Fragment {
 			    	 see about radio mode 
 			    	 */
 			    	if((!(mCurrentRadioMode == RadioModes.CD) && (Calendar.getInstance().getTimeInMillis() - mLastModeChange) > 1500) || lastState == null){
-			    		Log.d(TAG, "Maybe the state is wrong?");
-			    		if(mCurrentRadioMode == RadioModes.AUX && tabletLayout.getVisibility() == View.GONE) mBtnMusicMode.toggle();
-			    		if(!(mCurrentRadioMode == RadioModes.AUX) && tabletLayout.getVisibility() == View.VISIBLE) mBtnMusicMode.toggle();
+			    		if(mCurrentRadioMode == RadioModes.AUX && tabletLayout.getVisibility() == View.GONE)
+			    			mBtnMusicMode.toggle();
+			    		if(!(mCurrentRadioMode == RadioModes.AUX) && tabletLayout.getVisibility() == View.VISIBLE)
+			    			mBtnMusicMode.toggle();
 			    	}
 			    	
 			    	mLastRadioStatus = Calendar.getInstance().getTimeInMillis();
@@ -466,7 +459,7 @@ public class MainControlFragment extends Fragment {
 			Log.d(TAG, "Setting GPS Alitude");
 			postToUI(new Runnable(){
 			    public void run(){
-			    	geoAltitudeField.setText(String.format("Alt: %s'", (int) Math.round(altitude * 3.28084)));
+			    	geoAltitudeField.setText(String.format("%s'", (int) Math.round(altitude * 3.28084)));
 			    }
 			});
 		}
@@ -535,20 +528,19 @@ public class MainControlFragment extends Fragment {
 
 		@Override
 		public void onRadioCDStatusRequest() {
+			Log.d(TAG, "Got Radio to CD Status Request");
 			// Tell the Radio we have a CD on track 1
-			if(!mCDPlayerPlaying){
-				sendIBusCommand(IBusCommandsEnum.BMToRadioCDStatus, 0, 0x01, 0x01);
-			}else{
-				sendIBusCommand(IBusCommandsEnum.BMToRadioCDStatus, 1, 0x01, 0x01);
-			}
-			// 2 seconds later we should say it's playing
-			postToUIDelayed(new Runnable(){
-				@Override
-				public void run(){
-					sendIBusCommand(IBusCommandsEnum.BMToRadioCDStatus, 2, 0x01, 0x01);
-					mCDPlayerPlaying = true;
-				}
-			}, 3000);
+			final byte trackAndCD = (byte) 0x01;
+			postToUI(new Runnable(){
+			    public void run(){
+			    	sendIBusCommand(IBusCommandsEnum.BMToRadioCDStatus, 0, trackAndCD, trackAndCD);
+					if(!mCDPlayerPlaying){
+						sendIBusCommand(IBusCommandsEnum.BMToRadioCDStatus, 0, trackAndCD, trackAndCD);
+					}else{
+						sendIBusCommand(IBusCommandsEnum.BMToRadioCDStatus, 1, trackAndCD, trackAndCD);
+					}
+			    }
+			});
 		}
 		
 	};
@@ -758,9 +750,17 @@ public class MainControlFragment extends Fragment {
 							mPlayerService.sendNextKey();
 							break;
 						case R.id.playerPlayPauseBtn:
+							final byte trackAndCD = (byte) 0x01;
 							if(mIsPlaying) {
+								if(mCDPlayerPlaying){
+									mCDPlayerPlaying = false;
+								}
 								mPlayerService.sendPauseKey();
 							} else {
+								if(!mCDPlayerPlaying){
+									sendIBusCommand(IBusCommandsEnum.BMToRadioCDStatus, 2, trackAndCD, trackAndCD);
+									mCDPlayerPlaying = true;
+								}
 								mPlayerService.sendPlayKey();
 							}
 							break;
@@ -852,6 +852,11 @@ public class MainControlFragment extends Fragment {
 		    		if(! (mCurrentRadioMode == RadioModes.AUX)){
 		    			changeRadioMode(RadioModes.AUX);
 		    		}
+		    		final byte trackAndCD = (byte) 0x01;
+					if(!mCDPlayerPlaying){
+						sendIBusCommand(IBusCommandsEnum.BMToRadioCDStatus, 2, trackAndCD, trackAndCD);
+						mCDPlayerPlaying = true;
+					}
 		    		radioLayout.setVisibility(View.GONE);
 		    		tabletLayout.setVisibility(View.VISIBLE);
 		        }else{
@@ -888,7 +893,7 @@ public class MainControlFragment extends Fragment {
 				return true;
 			}
 		};
-
+		
 		fuel1Field.setTag(IBusCommandsEnum.BMToIKEResetFuel1.name());
 		fuel2Field.setTag(IBusCommandsEnum.BMToIKEResetFuel1.name());
 		avgSpeedField.setTag(IBusCommandsEnum.BMToIKEResetAvgSpeed.name());
@@ -925,17 +930,12 @@ public class MainControlFragment extends Fragment {
 	private void changeRadioMode(final RadioModes mode){
 		new Thread(new Runnable(){
 			public void run(){
-				//getActivity().runOnUiThread(new Runnable(){
-				//	public void run(){
-				//	}
-				//});
 				try{
 					Log.d(TAG, String.format("Current mode = %s, desired mode = %s", mCurrentRadioMode.toString(), mode.toString() ));
 					if( (mode == RadioModes.AUX && !(mCurrentRadioMode== RadioModes.AUX)) ||  
 						(mode == RadioModes.Radio && (mCurrentRadioMode != RadioModes.Radio)) ){
 						sendIBusCommand(IBusCommandsEnum.BMToRadioModePress);
-						sendIBusCommandDelayed(IBusCommandsEnum.BMToRadioModeRelease, 250);
-						Log.d(TAG, "Mode now " + mCurrentRadioMode.toString());
+						sendIBusCommandDelayed(IBusCommandsEnum.BMToRadioModeRelease, 300);
 						Thread.sleep(1000);
 						changeRadioMode(mode);
 					}
