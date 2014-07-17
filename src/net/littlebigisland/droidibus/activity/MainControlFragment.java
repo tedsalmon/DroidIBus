@@ -166,7 +166,7 @@ public class MainControlFragment extends Fragment {
 	};
 	
 	/**
-	 * IBusCallback Functions
+	 * IBus Callback Functions
 	 */
 	private IBusMessageReceiver mIBusUpdateListener =  new IBusMessageReceiver() {
 		
@@ -203,10 +203,10 @@ public class MainControlFragment extends Fragment {
 			    		case "TR 01 ":
 			    		case "TR 01":
 			    		case "NO CD":
-			    			mCurrentRadioMode = RadioModes.AUX;
+			    			mCurrentRadioMode = RadioModes.CD;
 			    			break;
 			    		case "AUX":
-			    			mCurrentRadioMode = RadioModes.CD;
+			    			mCurrentRadioMode = RadioModes.AUX;
 			    			break;
 			    		default:
 			    			mCurrentRadioMode = RadioModes.Radio;
@@ -573,7 +573,6 @@ public class MainControlFragment extends Fragment {
             mIBusService = binder.getService();
     		if(mIBusService != null) {
     			mIBusBound = true;
-    			Log.d(TAG, "mIBusService is bound");
     			mIBusService.setCallbackListener(mIBusUpdateListener);
     			// Emulate BM Boot Up
     			sendIBusCommand(IBusCommandsEnum.BMToGlobalBroadcastAliveMessage);
@@ -589,7 +588,7 @@ public class MainControlFragment extends Fragment {
 				sendIBusCommand(IBusCommandsEnum.BMToIKEGetOutdoorTemp);
 				sendIBusCommand(IBusCommandsEnum.BMToIKEGetRange);
 				sendIBusCommand(IBusCommandsEnum.BMToIKEGetAvgSpeed);
-    				
+				
 				/* This thread should make sure to send out and request
 				 * any IBus messages that the BM usually would.
 				 * We should also make sure to keep the radio in "Info"
@@ -615,7 +614,6 @@ public class MainControlFragment extends Fragment {
 	    									
 	    									long statusDiff = currentTime - mLastRadioStatus;
 	    									if(statusDiff > 10000 && ! (mCurrentRadioMode == RadioModes.AUX)){
-	    										Log.d(TAG, "Requesting Radio Info");
 												sendIBusCommand(IBusCommandsEnum.BMToRadioInfoPress);
 												sendIBusCommandDelayed(IBusCommandsEnum.BMToRadioInfoRelease, 500);
 	    									}
@@ -750,17 +748,9 @@ public class MainControlFragment extends Fragment {
 							mPlayerService.sendNextKey();
 							break;
 						case R.id.playerPlayPauseBtn:
-							final byte trackAndCD = (byte) 0x01;
 							if(mIsPlaying) {
-								if(mCDPlayerPlaying){
-									mCDPlayerPlaying = false;
-								}
 								mPlayerService.sendPauseKey();
 							} else {
-								if(!mCDPlayerPlaying){
-									sendIBusCommand(IBusCommandsEnum.BMToRadioCDStatus, 2, trackAndCD, trackAndCD);
-									mCDPlayerPlaying = true;
-								}
 								mPlayerService.sendPlayKey();
 							}
 							break;
@@ -852,11 +842,6 @@ public class MainControlFragment extends Fragment {
 		    		if(! (mCurrentRadioMode == RadioModes.AUX)){
 		    			changeRadioMode(RadioModes.AUX);
 		    		}
-		    		final byte trackAndCD = (byte) 0x01;
-					if(!mCDPlayerPlaying){
-						sendIBusCommand(IBusCommandsEnum.BMToRadioCDStatus, 2, trackAndCD, trackAndCD);
-						mCDPlayerPlaying = true;
-					}
 		    		radioLayout.setVisibility(View.GONE);
 		    		tabletLayout.setVisibility(View.VISIBLE);
 		        }else{

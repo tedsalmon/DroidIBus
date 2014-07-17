@@ -170,9 +170,9 @@ public class BoardMonitorSystemCommand extends IBusSystemCommand {
 		byte trackNum = (byte)args[2];
 		int status = (int)args[0];
 		byte function = 0x00;
-		byte playAvailable = 0x02; // 0x02 is will not play
+		byte playAvailable = 0x02; // 0x02 is "Not playing"
 		switch(status){
-			case 1: // Will play
+			case 1: // Playing song
 				playAvailable = 0x09;
 				break;
 			case 2: // Begin play
