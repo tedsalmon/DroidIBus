@@ -68,4 +68,7 @@ public abstract interface IBusMessageReceiver{
 	
 	public void onVoiceBtnPress();
 	
+	
+	// Light Control System
+	public void onLightStatus(final int lightStatus);
 }
