@@ -5,7 +5,6 @@ package net.littlebigisland.droidibus.activity;
  * @package net.littlebigisland.droidibus.activity
  */
 import java.util.Calendar;
-
 import net.littlebigisland.droidibus.R;
 import net.littlebigisland.droidibus.ibus.IBusCommand;
 import net.littlebigisland.droidibus.ibus.IBusCommandsEnum;
@@ -50,7 +49,7 @@ import android.widget.Switch;
 import android.widget.TextView;
 import android.widget.Toast;
 
-public class MainControlFragment extends Fragment {
+public class DashboardFragment extends Fragment {
 	public String TAG = "DroidIBus";
 	
 	protected IBusMessageService mIBusService;
@@ -198,7 +197,7 @@ public class MainControlFragment extends Fragment {
 			Log.d(TAG, "Setting station text - '" + text + "'");
 			postToUI(new Runnable() {
 			    public void run() {
-			    	RadioModes lastState = mCurrentRadioMode; 
+					RadioModes lastState = mCurrentRadioMode; 
 			    	switch(text){
 			    		case "TR 01 ":
 			    		case "TR 01":
@@ -213,7 +212,9 @@ public class MainControlFragment extends Fragment {
 			    			break;
 			    	}
 			    	
-			    	if(lastState != mCurrentRadioMode) mLastModeChange = Calendar.getInstance().getTimeInMillis();
+			    	if(lastState != mCurrentRadioMode){
+			    		mLastModeChange = Calendar.getInstance().getTimeInMillis();
+			    	}
 			    	
 			    	/* 
 			    	 We're not in the right mode, sync with the car
@@ -223,15 +224,17 @@ public class MainControlFragment extends Fragment {
 			    	 see about radio mode 
 			    	 */
 			    	if((!(mCurrentRadioMode == RadioModes.CD) && (Calendar.getInstance().getTimeInMillis() - mLastModeChange) > 1500) || lastState == null){
-			    		if(mCurrentRadioMode == RadioModes.AUX && tabletLayout.getVisibility() == View.GONE)
+			    		if(mCurrentRadioMode == RadioModes.AUX && tabletLayout.getVisibility() == View.GONE){
 			    			mBtnMusicMode.toggle();
-			    		if(!(mCurrentRadioMode == RadioModes.AUX) && tabletLayout.getVisibility() == View.VISIBLE)
+			    		}
+			    		if(!(mCurrentRadioMode == RadioModes.AUX) && tabletLayout.getVisibility() == View.VISIBLE){
 			    			mBtnMusicMode.toggle();
+			    		}
 			    	}
 			    	
 			    	mLastRadioStatus = Calendar.getInstance().getTimeInMillis();
 			    	stationText.setText(text);
-			    }
+				}
 			});
 		}
 		
@@ -396,18 +399,10 @@ public class MainControlFragment extends Fragment {
 			Log.d(TAG, "Ignition state is " + state);
 			postToUI(new Runnable() {
 			    public void run() {
-			    	switch(state){
-			    		case 0:
-			    			// Pause the music as we exit the vehicle
-			    			if(mPlayerBound && mCurrentRadioMode == RadioModes.AUX && mIsPlaying)
-			    				mPlayerService.sendPauseKey();
-			    			changeScreenState(false);
-			    			// Blank out values that aren't set while the car isn't on
-			    			speedField.setText(R.string.defaultText);
-			    			rpmField.setText(R.string.defaultText);
-			    			coolantTempField.setText(R.string.defaultText);
-			    			break;
-			    		case 1:
+			    	boolean carState = (state > 0) ? true : false;
+			    	if(carState){
+			    		// The screen isn't on but the car is, turn it on
+			    		if(!mScreenOn){
 			    			changeScreenState(true);
 			    			if(mPlayerBound && mCurrentRadioMode == RadioModes.AUX && !mIsPlaying){
 			    				// Post a runnable to play the last song in 5 seconds
@@ -416,8 +411,28 @@ public class MainControlFragment extends Fragment {
 									public void run() {
 										mPlayerService.sendPlayKey();
 									}
-			    				}, 2500);
+			    				}, 3500);
 			    			}
+		    			}
+			    	}else{
+			    		// The car is not on and the screen is, turn it off
+			    		if(mScreenOn){
+			    			// Pause the music as we exit the vehicle
+			    			if(mPlayerBound && mCurrentRadioMode == RadioModes.AUX && mIsPlaying)
+			    				mPlayerService.sendPauseKey();
+			    			changeScreenState(false);
+			    			// Blank out values that aren't set while the car isn't on
+			    			speedField.setText(R.string.defaultText);
+			    			rpmField.setText(R.string.defaultText);
+			    			coolantTempField.setText(R.string.defaultText);
+			    		}
+			    	}
+			    	switch(state){
+			    		case 0:
+
+			    			break;
+			    		case 1:
+
 			    			break;
 			    	}
 			    }
@@ -474,7 +489,9 @@ public class MainControlFragment extends Fragment {
 			Log.d(TAG, "Changing the track fwd in callback due to steering input!");
 			postToUI(new Runnable(){
 			    public void run(){
-					if(mPlayerBound) mPlayerService.sendNextKey();
+					if(mPlayerBound && mIsPlaying){
+						mPlayerService.sendNextKey();
+					}
 			    }
 			});
 		}
@@ -484,7 +501,9 @@ public class MainControlFragment extends Fragment {
 			Log.d(TAG, "Changing the track fwd in callback due to steering input!");
 			postToUI(new Runnable(){
 			    public void run(){
-					if(mPlayerBound) mPlayerService.sendPreviousKey();
+					if(mPlayerBound && mIsPlaying){
+						mPlayerService.sendPreviousKey();
+					}
 			    }
 			});
 		}
@@ -541,6 +560,12 @@ public class MainControlFragment extends Fragment {
 					}
 			    }
 			});
+		}
+
+		@Override
+		public void onLightStatus(int lightStatus) {
+			// TODO Implement
+			
 		}
 		
 	};
@@ -712,7 +737,7 @@ public class MainControlFragment extends Fragment {
     
 	@Override
 	public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
-		final View v = inflater.inflate(R.layout.main_activity, container, false);
+		final View v = inflater.inflate(R.layout.dashboard, container, false);
 		// Layouts
     	radioLayout = (LinearLayout) v.findViewById(R.id.radioAudio);
     	tabletLayout = (LinearLayout) v.findViewById(R.id.tabletAudio);
@@ -751,6 +776,11 @@ public class MainControlFragment extends Fragment {
 							if(mIsPlaying) {
 								mPlayerService.sendPauseKey();
 							} else {
+					    		final byte trackAndCD = (byte) 0x01;
+					    		 if(!mCDPlayerPlaying){
+					    			 sendIBusCommand(IBusCommandsEnum.BMToRadioCDStatus, 2, trackAndCD, trackAndCD);
+					    			 mCDPlayerPlaying = true;
+					    		 }
 								mPlayerService.sendPlayKey();
 							}
 							break;

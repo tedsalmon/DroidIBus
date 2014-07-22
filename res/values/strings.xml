@@ -24,4 +24,9 @@
     <string name="rdsIndicatorLbl">RDS</string>
     <string name="stereoIndicatorLbl">Stereo</string>
     <string name="blankLbl"></string>
+    <string-array name="options_array">
+        <item>Dashboard</item>
+        <item>Navigation</item>
+        <item>Settings</item>
+    </string-array>
 </resources>
