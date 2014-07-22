@@ -3,6 +3,9 @@ package net.littlebigisland.droidibus.ibus;
 import java.util.ArrayList;
 
 public class SteeringWheelSystemCommand extends IBusSystemCommand{
+	final private byte mRadioAddress = DeviceAddressEnum.Radio.toByte();
+	final private byte mSteeringWheelAddress = DeviceAddressEnum.MultiFunctionSteeringWheel.toByte();
+	final private byte mTelephoneAddress = DeviceAddressEnum.Telephone.toByte();
 	
 	class Radio extends IBusSystemCommand{
 
@@ -38,7 +41,43 @@ public class SteeringWheelSystemCommand extends IBusSystemCommand{
 	 * Cstruct - Register destination systems
 	 */
 	SteeringWheelSystemCommand(){
-		IBusDestinationSystems.put(DeviceAddressEnum.Radio.toByte(), new Radio());
-		IBusDestinationSystems.put(DeviceAddressEnum.Telephone.toByte(), new Telephone());
+		IBusDestinationSystems.put(mRadioAddress, new Radio());
+		IBusDestinationSystems.put(mTelephoneAddress, new Telephone());
+	}
+	
+	public byte[] sendVolumeUp(){
+		return new byte[]{
+			mSteeringWheelAddress, 0x04, mRadioAddress, 0x32, 0x31, 0x3F
+		};
+	}
+	
+	public byte[] sendVolumeDown(){
+		return new byte[]{
+			mSteeringWheelAddress, 0x04, mRadioAddress, 0x32, 0x30, 0x3E
+		};
+	}
+	
+	public byte[] sendTuneFwdPress(){
+		return new byte[]{
+			mSteeringWheelAddress, 0x04, mRadioAddress, 0x3B, 0x01, 0x06
+		};
+	}
+	
+	public byte[] sendTuneFwdRelease(){
+		return new byte[]{
+			mSteeringWheelAddress, 0x04, mRadioAddress, 0x3B, 0x21, 0x26
+		};
+	}
+	
+	public byte[] sendTunePrevPress(){
+		return new byte[]{
+			mSteeringWheelAddress, 0x04, mRadioAddress, 0x3B, 0x08, 0x0F
+		};
+	}
+	
+	public byte[] sendTunePrevRelease(){
+		return new byte[]{
+			mSteeringWheelAddress, 0x04, mRadioAddress, 0x3B, 0x28, 0x2F
+		};
 	}
 }

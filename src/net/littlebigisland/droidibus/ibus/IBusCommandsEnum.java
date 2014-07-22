@@ -45,7 +45,14 @@ public enum IBusCommandsEnum {
 	// BoardMonitor to General Module Commands
 	BMToGMGetDoorStatus(DeviceAddressEnum.OnBoardMonitor, "getDoorsRequest"),
 	// BoardMonitor to Global Broadcast Address Commands
-	BMToGlobalBroadcastAliveMessage(DeviceAddressEnum.OnBoardMonitor, "sendAliveMessage");
+	BMToGlobalBroadcastAliveMessage(DeviceAddressEnum.OnBoardMonitor, "sendAliveMessage"),
+	// Steering Wheel to Radio Commands
+	SWToRadioVolumeUp(DeviceAddressEnum.MultiFunctionSteeringWheel, "sendVolumeUp"),
+	SWToRadioVolumeDown(DeviceAddressEnum.MultiFunctionSteeringWheel, "sendVolumeDown"),
+	SWToRadioTuneFwdPress(DeviceAddressEnum.MultiFunctionSteeringWheel, "sendTuneFwdPress"),
+	SWToRadioTuneFwdRelease(DeviceAddressEnum.MultiFunctionSteeringWheel, "sendTuneFwdRelease"),
+	SWToRadioTunePrevPress(DeviceAddressEnum.MultiFunctionSteeringWheel, "sendTunePrevPress"),
+	SWToRadioTunePrevRelease(DeviceAddressEnum.MultiFunctionSteeringWheel, "sendTunePrevRelease");
 	
 	private final DeviceAddressEnum system;
 	private final String methodName;
