@@ -18,8 +18,6 @@ class RadioSystemCommand extends IBusSystemCommand{
 		public void mapReceived(ArrayList<Byte> msg){
 			currentMessage = msg;
 			
-
-			
 			switch(currentMessage.get(3)){
 				case stationText:
 					triggerCallback("onUpdateRadioStation", decodeData());
