@@ -24,9 +24,23 @@
     <string name="rdsIndicatorLbl">RDS</string>
     <string name="stereoIndicatorLbl">Stereo</string>
     <string name="blankLbl"></string>
+    <!-- Options for the Drawer -->
     <string-array name="options_array">
         <item>Dashboard</item>
         <item>Navigation</item>
         <item>Settings</item>
     </string-array>
+    <!-- Settings below are for our preferences menu -->
+    <string name="settings_carSettings">Car Equipment</string>
+    <string name="settings_radioType">Radio Type</string>
+    <string name="settings_radioType_summ">Controls which messages are parsed and used to control the radio</string>
+    <string-array name="settings_radioType_options">
+        <item>CD53</item>
+        <item>BM53</item>
+    </string-array>
+    <string name="settings_navAvailable">Display Nav Data</string>
+    <string name="settings_navAvailable_summ">Enable only if your vehicle is equipped with the nav unit and it\'s DVD</string>
+    <string name="settings_personalize">Personalization</string>
+    <string name="settings_changeTextColor">Change Text Color With Lights</string>
+    <string name="settings_changeTextColor_summ">Changes the color of the tablet text to amber when the interior lights come on</string>
 </resources>
