@@ -31,7 +31,7 @@
         <item>Settings</item>
     </string-array>
     <!-- Settings below are for our preferences menu -->
-    <string name="settings_carSettings">Car Equipment</string>
+    <string name="settings_carSettings">Vehicle Equipment</string>
     <string name="settings_radioType">Radio Type</string>
     <string name="settings_radioType_summ">Controls which messages are parsed and used to control the radio</string>
     <string-array name="settings_radioType_options">
@@ -43,4 +43,11 @@
     <string name="settings_personalize">Personalization</string>
     <string name="settings_changeTextColor">Change Text Color With Lights</string>
     <string name="settings_changeTextColor_summ">Changes the color of the tablet text to amber when the interior lights come on</string>
+    <string name="settings_carValueSettings">Vehicle OBC Values</string>
+    <string name="settings_date">Date</string>
+    <string name="settings_date_summ">Set the vehicle date</string>
+    <string name="settings_time">Time</string>
+    <string name="settings_time_summ">Set the vehicle time</string>
+    <string name="settings_units">Unit Types</string>
+    <string name="settings_units_summ">Set the vehicle Units (eg. Metric and Imperial)</string>
 </resources>

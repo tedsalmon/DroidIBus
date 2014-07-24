@@ -1,29 +1,35 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:layout_width="match_parent"
-    android:layout_height="match_parent">
-	<PreferenceScreen>
-		<PreferenceCategory android:title="@string/settings_carSettings" >
-		    <ListPreference
-		        android:title="@string/settings_radioType"
-		        android:summary="@string/settings_radioType_summ"
-		        android:key="settingRadioType"
-		        android:entries="@array/settings_radioType_options"
-		        android:entryValues="@array/settings_radioType_options" />
-		    <CheckBoxPreference
-		        android:title="@string/settings_navAvailable"
-		        android:summary="@string/settings_navAvailable_summ"
-		        android:key="navAvailable"
-		        android:defaultValue="false"  />
-		</PreferenceCategory>
-	</PreferenceScreen>
-	<PreferenceScreen>
-		<PreferenceCategory android:title="@string/settings_personalize">
-		    <CheckBoxPreference
-		        android:title="@string/settings_changeTextColor"
-		        android:summary="@string/settings_changeTextColor_summ"
-		        android:key="nightColorsWithInterior"
-		        android:defaultValue="false"  />
-		</PreferenceCategory>
-	</PreferenceScreen>
-</LinearLayout>
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
+	<PreferenceCategory android:title="@string/settings_carSettings" >
+	    <ListPreference
+	        android:title="@string/settings_radioType"
+	        android:summary="@string/settings_radioType_summ"
+	        android:key="settingRadioType"
+	        android:entries="@array/settings_radioType_options"
+	        android:entryValues="@array/settings_radioType_options" />
+	    <CheckBoxPreference
+	        android:title="@string/settings_navAvailable"
+	        android:summary="@string/settings_navAvailable_summ"
+	        android:key="navAvailable"
+	        android:defaultValue="false"  />
+	</PreferenceCategory>
+	<PreferenceCategory android:title="@string/settings_personalize">
+	    <CheckBoxPreference
+	        android:title="@string/settings_changeTextColor"
+	        android:summary="@string/settings_changeTextColor_summ"
+	        android:key="nightColorsWithInterior"
+	        android:defaultValue="false"  />
+	</PreferenceCategory>
+	<PreferenceCategory android:title="@string/settings_carValueSettings">
+	    <net.littlebigisland.droidibus.activity.preferences.SettingsCarTimePreference
+	        android:key="obcTime"
+	        android:defaultValue="00:00"
+	        android:summary="@string/settings_time_summ"
+	        android:title="@string/settings_time" />
+	    <net.littlebigisland.droidibus.activity.preferences.SettingsCarDatePreference
+	        android:key="obcDate"
+	        android:defaultValue="00:00"
+	        android:summary="@string/settings_date_summ"
+	        android:title="@string/settings_date" />
+	</PreferenceCategory>
+</PreferenceScreen>
