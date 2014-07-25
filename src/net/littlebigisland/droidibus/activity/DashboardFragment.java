@@ -25,6 +25,7 @@ import android.os.Handler;
 import android.os.IBinder;
 import android.os.PowerManager;
 import android.os.PowerManager.WakeLock;
+import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.app.Fragment;
 import android.util.Log;
@@ -634,7 +635,7 @@ public class DashboardFragment extends Fragment {
 						while(mIBusBound){
 							try{
 								if(mIBusService.isIBusActive()){
-	    							getActivity().runOnUiThread(new Runnable(){
+	    							mActivity.runOnUiThread(new Runnable(){
 	    								@Override
 	    								public void run(){
 	    									long currentTime = Calendar.getInstance().getTimeInMillis();
@@ -686,7 +687,7 @@ public class DashboardFragment extends Fragment {
 	};
 	
 	private void bindServices() {
-		Context applicationContext = getActivity();
+		Context applicationContext = mActivity;
 		
 		Intent IBusIntent = new Intent(applicationContext, IBusMessageService.class);
 		try {
@@ -709,7 +710,7 @@ public class DashboardFragment extends Fragment {
 	}
 	
 	private void unbindServices() {
-		Context applicationContext = getActivity();
+		Context applicationContext = mActivity;
 		if(mIBusBound){
 			try {
 				Log.d(TAG, "Unbinding from IBusMessageService");
@@ -741,6 +742,7 @@ public class DashboardFragment extends Fragment {
 	@Override
 	public void onAttach(Activity activity){
 		super.onAttach(activity);
+		Log.d(TAG, "onAttach");
 		mActivity = activity;
 	}
     
@@ -937,6 +939,7 @@ public class DashboardFragment extends Fragment {
 		};
 		
 		OnTouchListener touchAction = new OnTouchListener() {
+			@SuppressLint("ClickableViewAccessibility")
 			@Override
 			public boolean onTouch(View v, MotionEvent event) {
 				String action = (event.getAction() == MotionEvent.ACTION_DOWN) ? "Press" : "Release";
@@ -951,6 +954,11 @@ public class DashboardFragment extends Fragment {
 		btnRadioAM.setOnTouchListener(touchAction);
 		btnPrev.setOnTouchListener(touchAction);
 		btnNext.setOnTouchListener(touchAction);
+		
+		// Test
+		if(getActivity() == null){
+			Log.d(TAG, "Activity is Null prior to service binding!");
+		}
 
 		// Bind required background services last since the callback
 		// functions depend on the view items being initialized 
@@ -983,9 +991,9 @@ public class DashboardFragment extends Fragment {
 	 */
 	@SuppressWarnings("deprecation")
 	private void changeScreenState(boolean screenState){
-		if(mPowerManager == null) mPowerManager = (PowerManager) getActivity().getSystemService(Context.POWER_SERVICE);
+		if(mPowerManager == null) mPowerManager = (PowerManager) mActivity.getSystemService(Context.POWER_SERVICE);
 		boolean modeChange = false;
-		Window window = getActivity().getWindow();
+		Window window = mActivity.getWindow();
 		WindowManager.LayoutParams layoutP = window.getAttributes();
 		
 		if(screenState && !mScreenOn){
@@ -1018,7 +1026,7 @@ public class DashboardFragment extends Fragment {
 	}
 	
 	private void showToast(String toastText){
-		Context appContext = getActivity();
+		Context appContext = mActivity;
 		Toast.makeText(appContext, toastText, Toast.LENGTH_LONG).show();
 	}
 	
@@ -1029,7 +1037,7 @@ public class DashboardFragment extends Fragment {
 	}
 	
 	private void sendIBusCommandDelayed(final IBusCommandsEnum cmd, final long delayMillis, final Object... args){
-		new Handler(getActivity().getMainLooper()).postDelayed(new Runnable(){
+		new Handler(mActivity.getMainLooper()).postDelayed(new Runnable(){
 			public void run(){
 				sendIBusCommand(cmd, args);
 			}

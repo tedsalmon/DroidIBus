@@ -59,9 +59,14 @@ public class MainActivity extends FragmentActivity {
         		@Override
         		public void onDrawerClosed(View drawerView){
         			super.onDrawerClosed(drawerView);
-        			FragmentTransaction tx = getFragmentManager().beginTransaction();
-        			tx.replace(R.id.main, Fragment.instantiate(MainActivity.this, mFragments[position]));
-        			tx.commit();
+        			FragmentTransaction fragmentTx = getFragmentManager().beginTransaction();
+        			fragmentTx.replace(
+        				R.id.main,
+        				Fragment.instantiate(
+        					MainActivity.this, mFragments[position]
+        				)
+        			);
+        			fragmentTx.commit();
         		}
 			});
         	mDrawerLayout.closeDrawer(mDrawerList);
