@@ -25,6 +25,7 @@ import android.os.Handler;
 import android.os.IBinder;
 import android.os.PowerManager;
 import android.os.PowerManager.WakeLock;
+import android.app.Activity;
 import android.app.Fragment;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -88,6 +89,8 @@ public class DashboardFragment extends Fragment {
 	protected long mLastModeChange = 0; // Time that the radio mode last changed
 	protected long mLastRadioStatusRequest = 0; // Time we last requested the Radio's status
 	protected boolean mCDPlayerPlaying = false;
+	
+	protected Activity mActivity = null;
 	
 	private enum RadioModes{
 		AUX,
@@ -174,7 +177,10 @@ public class DashboardFragment extends Fragment {
 		 * @param code
 		 */
 		private void postToUI(Runnable code){
-			Handler mainHandler = new Handler(getActivity().getMainLooper());
+			if(mActivity == null){
+				Log.d(TAG, "Activity is null!");
+			}
+			Handler mainHandler = new Handler(mActivity.getMainLooper());
 			mainHandler.post(code);
 		}
 		
@@ -184,7 +190,10 @@ public class DashboardFragment extends Fragment {
 		 * @param delayMillisecs Time to delay this message in the event loop
 		 */
 		private void postToUIDelayed(Runnable code, long delayMillisecs){
-			Handler mainHandler = new Handler(getActivity().getMainLooper());
+			if(mActivity == null){
+				Log.d(TAG, "Activity is null!");
+			}
+			Handler mainHandler = new Handler(mActivity.getMainLooper());
 			mainHandler.postDelayed(code, delayMillisecs);
 		}
 		
@@ -565,7 +574,7 @@ public class DashboardFragment extends Fragment {
 		@Override
 		public void onLightStatus(int lightStatus) {
 			// TODO Implement
-			
+			Log.d(TAG, String.format("Light status %s", lightStatus));
 		}
 		
 	};
@@ -728,6 +737,12 @@ public class DashboardFragment extends Fragment {
 			}
 		}
 	}
+	
+	@Override
+	public void onAttach(Activity activity){
+		super.onAttach(activity);
+		mActivity = activity;
+	}
     
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -744,9 +759,6 @@ public class DashboardFragment extends Fragment {
 
 		// Keep a wake lock
     	changeScreenState(true);
-		
-    	// Bind required background services
-    	bindServices();
     	
 		// Music Player
 		mPlayerPrevBtn = (ImageButton) v.findViewById(R.id.playerPrevBtn);
@@ -939,6 +951,10 @@ public class DashboardFragment extends Fragment {
 		btnRadioAM.setOnTouchListener(touchAction);
 		btnPrev.setOnTouchListener(touchAction);
 		btnNext.setOnTouchListener(touchAction);
+
+		// Bind required background services last since the callback
+		// functions depend on the view items being initialized 
+    	bindServices();
 		return v;
 	}
 	
@@ -1018,6 +1034,12 @@ public class DashboardFragment extends Fragment {
 				sendIBusCommand(cmd, args);
 			}
 		}, delayMillis);
+	}
+	
+	@Override
+	public void onDetach(){
+		super.onDetach();
+		Log.d(TAG, "onDetach called");
 	}
 	
     @Override
