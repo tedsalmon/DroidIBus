@@ -21,7 +21,7 @@ public class MainActivity extends FragmentActivity {
 	
 	private Fragment[] mFragments = {
 		new DashboardFragment(),
-		new SettingsFragment(),
+		new NavigationFragment(),
 		new SettingsFragment(),
 	};
 	
@@ -59,7 +59,7 @@ public class MainActivity extends FragmentActivity {
         			fragmentTx.replace(R.id.main, mFragments[position]);
         			fragmentTx.commit();
         		}
-			});
+        	});
         	mDrawerLayout.closeDrawer(mDrawerList);
         }
     }
