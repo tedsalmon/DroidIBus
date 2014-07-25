@@ -26,7 +26,6 @@ import android.os.IBinder;
 import android.os.PowerManager;
 import android.os.PowerManager.WakeLock;
 import android.annotation.SuppressLint;
-import android.app.Activity;
 import android.app.Fragment;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -84,14 +83,13 @@ public class DashboardFragment extends Fragment {
 	protected PowerManager mPowerManager = null;
 	protected WakeLock screenWakeLock;
 	protected boolean mScreenOn = false; // Screen on = true  Screen off = false
+	private IBusMessageReceiver mIBusUpdateListener =  null;
 	
 	protected RadioModes mCurrentRadioMode = null; // Current Radio Text
 	protected long mLastRadioStatus = 0; // Epoch of last time we got a status message from the Radio
 	protected long mLastModeChange = 0; // Time that the radio mode last changed
 	protected long mLastRadioStatusRequest = 0; // Time we last requested the Radio's status
 	protected boolean mCDPlayerPlaying = false;
-	
-	protected Activity mActivity = null;
 	
 	private enum RadioModes{
 		AUX,
@@ -170,18 +168,20 @@ public class DashboardFragment extends Fragment {
 	
 	/**
 	 * IBus Callback Functions
-	 */
-	private IBusMessageReceiver mIBusUpdateListener =  new IBusMessageReceiver() {
+	 */ 	
+	class DashboardIBusCallbacks implements IBusMessageReceiver{
 		
 		/**
 		 * Send shit back to the UI Context
 		 * @param code
 		 */
 		private void postToUI(Runnable code){
-			if(mActivity == null){
+			if(getActivity() == null){
 				Log.d(TAG, "Activity is null!");
+			}else{
+				Log.d(TAG, "Activity is NOT null");
 			}
-			Handler mainHandler = new Handler(mActivity.getMainLooper());
+			Handler mainHandler = new Handler(getActivity().getMainLooper());
 			mainHandler.post(code);
 		}
 		
@@ -191,10 +191,12 @@ public class DashboardFragment extends Fragment {
 		 * @param delayMillisecs Time to delay this message in the event loop
 		 */
 		private void postToUIDelayed(Runnable code, long delayMillisecs){
-			if(mActivity == null){
+			if(getActivity() == null){
 				Log.d(TAG, "Activity is null!");
+			}else{
+				Log.d(TAG, "Activity is NOT null");
 			}
-			Handler mainHandler = new Handler(mActivity.getMainLooper());
+			Handler mainHandler = new Handler(getActivity().getMainLooper());
 			mainHandler.postDelayed(code, delayMillisecs);
 		}
 		
@@ -437,14 +439,6 @@ public class DashboardFragment extends Fragment {
 			    			coolantTempField.setText(R.string.defaultText);
 			    		}
 			    	}
-			    	switch(state){
-			    		case 0:
-
-			    			break;
-			    		case 1:
-
-			    			break;
-			    	}
 			    }
 			});
 		}
@@ -574,7 +568,6 @@ public class DashboardFragment extends Fragment {
 
 		@Override
 		public void onLightStatus(int lightStatus) {
-			// TODO Implement
 			Log.d(TAG, String.format("Light status %s", lightStatus));
 		}
 		
@@ -635,7 +628,7 @@ public class DashboardFragment extends Fragment {
 						while(mIBusBound){
 							try{
 								if(mIBusService.isIBusActive()){
-	    							mActivity.runOnUiThread(new Runnable(){
+	    							getActivity().runOnUiThread(new Runnable(){
 	    								@Override
 	    								public void run(){
 	    									long currentTime = Calendar.getInstance().getTimeInMillis();
@@ -687,7 +680,7 @@ public class DashboardFragment extends Fragment {
 	};
 	
 	private void bindServices() {
-		Context applicationContext = mActivity;
+		Context applicationContext = getActivity();
 		
 		Intent IBusIntent = new Intent(applicationContext, IBusMessageService.class);
 		try {
@@ -710,7 +703,7 @@ public class DashboardFragment extends Fragment {
 	}
 	
 	private void unbindServices() {
-		Context applicationContext = mActivity;
+		Context applicationContext = getActivity();
 		if(mIBusBound){
 			try {
 				Log.d(TAG, "Unbinding from IBusMessageService");
@@ -738,14 +731,7 @@ public class DashboardFragment extends Fragment {
 			}
 		}
 	}
-	
-	@Override
-	public void onAttach(Activity activity){
-		super.onAttach(activity);
-		Log.d(TAG, "onAttach");
-		mActivity = activity;
-	}
-    
+
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -959,7 +945,7 @@ public class DashboardFragment extends Fragment {
 		if(getActivity() == null){
 			Log.d(TAG, "Activity is Null prior to service binding!");
 		}
-
+		mIBusUpdateListener = new DashboardIBusCallbacks();
 		// Bind required background services last since the callback
 		// functions depend on the view items being initialized 
     	bindServices();
@@ -991,9 +977,9 @@ public class DashboardFragment extends Fragment {
 	 */
 	@SuppressWarnings("deprecation")
 	private void changeScreenState(boolean screenState){
-		if(mPowerManager == null) mPowerManager = (PowerManager) mActivity.getSystemService(Context.POWER_SERVICE);
+		if(mPowerManager == null) mPowerManager = (PowerManager) getActivity().getSystemService(Context.POWER_SERVICE);
 		boolean modeChange = false;
-		Window window = mActivity.getWindow();
+		Window window = getActivity().getWindow();
 		WindowManager.LayoutParams layoutP = window.getAttributes();
 		
 		if(screenState && !mScreenOn){
@@ -1026,7 +1012,7 @@ public class DashboardFragment extends Fragment {
 	}
 	
 	private void showToast(String toastText){
-		Context appContext = mActivity;
+		Context appContext = getActivity();
 		Toast.makeText(appContext, toastText, Toast.LENGTH_LONG).show();
 	}
 	
@@ -1037,17 +1023,11 @@ public class DashboardFragment extends Fragment {
 	}
 	
 	private void sendIBusCommandDelayed(final IBusCommandsEnum cmd, final long delayMillis, final Object... args){
-		new Handler(mActivity.getMainLooper()).postDelayed(new Runnable(){
+		new Handler(getActivity().getMainLooper()).postDelayed(new Runnable(){
 			public void run(){
 				sendIBusCommand(cmd, args);
 			}
 		}, delayMillis);
-	}
-	
-	@Override
-	public void onDetach(){
-		super.onDetach();
-		Log.d(TAG, "onDetach called");
 	}
 	
     @Override

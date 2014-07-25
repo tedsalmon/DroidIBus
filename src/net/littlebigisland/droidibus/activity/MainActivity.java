@@ -6,6 +6,7 @@ package net.littlebigisland.droidibus.activity;
  */
 import net.littlebigisland.droidibus.R;
 import android.app.Fragment;
+import android.app.FragmentManager;
 import android.app.FragmentTransaction;
 import android.os.Bundle;
 import android.support.v4.app.FragmentActivity;
@@ -40,15 +41,16 @@ public class MainActivity extends FragmentActivity {
 		// set up the drawer's list view with items and click listener
 		mDrawerList.setAdapter(new ArrayAdapter<String>(this, R.layout.drawer_item, mSettingsItems));
 		mDrawerList.setOnItemClickListener(new DrawerItemClickListener());
-		FragmentTransaction fragmentTx = getFragmentManager().beginTransaction();
-		fragmentTx.replace(
-			R.id.main,
-			Fragment.instantiate(
-				MainActivity.this,
-				mFragments[0]
-			)
-		);
-		fragmentTx.commit();
+		FragmentManager fragmentManager = getFragmentManager();
+		if(savedInstanceState == null){
+			FragmentTransaction fragmentTx = fragmentManager.beginTransaction();
+			DashboardFragment fragment = new DashboardFragment();
+			fragmentTx.replace(
+				R.id.main,
+				fragment
+			);
+			fragmentTx.commit();
+		}
 	}
 	
     /* The click listener for ListView in the navigation drawer */
