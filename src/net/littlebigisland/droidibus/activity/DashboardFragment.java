@@ -83,7 +83,6 @@ public class DashboardFragment extends Fragment {
 	protected PowerManager mPowerManager = null;
 	protected WakeLock screenWakeLock;
 	protected boolean mScreenOn = false; // Screen on = true  Screen off = false
-	private IBusMessageReceiver mIBusUpdateListener =  null;
 	
 	protected RadioModes mCurrentRadioMode = null; // Current Radio Text
 	protected long mLastRadioStatus = 0; // Epoch of last time we got a status message from the Radio
@@ -169,7 +168,7 @@ public class DashboardFragment extends Fragment {
 	/**
 	 * IBus Callback Functions
 	 */ 	
-	class DashboardIBusCallbacks implements IBusMessageReceiver{
+	private IBusMessageReceiver mIBusUpdateListener = new IBusMessageReceiver() {
 		
 		/**
 		 * Send shit back to the UI Context
@@ -941,11 +940,6 @@ public class DashboardFragment extends Fragment {
 		btnPrev.setOnTouchListener(touchAction);
 		btnNext.setOnTouchListener(touchAction);
 		
-		// Test
-		if(getActivity() == null){
-			Log.d(TAG, "Activity is Null prior to service binding!");
-		}
-		mIBusUpdateListener = new DashboardIBusCallbacks();
 		// Bind required background services last since the callback
 		// functions depend on the view items being initialized 
     	bindServices();
