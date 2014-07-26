@@ -19,6 +19,7 @@ public enum IBusCommandsEnum {
 	BMToIKEResetFuel1(DeviceAddressEnum.OnBoardMonitor, "resetFuel1"),
 	BMToIKEResetFuel2(DeviceAddressEnum.OnBoardMonitor, "resetFuel2"),
 	BMToIKEResetAvgSpeed(DeviceAddressEnum.OnBoardMonitor, "resetAvgSpeed"),
+	BMToIKESetTime(DeviceAddressEnum.OnBoardMonitor, "setTime"),
 	// BoardMonitor to Radio Commands
 	BMToRadioGetStatus(DeviceAddressEnum.OnBoardMonitor, "getRadioStatus"),
 	BMToRadioCDStatus(DeviceAddressEnum.OnBoardMonitor, "sendCDPlayerMessage"),
