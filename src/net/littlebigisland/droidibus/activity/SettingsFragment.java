@@ -9,7 +9,7 @@ import android.view.ViewGroup;
 
 public class SettingsFragment extends PreferenceFragment{
 	public String TAG = "DroidIBus";
-    
+	
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);

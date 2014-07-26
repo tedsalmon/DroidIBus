@@ -9,6 +9,7 @@ import java.util.Map;
 
 import android.annotation.SuppressLint;
 import android.os.Handler;
+import android.util.Log;
 
 /**
  * This class represents the base of which all IBus Systems will extend from
@@ -26,6 +27,8 @@ import android.os.Handler;
  * implementation of the IKE class inside the BM class.
  */
 public abstract class IBusSystemCommand {
+	
+	private String TAG = "DroidIBus";
 	
 	// The variable that holds a list of interfaces provided by listeners
 	private ArrayList<IBusMessageReceiver> mCallbackListeners = new ArrayList<IBusMessageReceiver>();
@@ -142,7 +145,8 @@ public abstract class IBusSystemCommand {
 					@Override
 					public void run() {
 						try{
-							final Method cb = mCallbackReceiver.getClass().getMethod(callback);
+							Log.d(TAG, String.format("Triggering '%s()'", callback.toString()));
+							Method cb = mCallbackReceiver.getClass().getMethod(callback);
 							cb.invoke(mCallbackReceiver);
 						}catch (IllegalAccessException | IllegalArgumentException | InvocationTargetException | NoSuchMethodException e) {
 							e.printStackTrace();
@@ -169,6 +173,7 @@ public abstract class IBusSystemCommand {
 					@Override
 					public void run() {
 						try{
+							Log.d(TAG, String.format("Triggering '%s()' with value '%s'", callback.toString(), value));
 							Method cb = mCallbackReceiver.getClass().getMethod(callback, String.class);
 							cb.invoke(mCallbackReceiver, value);
 						}catch (IllegalAccessException | IllegalArgumentException | InvocationTargetException | NoSuchMethodException e) {
@@ -196,6 +201,7 @@ public abstract class IBusSystemCommand {
 					@Override
 					public void run() {
 						try{
+							Log.d(TAG, String.format("Triggering '%s()' with value '%s'", callback.toString(), value));
 							Method cb = mCallbackReceiver.getClass().getMethod(callback, int.class);
 							cb.invoke(mCallbackReceiver, value);
 						}catch (IllegalAccessException | IllegalArgumentException | InvocationTargetException | NoSuchMethodException e) {
