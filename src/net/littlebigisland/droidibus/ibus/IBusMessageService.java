@@ -25,6 +25,7 @@ import ioio.lib.api.exception.ConnectionLostException;
 import ioio.lib.util.BaseIOIOLooper;
 import ioio.lib.util.IOIOLooper;
 import ioio.lib.util.android.IOIOService;
+import android.annotation.SuppressLint;
 import android.content.Intent;
 import android.os.Binder;
 import android.os.Handler;
@@ -39,8 +40,10 @@ public class IBusMessageService extends IOIOService {
 	private ArrayList<IBusCommand> mCommandQueue = new ArrayList<IBusCommand>();
 	private ArrayList<IBusMessageReceiver> mCallbackListeners = new ArrayList<IBusMessageReceiver>();
 	private ArrayList<Handler> mCallbackHandlers = new ArrayList<Handler>();
+	@SuppressLint("UseSparseArrays")
 	private Map<Byte, IBusSystemCommand> IBusSysMap = new HashMap<Byte, IBusSystemCommand>();
-	private Map<Byte, String> mDeviceLookup = new HashMap<Byte, String>(); // For logging
+	@SuppressLint("UseSparseArrays")
+	private Map<Byte, String> mDeviceLookup = new HashMap<Byte, String>();
 	private boolean mIsIOIOConnected = false;
 	
 	/**
@@ -230,7 +233,7 @@ public class IBusMessageService extends IOIOService {
 				IBusSysMap.put(DeviceAddressEnum.OnBoardMonitor.toByte(), new BoardMonitorSystemCommand());
 				// Register the callback listener here ;)
 				for (Object key : IBusSysMap.keySet()){
-					for(int i = 0; i < mCallbackListeners.size() - 1; i++){
+					for(int i = 0; i < mCallbackListeners.size(); i++){
 						IBusSysMap.get(key).registerCallback(mCallbackListeners.get(i), mCallbackHandlers.get(i));
 					}
 				}

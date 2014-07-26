@@ -7,8 +7,8 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 
+import android.annotation.SuppressLint;
 import android.os.Handler;
-import android.util.Log;
 
 /**
  * This class represents the base of which all IBus Systems will extend from
@@ -31,9 +31,12 @@ public abstract class IBusSystemCommand {
 	private ArrayList<IBusMessageReceiver> mCallbackListeners = new ArrayList<IBusMessageReceiver>();
 	// The variable that holds the handler for every thread with an implemented interface
 	private ArrayList<Handler> mCallbackHandlers = new ArrayList<Handler>();
+	
 	// ArrayList holding the message currently being processed.
 	public ArrayList<Byte> currentMessage = null;
+	
 	// Map used to map implementation of Destination systems from each Source System 
+	@SuppressLint("UseSparseArrays")
 	public Map<Byte, IBusSystemCommand> IBusDestinationSystems = new HashMap<Byte, IBusSystemCommand>();
 	
 	/** 
@@ -131,32 +134,23 @@ public abstract class IBusSystemCommand {
 	 * @throws NoSuchMethodException 
 	 */
 	public void triggerCallback(final String callback){
-		Log.d("DroidIBus", "Triggering callback!");
 		if(mCallbackListeners.size() > 0){
-			Log.d("DroidIBus", "Callback Size > 0!");
 			for(int i = 0; i < mCallbackListeners.size(); i++){
-				Log.d("DroidIBus", "Callback Loop!");
 				final IBusMessageReceiver mCallbackReceiver = mCallbackListeners.get(i);
 				Handler mHandler = mCallbackHandlers.get(i);
-				Log.d("DroidIBus", "Prior to launching runnable");
 				mHandler.post(new Runnable(){
 					@Override
 					public void run() {
 						try{
-							Log.d("DroidIBus", "Running callback!");
 							final Method cb = mCallbackReceiver.getClass().getMethod(callback);
 							cb.invoke(mCallbackReceiver);
 						}catch (IllegalAccessException | IllegalArgumentException | InvocationTargetException | NoSuchMethodException e) {
-							Log.d("DroidIBus", "Callback Exception!");
 							e.printStackTrace();
 						}
 					}
 				});
 			}
-		}else{
-			Log.d("DroidIBus", "No Callback listeners?");
 		}
-		Log.d("DroidIBus", "Done with callback!");
 	}
 	
 	/**
@@ -167,32 +161,23 @@ public abstract class IBusSystemCommand {
 	 * @param value    The string value to pass to the callback
 	 */
 	public void triggerCallback(final String callback, final String value){
-		Log.d("DroidIBus", "Triggering callback!");
 		if(mCallbackListeners.size() > 0){
-			Log.d("DroidIBus", "Callback Size > 0!");
 			for(int i = 0; i < mCallbackListeners.size(); i++){
-				Log.d("DroidIBus", "Callback Loop!");
 				final IBusMessageReceiver mCallbackReceiver = mCallbackListeners.get(i);
 				Handler mHandler = mCallbackHandlers.get(i);
-				Log.d("DroidIBus", "Prior to launching runnable");
 				mHandler.post(new Runnable(){
 					@Override
 					public void run() {
 						try{
-							Log.d("DroidIBus", "Running callback!");
 							Method cb = mCallbackReceiver.getClass().getMethod(callback, String.class);
 							cb.invoke(mCallbackReceiver, value);
 						}catch (IllegalAccessException | IllegalArgumentException | InvocationTargetException | NoSuchMethodException e) {
-							Log.d("DroidIBus", "Callback Exception!");
 							e.printStackTrace();
 						}
 					}
 				});
 			}
-		}else{
-			Log.d("DroidIBus", "No Callback listeners?");
 		}
-		Log.d("DroidIBus", "Done with callback!");
 	}
 	
 	/**
@@ -203,31 +188,22 @@ public abstract class IBusSystemCommand {
 	 * @param value    The integer value to pass to the callback
 	 */	
 	public void triggerCallback(final String callback, final int value){
-		Log.d("DroidIBus", "Triggering callback!");
 		if(mCallbackListeners.size() > 0){
-			Log.d("DroidIBus", "Callback Size > 0!");
 			for(int i = 0; i < mCallbackListeners.size(); i++){
-				Log.d("DroidIBus", "Callback Loop!");
 				final IBusMessageReceiver mCallbackReceiver = mCallbackListeners.get(i);
 				Handler mHandler = mCallbackHandlers.get(i);
-				Log.d("DroidIBus", "Prior to launching runnable");
 				mHandler.post(new Runnable(){
 					@Override
 					public void run() {
 						try{
-							Log.d("DroidIBus", "Running callback!");
-							final Method cb = mCallbackReceiver.getClass().getMethod(callback, int.class);
+							Method cb = mCallbackReceiver.getClass().getMethod(callback, int.class);
 							cb.invoke(mCallbackReceiver, value);
 						}catch (IllegalAccessException | IllegalArgumentException | InvocationTargetException | NoSuchMethodException e) {
-							Log.d("DroidIBus", "Callback Exception!");
 							e.printStackTrace();
 						}
 					}
 				});
 			}
-		}else{
-			Log.d("DroidIBus", "No Callback listeners?");
 		}
-		Log.d("DroidIBus", "Done with callback!");
 	}
 }
