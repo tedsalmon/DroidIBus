@@ -27,6 +27,7 @@ import ioio.lib.util.IOIOLooper;
 import ioio.lib.util.android.IOIOService;
 import android.content.Intent;
 import android.os.Binder;
+import android.os.Handler;
 import android.os.IBinder;
 import android.util.Log;
 
@@ -36,7 +37,9 @@ public class IBusMessageService extends IOIOService {
 	private String TAG = "DroidIBus";
 	private final IBinder mBinder = new IOIOBinder();
 	private ArrayList<IBusCommand> mCommandQueue = new ArrayList<IBusCommand>();
-	private IBusMessageReceiver mIBusCbListener = null;
+	private ArrayList<IBusMessageReceiver> mCallbackListeners = new ArrayList<IBusMessageReceiver>();
+	private ArrayList<Handler> mCallbackHandlers = new ArrayList<Handler>();
+	private Map<Byte, IBusSystemCommand> IBusSysMap = new HashMap<Byte, IBusSystemCommand>();
 	private Map<Byte, String> mDeviceLookup = new HashMap<Byte, String>(); // For logging
 	private boolean mIsIOIOConnected = false;
 	
@@ -73,8 +76,6 @@ public class IBusMessageService extends IOIOService {
 			private long lastSend;
 
 			private ArrayList<Byte> readBuffer;
-			
-			private Map<Byte, IBusSystemCommand> IBusSysMap = new HashMap<Byte, IBusSystemCommand>();
 			
 			/**
 			 * Called every time a connection with IOIO has been established.
@@ -133,7 +134,7 @@ public class IBusMessageService extends IOIOService {
 					readBuffer.clear();
 				}
 				// If we have callbacks setup we can start handling messages
-				if(!mCallbackRegistered && mIBusCbListener != null)
+				if(!mCallbackRegistered && mCallbackListeners != null)
 					initiateHandlers();
 				try {
 					/* Handle incoming IBus data.
@@ -228,8 +229,11 @@ public class IBusMessageService extends IOIOService {
 				IBusSysMap.put(DeviceAddressEnum.MultiFunctionSteeringWheel.toByte(), new SteeringWheelSystemCommand());
 				IBusSysMap.put(DeviceAddressEnum.OnBoardMonitor.toByte(), new BoardMonitorSystemCommand());
 				// Register the callback listener here ;)
-				for (Object key : IBusSysMap.keySet())
-					IBusSysMap.get(key).registerCallbacks(mIBusCbListener);
+				for (Object key : IBusSysMap.keySet()){
+					for(int i = 0; i < mCallbackListeners.size() - 1; i++){
+						IBusSysMap.get(key).registerCallback(mCallbackListeners.get(i), mCallbackHandlers.get(i));
+					}
+				}
 				mCallbackRegistered = true;
 			}
 				
@@ -257,7 +261,7 @@ public class IBusMessageService extends IOIOService {
 				// The first item in the IBus message indicates the source system
 				try{
 					IBusSysMap.get(msg.get(0)).mapReceived(msg);
-				}catch(NullPointerException npe){
+				}catch(NullPointerException e){
 					// Things not in the map throw a NullPointerException
 				}
 			}
@@ -272,8 +276,14 @@ public class IBusMessageService extends IOIOService {
 		mCommandQueue.add(cmd);
 	}
 	
-	public void setCallbackListener(IBusMessageReceiver listener){
-		mIBusCbListener = listener;
+	public void addCallback(IBusMessageReceiver listener, Handler handler){
+		mCallbackListeners.add(listener);
+		mCallbackHandlers.add(handler);
+		if(IBusSysMap.size() > 0){
+			for (Object key : IBusSysMap.keySet())
+				IBusSysMap.get(key).registerCallback(listener, handler);
+		}
+			
 	}
 	
 	public void disable(){

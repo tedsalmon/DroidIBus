@@ -53,19 +53,21 @@ import android.widget.Toast;
 public class DashboardFragment extends Fragment {
 	public String TAG = "DroidIBus";
 	
+	protected Handler mHandler = new Handler();
+	
 	protected IBusMessageService mIBusService;
-    protected boolean mIBusBound = false;
-    
-    // Fields in the activity
-    protected TextView stationText, radioRDSIndicatorField, radioProgramField,
-    				   radioBroadcastField, radioStereoIndicatorField, 
-    				   speedField, rpmField, rangeField, outTempField,
-    				   coolantTempField, fuel1Field, fuel2Field, avgSpeedField,
-    				   geoCoordinatesField ,geoStreetField, geoLocaleField,
-    				   geoAltitudeField, dateField, timeField;
-
+	protected boolean mIBusBound = false;
+	
+	// Fields in the activity
+	protected TextView stationText, radioRDSIndicatorField, radioProgramField,
+					   radioBroadcastField, radioStereoIndicatorField, 
+					   speedField, rpmField, rangeField, outTempField,
+					   coolantTempField, fuel1Field, fuel2Field, avgSpeedField,
+					   geoCoordinatesField ,geoStreetField, geoLocaleField,
+					   geoAltitudeField, dateField, timeField;
+	
 	// Views in the Activity
-    protected LinearLayout radioLayout, tabletLayout;
+	protected LinearLayout radioLayout, tabletLayout;
 	protected ImageButton mPlayerPrevBtn, mPlayerControlBtn, mPlayerNextBtn;
 	protected TextView mPlayerArtistText, mPlayerTitleText, mPlayerAlbumText;
 	protected SeekBar mPlayerScrubBar;
@@ -74,8 +76,6 @@ public class DashboardFragment extends Fragment {
 	
 	protected MusicControllerService mPlayerService;
 	protected boolean mPlayerBound = false;
-	
-	protected Handler mPlayerHandler = new Handler();
 
 	protected boolean mIsPlaying = false;
 	protected long mSongDuration = 1;
@@ -110,10 +110,10 @@ public class DashboardFragment extends Fragment {
 			// If we can update the seek bar, set that up, else disable it
 			if(mScrubbingSupported) {
 				mPlayerScrubBar.setEnabled(true);
-				mPlayerHandler.post(mUpdateSeekBar);
+				mHandler.post(mUpdateSeekBar);
 			}else{
 				mPlayerScrubBar.setEnabled(false);
-				mPlayerHandler.removeCallbacks(mUpdateSeekBar);
+				mHandler.removeCallbacks(mUpdateSeekBar);
 			}
 		}
 
@@ -134,12 +134,12 @@ public class DashboardFragment extends Fragment {
 		private void stateUpdate(int state){
 			switch(state){
 				case RemoteControlClient.PLAYSTATE_PLAYING:
-					if(mScrubbingSupported) mPlayerHandler.post(mUpdateSeekBar);
+					if(mScrubbingSupported) mHandler.post(mUpdateSeekBar);
 					mIsPlaying = true;
 					mPlayerControlBtn.setImageResource(android.R.drawable.ic_media_pause);
 					break;
 				default:
-					mPlayerHandler.removeCallbacks(mUpdateSeekBar);
+					mHandler.removeCallbacks(mUpdateSeekBar);
 					mIsPlaying = false;
 					mPlayerControlBtn.setImageResource(android.R.drawable.ic_media_play);
 					break;
@@ -169,36 +169,6 @@ public class DashboardFragment extends Fragment {
 	 * IBus Callback Functions
 	 */ 	
 	private IBusMessageReceiver mIBusUpdateListener = new IBusMessageReceiver() {
-		
-		/**
-		 * Send shit back to the UI Context
-		 * @param code
-		 */
-		private void postToUI(Runnable code){
-			if(getActivity() == null){
-				Log.d(TAG, "Activity is null!");
-			}else{
-				Log.d(TAG, "Activity is NOT null");
-			}
-			Handler mainHandler = new Handler(getActivity().getMainLooper());
-			mainHandler.post(code);
-		}
-		
-		/**
-		 * Send shit back to the UI Context with a delay
-		 * @param code Runnable with code
-		 * @param delayMillisecs Time to delay this message in the event loop
-		 */
-		private void postToUIDelayed(Runnable code, long delayMillisecs){
-			if(getActivity() == null){
-				Log.d(TAG, "Activity is null!");
-			}else{
-				Log.d(TAG, "Activity is NOT null");
-			}
-			Handler mainHandler = new Handler(getActivity().getMainLooper());
-			mainHandler.postDelayed(code, delayMillisecs);
-		}
-		
 		/**
 		 * Callback to handle any updates to the station text when in Radio Mode
 		 * @param text Text to set
@@ -206,97 +176,77 @@ public class DashboardFragment extends Fragment {
 		@Override
 		public void onUpdateRadioStation(final String text){
 			Log.d(TAG, "Setting station text - '" + text + "'");
-			postToUI(new Runnable() {
-			    public void run() {
-					RadioModes lastState = mCurrentRadioMode; 
-			    	switch(text){
-			    		case "TR 01 ":
-			    		case "TR 01":
-			    		case "NO CD":
-			    			mCurrentRadioMode = RadioModes.CD;
-			    			break;
-			    		case "AUX":
-			    			mCurrentRadioMode = RadioModes.AUX;
-			    			break;
-			    		default:
-			    			mCurrentRadioMode = RadioModes.Radio;
-			    			break;
-			    	}
-			    	
-			    	if(lastState != mCurrentRadioMode){
-			    		mLastModeChange = Calendar.getInstance().getTimeInMillis();
-			    	}
-			    	
-			    	/* 
-			    	 We're not in the right mode, sync with the car
-			    	 Make sure this isn't CD mode and that we're not in the middle of a mode change
-			    	 by making sure we've been in the current mode for at least 1.5 seconds
-			    	 If lastState is null then we should also check as this is the first bit of data
-			    	 see about radio mode 
-			    	 */
-			    	if((!(mCurrentRadioMode == RadioModes.CD) && (Calendar.getInstance().getTimeInMillis() - mLastModeChange) > 1500) || lastState == null){
-			    		if(mCurrentRadioMode == RadioModes.AUX && tabletLayout.getVisibility() == View.GONE){
-			    			mBtnMusicMode.toggle();
-			    		}
-			    		if(!(mCurrentRadioMode == RadioModes.AUX) && tabletLayout.getVisibility() == View.VISIBLE){
-			    			mBtnMusicMode.toggle();
-			    		}
-			    	}
-			    	
-			    	mLastRadioStatus = Calendar.getInstance().getTimeInMillis();
-			    	stationText.setText(text);
-				}
-			});
+			RadioModes lastState = mCurrentRadioMode; 
+	    	switch(text){
+	    		case "TR 01 ":
+	    		case "TR 01":
+	    		case "NO CD":
+	    			mCurrentRadioMode = RadioModes.CD;
+	    			break;
+	    		case "AUX":
+	    			mCurrentRadioMode = RadioModes.AUX;
+	    			break;
+	    		default:
+	    			mCurrentRadioMode = RadioModes.Radio;
+	    			break;
+	    	}
+	    	
+	    	if(lastState != mCurrentRadioMode){
+	    		mLastModeChange = Calendar.getInstance().getTimeInMillis();
+	    	}
+	    	
+	    	/* 
+	    	 We're not in the right mode, sync with the car
+	    	 Make sure this isn't CD mode and that we're not in the middle of a mode change
+	    	 by making sure we've been in the current mode for at least 1.5 seconds
+	    	 If lastState is null then we should also check as this is the first bit of data
+	    	 see about radio mode 
+	    	 */
+	    	if((!(mCurrentRadioMode == RadioModes.CD) && (Calendar.getInstance().getTimeInMillis() - mLastModeChange) > 1500) || lastState == null){
+	    		if(mCurrentRadioMode == RadioModes.AUX && tabletLayout.getVisibility() == View.GONE){
+	    			mBtnMusicMode.toggle();
+	    		}
+	    		if(!(mCurrentRadioMode == RadioModes.AUX) && tabletLayout.getVisibility() == View.VISIBLE){
+	    			mBtnMusicMode.toggle();
+	    		}
+	    	}
+	    	
+	    	mLastRadioStatus = Calendar.getInstance().getTimeInMillis();
+	    	stationText.setText(text);
 		}
 		
 		@Override
 		public void onUpdateRadioBrodcasts(final String broadcastType){
 			Log.d(TAG, "Setting Radio Broadcast Type");
-			postToUI(new Runnable(){
-			    public void run(){
-			    	mLastRadioStatus = Calendar.getInstance().getTimeInMillis();
-			    	radioBroadcastField.setText(broadcastType);
-			    }
-			});
+			mLastRadioStatus = Calendar.getInstance().getTimeInMillis();
+			radioBroadcastField.setText(broadcastType);
 		}
 
 		@Override
 		public void onUpdateRadioStereoIndicator(final String stereoIndicator){
 			Log.d(TAG, "Setting Stereo Indicator - '" + stereoIndicator + "'");
-			postToUI(new Runnable(){
-			    public void run(){
-			    	if(radioLayout.getVisibility() == View.VISIBLE){
-			    		mLastRadioStatus = Calendar.getInstance().getTimeInMillis();
-			    		int visibility = (stereoIndicator.equals("")) ? View.GONE : View.VISIBLE;
-			    		radioStereoIndicatorField.setVisibility(visibility);
-			    	}
-			    }
-			});
+			if(radioLayout.getVisibility() == View.VISIBLE){
+				mLastRadioStatus = Calendar.getInstance().getTimeInMillis();
+				int visibility = (stereoIndicator.equals("")) ? View.GONE : View.VISIBLE;
+				radioStereoIndicatorField.setVisibility(visibility);
+			}
 		}
 
 		@Override
 		public void onUpdateRadioRDSIndicator(final String rdsIndicator){
 			Log.d(TAG, "Setting RDS Indicator - '" + rdsIndicator + "'");
-			postToUI(new Runnable(){
-			    public void run(){
-			    	mLastRadioStatus = Calendar.getInstance().getTimeInMillis();
-			    	if(radioLayout.getVisibility() == View.VISIBLE){
-			    		int visibility = (rdsIndicator.equals("")) ? View.GONE : View.VISIBLE;
-			    		radioRDSIndicatorField.setVisibility(visibility);
-			    	}
-			    }
-			});
+			mLastRadioStatus = Calendar.getInstance().getTimeInMillis();
+			if(radioLayout.getVisibility() == View.VISIBLE){
+				int visibility = (rdsIndicator.equals("")) ? View.GONE : View.VISIBLE;
+				radioRDSIndicatorField.setVisibility(visibility);
+			}
 		}
 
 		@Override
 		public void onUpdateRadioProgramIndicator(final String currentProgram){
 			Log.d(TAG, "Setting Radio Program Type");
-			postToUI(new Runnable(){
-			    public void run(){
-			    	mLastRadioStatus = Calendar.getInstance().getTimeInMillis();
-			    	radioProgramField.setText(currentProgram);
-			    }
-			});
+			mLastRadioStatus = Calendar.getInstance().getTimeInMillis();
+			radioProgramField.setText(currentProgram);
 		}
 		
 		/**
@@ -307,179 +257,119 @@ public class DashboardFragment extends Fragment {
 		public void onUpdateSpeed(final int speed){
 			Log.d(TAG, "Setting Speed in Callback!");
 			final int speedMPH = ((int) ((speed * 2) * 0.621371));
-			postToUI(new Runnable() {
-			    public void run() {
-			    	speedField.setText(String.format("%d MPH", speedMPH));
-			    }
-			});
+			speedField.setText(String.format("%d MPH", speedMPH));
 		}
 		
 		@Override
 		public void onUpdateRPM(final int rpm){
 			Log.d(TAG, "Setting RPM in Callback!");
-			postToUI(new Runnable() {
-			    public void run() {
-			    	rpmField.setText(Integer.toString(rpm));
-			    }
-			});
+			rpmField.setText(Integer.toString(rpm));
 			
 		}
 		
 		@Override
 		public void onUpdateRange(final String range){
 			Log.d(TAG, "Setting Gas Range in Callback!");
-			postToUI(new Runnable() {
-			    public void run() {
-			    	rangeField.setText(range);
-			    }
-			});
+			rangeField.setText(range);
 		}
 		
 		@Override
 		public void onUpdateOutdoorTemp(final String temp){
 			Log.d(TAG, "Setting Outdoor Temp in Callback!");
-			postToUI(new Runnable() {
-			    public void run() {
-			    	outTempField.setText(temp);
-			    }
-			});
+			outTempField.setText(temp);
 		}
 		
 		@Override
 		public void onUpdateCoolantTemp(final int temp){
 			Log.d(TAG, "Setting Coolant Temp in Callback!");
-			postToUI(new Runnable() {
-			    public void run() {
-			    	coolantTempField.setText(Integer.toString(temp));
-			    }
-			});
+			coolantTempField.setText(Integer.toString(temp));
 		}
 		
 		@Override
 		public void onUpdateFuel1(final String mpg){
 			Log.d(TAG, "Setting MPG1 in Callback!");
-			postToUI(new Runnable() {
-			    public void run() {
-			    	fuel1Field.setText(mpg);
-			    }
-			});
+			fuel1Field.setText(mpg);
 		}
 		
 		@Override
 		public void onUpdateFuel2(final String mpg){
 			Log.d(TAG, "Setting MPG2 in Callback!");
-			postToUI(new Runnable() {
-			    public void run() {
-			    	fuel2Field.setText(mpg);
-			    }
-			});
+			fuel2Field.setText(mpg);
 		}
 		
 		@Override
 		public void onUpdateAvgSpeed(final String speed){
 			Log.d(TAG, "Setting AVG Speed in Callback!");
-			postToUI(new Runnable() {
-			    public void run() {
-			    	avgSpeedField.setText(speed);
-			    }
-			});
+			avgSpeedField.setText(speed);
 		}
 		
 		@Override
 		public void onUpdateTime(final String time){
 			Log.d(TAG, "The time is " + time);
-			postToUI(new Runnable() {
-			    public void run() {
-			    	timeField.setText(time);
-			    }
-			});
+			timeField.setText(time);
 		}
 		
 		@Override
 		public void onUpdateDate(final String date){
 			Log.d(TAG, "The date is " + date);
-			postToUI(new Runnable() {
-			    public void run() {
-			    	dateField.setText(date);
-			    }
-			});
+			dateField.setText(date);
 		}
 
 		@Override
 		public void onUpdateIgnitionSate(final int state) {
 			Log.d(TAG, "Ignition state is " + state);
-			postToUI(new Runnable() {
-			    public void run() {
-			    	boolean carState = (state > 0) ? true : false;
-			    	if(carState){
-			    		// The screen isn't on but the car is, turn it on
-			    		if(!mScreenOn){
-			    			changeScreenState(true);
-			    			if(mPlayerBound && mCurrentRadioMode == RadioModes.AUX && !mIsPlaying){
-			    				// Post a runnable to play the last song in 5 seconds
-			    				postToUIDelayed(new Runnable(){
-									@Override
-									public void run() {
-										mPlayerService.sendPlayKey();
-									}
-			    				}, 3500);
-			    			}
-		    			}
-			    	}else{
-			    		// The car is not on and the screen is, turn it off
-			    		if(mScreenOn){
-			    			// Pause the music as we exit the vehicle
-			    			if(mPlayerBound && mCurrentRadioMode == RadioModes.AUX && mIsPlaying)
-			    				mPlayerService.sendPauseKey();
-			    			changeScreenState(false);
-			    			// Blank out values that aren't set while the car isn't on
-			    			speedField.setText(R.string.defaultText);
-			    			rpmField.setText(R.string.defaultText);
-			    			coolantTempField.setText(R.string.defaultText);
-			    		}
-			    	}
-			    }
-			});
+	    	boolean carState = (state > 0) ? true : false;
+	    	if(carState){
+	    		// The screen isn't on but the car is, turn it on
+	    		if(!mScreenOn){
+	    			changeScreenState(true);
+	    			if(mPlayerBound && mCurrentRadioMode == RadioModes.AUX && !mIsPlaying){
+	    				// Post a runnable to play the last song in 5 seconds
+	    				new Handler(getActivity().getMainLooper()).postDelayed(new Runnable(){
+							@Override
+							public void run() {
+								mPlayerService.sendPlayKey();
+							}
+						}, 3500);
+	    			}
+    			}
+	    	}else{
+	    		// The car is not on and the screen is, turn it off
+	    		if(mScreenOn){
+	    			// Pause the music as we exit the vehicle
+	    			if(mPlayerBound && mCurrentRadioMode == RadioModes.AUX && mIsPlaying)
+	    				mPlayerService.sendPauseKey();
+	    			changeScreenState(false);
+	    			// Blank out values that aren't set while the car isn't on
+	    			speedField.setText(R.string.defaultText);
+	    			rpmField.setText(R.string.defaultText);
+	    			coolantTempField.setText(R.string.defaultText);
+	    		}
+	    	}
 		}
 
 		@Override
 		public void onUpdateStreetLocation(final String streetName) {
 			Log.d(TAG, "Street name " + streetName);
-			postToUI(new Runnable() {
-			    public void run() {
-			    	geoStreetField.setText(streetName);
-			    }
-			});
+			geoStreetField.setText(streetName);
 		}
 		
 		@Override
 		public void onUpdateLocale(final String cityName) {
 			Log.d(TAG, "Locale name " + cityName);
-			postToUI(new Runnable() {
-			    public void run() {
-			    	geoLocaleField.setText(cityName);
-			    }
-			});
+			geoLocaleField.setText(cityName);
 		}
 
 		@Override
 		public void onUpdateGPSCoordinates(final String gpsCoordinates){
 			Log.d(TAG, "GPS Coordinates are " + gpsCoordinates);
-			postToUI(new Runnable(){
-			    public void run() {
-			    	geoCoordinatesField.setText(gpsCoordinates);
-			    }
-			});
+			geoCoordinatesField.setText(gpsCoordinates);
 		}
 		
 		@Override
 		public void onUpdateGPSAltitude(final int altitude){
 			Log.d(TAG, "Setting GPS Alitude");
-			postToUI(new Runnable(){
-			    public void run(){
-			    	geoAltitudeField.setText(String.format("%s'", (int) Math.round(altitude * 3.28084)));
-			    }
-			});
+			geoAltitudeField.setText(String.format("%s'", (int) Math.round(altitude * 3.28084)));
 		}
 
 		@Override
@@ -490,43 +380,31 @@ public class DashboardFragment extends Fragment {
 		@Override
 		public void onTrackFwd(){
 			Log.d(TAG, "Changing the track fwd in callback due to steering input!");
-			postToUI(new Runnable(){
-			    public void run(){
-					if(mPlayerBound && mIsPlaying){
-						mPlayerService.sendNextKey();
-					}
-			    }
-			});
+			if(mPlayerBound && mIsPlaying){
+				mPlayerService.sendNextKey();
+			}
 		}
 
 		@Override
 		public void onTrackPrev(){
 			Log.d(TAG, "Changing the track fwd in callback due to steering input!");
-			postToUI(new Runnable(){
-			    public void run(){
-					if(mPlayerBound && mIsPlaying){
-						mPlayerService.sendPreviousKey();
-					}
-			    }
-			});
+			if(mPlayerBound && mIsPlaying){
+				mPlayerService.sendPreviousKey();
+			}
 		}
 		
 		@Override
 		public void onVoiceBtnPress(){
 			// Repurpose this button to pause/play music
 			Log.d(TAG, "Changing playback state in callback due to steering input!");
-			postToUI(new Runnable(){
-			    public void run(){
-			    	if(mPlayerBound && mCurrentRadioMode == RadioModes.AUX){
-			    		Log.d(TAG, "Firing off playback change as we are in AUX mode");
-			    		if(mIsPlaying){
-							mPlayerService.sendPauseKey();
-			    		}else{
-							mPlayerService.sendPlayKey();
-			    		}
-			    	}
-			    }
-			});
+	    	if(mPlayerBound && mCurrentRadioMode == RadioModes.AUX){
+	    		Log.d(TAG, "Firing off playback change as we are in AUX mode");
+	    		if(mIsPlaying){
+					mPlayerService.sendPauseKey();
+	    		}else{
+					mPlayerService.sendPlayKey();
+	    		}
+	    	}
 		}
 
 		@Override
@@ -534,17 +412,8 @@ public class DashboardFragment extends Fragment {
 			Log.d(TAG, String.format("Radio is %s", status));
 			// Radio is off, turn it on
 			if(status == 0){
-				postToUI(new Runnable(){
-				    public void run(){
-			    		sendIBusCommand(IBusCommandsEnum.BMToRadioPwrPress);
-				    }
-				});
-				postToUIDelayed(new Runnable(){
-					@Override
-					public void run(){
-						sendIBusCommand(IBusCommandsEnum.BMToRadioPwrRelease);
-					}
-				}, 500);
+				sendIBusCommand(IBusCommandsEnum.BMToRadioPwrPress);
+				sendIBusCommandDelayed(IBusCommandsEnum.BMToRadioPwrRelease, 500);
 			}
 		}
 
@@ -553,16 +422,12 @@ public class DashboardFragment extends Fragment {
 			Log.d(TAG, "Got Radio to CD Status Request");
 			// Tell the Radio we have a CD on track 1
 			final byte trackAndCD = (byte) 0x01;
-			postToUI(new Runnable(){
-			    public void run(){
-			    	sendIBusCommand(IBusCommandsEnum.BMToRadioCDStatus, 0, trackAndCD, trackAndCD);
-					if(!mCDPlayerPlaying){
-						sendIBusCommand(IBusCommandsEnum.BMToRadioCDStatus, 0, trackAndCD, trackAndCD);
-					}else{
-						sendIBusCommand(IBusCommandsEnum.BMToRadioCDStatus, 1, trackAndCD, trackAndCD);
-					}
-			    }
-			});
+	    	sendIBusCommand(IBusCommandsEnum.BMToRadioCDStatus, 0, trackAndCD, trackAndCD);
+			if(!mCDPlayerPlaying){
+				sendIBusCommand(IBusCommandsEnum.BMToRadioCDStatus, 0, trackAndCD, trackAndCD);
+			}else{
+				sendIBusCommand(IBusCommandsEnum.BMToRadioCDStatus, 1, trackAndCD, trackAndCD);
+			}
 		}
 
 		@Override
@@ -600,14 +465,14 @@ public class DashboardFragment extends Fragment {
             mIBusService = binder.getService();
     		if(mIBusService != null) {
     			mIBusBound = true;
-    			mIBusService.setCallbackListener(mIBusUpdateListener);
-    			// Emulate BM Boot Up
-    			sendIBusCommand(IBusCommandsEnum.BMToGlobalBroadcastAliveMessage);
-    			sendIBusCommand(IBusCommandsEnum.BMToIKEGetIgnitionStatus);
-    			sendIBusCommand(IBusCommandsEnum.BMToLCMGetDimmerStatus);
-    			sendIBusCommand(IBusCommandsEnum.BMToGMGetDoorStatus);
-    			// Send a "get" request to populate the values on screen
-    			// Do it here because this is when the service methods come into scope
+				mIBusService.addCallback(mIBusUpdateListener, mHandler);
+				// Emulate BM Boot Up
+				sendIBusCommand(IBusCommandsEnum.BMToGlobalBroadcastAliveMessage);
+				sendIBusCommand(IBusCommandsEnum.BMToIKEGetIgnitionStatus);
+				sendIBusCommand(IBusCommandsEnum.BMToLCMGetDimmerStatus);
+				sendIBusCommand(IBusCommandsEnum.BMToGMGetDoorStatus);
+				// Send a "get" request to populate the values on screen
+				// Do it here because this is when the service methods come into scope
 				sendIBusCommand(IBusCommandsEnum.BMToIKEGetTime);
 				sendIBusCommand(IBusCommandsEnum.BMToIKEGetDate);
 				sendIBusCommand(IBusCommandsEnum.BMToIKEGetFuel1);
@@ -673,7 +538,7 @@ public class DashboardFragment extends Fragment {
 				mPlayerScrubBar.setProgress(
 					(int) (mPlayerService.getEstimatedPosition() * mPlayerScrubBar.getMax() / mSongDuration)
 				);
-				mPlayerHandler.postDelayed(this, 100);
+				mHandler.postDelayed(this, 100);
 			}
 		}
 	};
@@ -803,12 +668,12 @@ public class DashboardFragment extends Fragment {
 
 			@Override
 			public void onStartTrackingTouch(SeekBar seekBar) {
-				mPlayerHandler.removeCallbacks(mUpdateSeekBar);
+				mHandler.removeCallbacks(mUpdateSeekBar);
 			}
 
 			@Override
 			public void onStopTrackingTouch(SeekBar seekBar) {
-				mPlayerHandler.post(mUpdateSeekBar);
+				mHandler.post(mUpdateSeekBar);
 			}
 		});
 		
