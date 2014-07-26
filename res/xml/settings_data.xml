@@ -28,7 +28,6 @@
 	        android:title="@string/settings_time" />
 	    <net.littlebigisland.droidibus.activity.preferences.SettingsCarDatePreference
 	        android:key="obcDate"
-	        android:defaultValue="00:00"
 	        android:summary="@string/settings_date_summ"
 	        android:title="@string/settings_date" />
 	</PreferenceCategory>
