@@ -109,7 +109,7 @@ public abstract class IBusSystemCommand {
 		try{
 			IBusDestinationSystems.get((byte) msg.get(2)).mapReceived(msg);
 		}catch(NullPointerException npe){
-			// Things not in the map throw a NullPointerException
+			npe.printStackTrace();
 		}
 	}
 	

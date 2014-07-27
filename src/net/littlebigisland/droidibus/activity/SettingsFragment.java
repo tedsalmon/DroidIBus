@@ -122,17 +122,32 @@ public class SettingsFragment extends PreferenceFragment implements OnSharedPref
 		if(!mIBusBound){
 			bindServices();
 		}
+		String prefVal = "";
 		switch(key){
 			case "obcDate":
+				String dateParts[] = sharedPreferences.getString(key, "").split(" ");
+				int day = Integer.parseInt(dateParts[0]);
+				int month = Integer.parseInt(dateParts[1]);
+				int year = Integer.parseInt(dateParts[2]);
+				prefVal = String.format("%s %s %s", day, month, year);
+				sendIBusCommand(IBusCommandsEnum.BMToIKESetDate, day, month, year);
 				break;
 			case "obcTime":
 				String time = sharedPreferences.getString(key, "");
 				int hour = Integer.parseInt(time.substring(0, 2));
 				int minute = Integer.parseInt(time.substring(3, 5));
 				sendIBusCommand(IBusCommandsEnum.BMToIKESetTime, hour, minute);
+				prefVal = time;
+				break;
+			case "settingRadioType":
+				prefVal = sharedPreferences.getString(key, "");
+				break;
+			case "nightColorsWithInterior":
+			case "navAvailable":
+				prefVal = (sharedPreferences.getBoolean(key, false)) ? "true" : "false";
 				break;
 		}
-		Log.d(TAG, String.format("Got preference change for %s -> %s", key, sharedPreferences.getString(key, "")));
+		Log.d(TAG, String.format("Got preference change for %s -> %s", key, prefVal));
 	}
 	
 	@Override

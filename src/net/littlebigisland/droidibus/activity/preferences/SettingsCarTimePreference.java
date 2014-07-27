@@ -58,7 +58,7 @@ public class SettingsCarTimePreference extends DialogPreference {
         if (positiveResult) {
             lastHour=picker.getCurrentHour();
             lastMinute=picker.getCurrentMinute();
-            String currentTime = String.format("%02d:%02d", lastHour, lastMinute);
+            String currentTime = String.format("UTF-8", "%02d:%02d", lastHour, lastMinute);
             if (callChangeListener(currentTime)) {
                 persistString(currentTime);
             }

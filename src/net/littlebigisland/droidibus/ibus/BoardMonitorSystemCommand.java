@@ -222,7 +222,7 @@ public class BoardMonitorSystemCommand extends IBusSystemCommand {
 		int hours = (Integer) args[0];
 		int minutes = (Integer) args[1];
 		byte[] completedMessage = new byte[]{
-			gfxDriver, 0x06, IKESystem, OBCRequestSet, (byte)hours, (byte)minutes, 0x00
+			gfxDriver, 0x06, IKESystem, OBCRequestSet, 0x01, (byte)hours, (byte)minutes, 0x00
 		};
 		completedMessage[6] = genMessageCRC(completedMessage);
 		return completedMessage;
@@ -230,7 +230,7 @@ public class BoardMonitorSystemCommand extends IBusSystemCommand {
 	
 	/**
 	 * Send a new date setting to the IKE
-	 * IBus message: 3B 06 80 40 02 <Day> <Month> <Year> <CRC>
+	 * IBus message: 3B 07 80 40 02 <Day> <Month> <Year> <CRC>
 	 * @param args Three ints MUST be provided
 	 * 	int day, int month, int year
 	 * @return Byte array of composed message to send to IBus
@@ -241,7 +241,7 @@ public class BoardMonitorSystemCommand extends IBusSystemCommand {
 		int year = (Integer) args[2];
 		
 		byte[] completedMessage = new byte[]{
-			gfxDriver, 0x07, IKESystem, OBCRequestSet, (byte)day, (byte)month, (byte)year, 0x00
+			gfxDriver, 0x07, IKESystem, OBCRequestSet, 0x02, (byte)day, (byte)month, (byte)year, 0x00
 		};
 		completedMessage[7] = genMessageCRC(completedMessage);
 		return completedMessage;

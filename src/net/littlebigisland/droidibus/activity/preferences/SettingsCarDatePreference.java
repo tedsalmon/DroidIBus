@@ -8,6 +8,7 @@ import android.widget.DatePicker;
 
 public class SettingsCarDatePreference extends DialogPreference{
 	private DatePicker mDatePicker = null;
+	private String mCurrentDate = "";
 	
 	public SettingsCarDatePreference(Context ctxt) {
         this(ctxt, null);
@@ -33,5 +34,22 @@ public class SettingsCarDatePreference extends DialogPreference{
     protected View onCreateDialogView() {
     	mDatePicker = new DatePicker(getContext());
         return(mDatePicker);
+    }
+    
+    @Override
+    protected void onDialogClosed(boolean positiveResult) {
+        super.onDialogClosed(positiveResult);
+
+        if (positiveResult) {
+        	mCurrentDate = String.format(
+        		"%s %s %s",
+        		mDatePicker.getDayOfMonth(),
+        		mDatePicker.getMonth() + 1,
+        		mDatePicker.getYear()
+        	);
+            if (callChangeListener(mCurrentDate)) {
+                persistString(mCurrentDate);
+            }
+        }
     }
 }
