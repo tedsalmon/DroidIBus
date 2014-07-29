@@ -30,10 +30,27 @@ public abstract class IBusSystemCommand {
 	
 	private String TAG = "DroidIBus";
 	
-	// The variable that holds a list of interfaces provided by listeners
-	private ArrayList<IBusMessageReceiver> mCallbackListeners = new ArrayList<IBusMessageReceiver>();
-	// The variable that holds the handler for every thread with an implemented interface
-	private ArrayList<Handler> mCallbackHandlers = new ArrayList<Handler>();
+	// Hold a map of what instances have requested callbacks
+	private Map<String, CallbackHolder> mRegisteredCallbacks = new HashMap<String, CallbackHolder>();
+	// Simple class to hold our Receiver and Handler for each activity registered for callbacks
+	private class CallbackHolder{
+		
+		private IBusCallbackReceiver mIBusReceiver = null;
+		private Handler mActivityHandler = null;
+		
+		public CallbackHolder(IBusCallbackReceiver mIBusRecvr, Handler activityHandler){
+			mIBusReceiver = mIBusRecvr;
+			mActivityHandler = activityHandler;
+		}
+		
+		public IBusCallbackReceiver getReceiver(){
+			return mIBusReceiver;
+		}
+		
+		public Handler getHandler(){
+			return mActivityHandler;
+		}
+	}
 	
 	// ArrayList holding the message currently being processed.
 	public ArrayList<Byte> currentMessage = null;
@@ -121,13 +138,15 @@ public abstract class IBusSystemCommand {
 	 * @param cb 	Your implementation of the IBusMessageReceiver
 	 * 
 	 */
-	public void registerCallback(IBusMessageReceiver cb, Handler handler){
-		mCallbackListeners.add(cb);
-		mCallbackHandlers.add(handler);
+	public void registerCallback(IBusCallbackReceiver cb, Handler handler){
+		mRegisteredCallbacks.put(cb.toString(), new CallbackHolder(cb, handler));
 		for (Object key : IBusDestinationSystems.keySet()){
 			IBusDestinationSystems.get(key).registerCallback(cb, handler);
 		}
-		
+	}
+	
+	public void unregisterCallback(IBusCallbackReceiver cb){
+		mRegisteredCallbacks.remove(cb.toString());
 	}
 	
 	/**
@@ -137,23 +156,22 @@ public abstract class IBusSystemCommand {
 	 * @throws NoSuchMethodException 
 	 */
 	public void triggerCallback(final String callback){
-		if(mCallbackListeners.size() > 0){
-			for(int i = 0; i < mCallbackListeners.size(); i++){
-				final IBusMessageReceiver mCallbackReceiver = mCallbackListeners.get(i);
-				Handler mHandler = mCallbackHandlers.get(i);
-				mHandler.post(new Runnable(){
-					@Override
-					public void run() {
-						try{
-							Log.d(TAG, String.format("Triggering '%s()'", callback.toString()));
-							Method cb = mCallbackReceiver.getClass().getMethod(callback);
-							cb.invoke(mCallbackReceiver);
-						}catch (IllegalAccessException | IllegalArgumentException | InvocationTargetException | NoSuchMethodException e) {
-							e.printStackTrace();
-						}
+		for (String key : mRegisteredCallbacks.keySet()){
+			final CallbackHolder tempCallback = mRegisteredCallbacks.get(key);
+			final Handler mHandler = tempCallback.getHandler();
+			final IBusCallbackReceiver mCallbackReceiver = tempCallback.getReceiver();
+			mHandler.post(new Runnable(){
+				@Override
+				public void run() {
+					try{
+						Log.d(TAG, String.format("Triggering '%s()'", callback.toString()));
+						Method cb = mCallbackReceiver.getClass().getMethod(callback);
+						cb.invoke(mCallbackReceiver);
+					}catch (IllegalAccessException | IllegalArgumentException | InvocationTargetException | NoSuchMethodException e) {
+						e.printStackTrace();
 					}
-				});
-			}
+				}
+			});
 		}
 	}
 	
@@ -165,23 +183,22 @@ public abstract class IBusSystemCommand {
 	 * @param value    The string value to pass to the callback
 	 */
 	public void triggerCallback(final String callback, final String value){
-		if(mCallbackListeners.size() > 0){
-			for(int i = 0; i < mCallbackListeners.size(); i++){
-				final IBusMessageReceiver mCallbackReceiver = mCallbackListeners.get(i);
-				Handler mHandler = mCallbackHandlers.get(i);
-				mHandler.post(new Runnable(){
-					@Override
-					public void run() {
-						try{
-							Log.d(TAG, String.format("Triggering '%s()' with value '%s'", callback.toString(), value));
-							Method cb = mCallbackReceiver.getClass().getMethod(callback, String.class);
-							cb.invoke(mCallbackReceiver, value);
-						}catch (IllegalAccessException | IllegalArgumentException | InvocationTargetException | NoSuchMethodException e) {
-							e.printStackTrace();
-						}
+		for (String key : mRegisteredCallbacks.keySet()){
+			final CallbackHolder tempCallback = mRegisteredCallbacks.get(key);
+			final Handler mHandler = tempCallback.getHandler();
+			final IBusCallbackReceiver mCallbackReceiver = tempCallback.getReceiver();
+			mHandler.post(new Runnable(){
+				@Override
+				public void run() {
+					try{
+						Log.d(TAG, String.format("Triggering '%s()' with value '%s'", callback.toString(), value));
+						Method cb = mCallbackReceiver.getClass().getMethod(callback, String.class);
+						cb.invoke(mCallbackReceiver, value);
+					}catch (IllegalAccessException | IllegalArgumentException | InvocationTargetException | NoSuchMethodException e) {
+						e.printStackTrace();
 					}
-				});
-			}
+				}
+			});
 		}
 	}
 	
@@ -193,23 +210,22 @@ public abstract class IBusSystemCommand {
 	 * @param value    The integer value to pass to the callback
 	 */	
 	public void triggerCallback(final String callback, final int value){
-		if(mCallbackListeners.size() > 0){
-			for(int i = 0; i < mCallbackListeners.size(); i++){
-				final IBusMessageReceiver mCallbackReceiver = mCallbackListeners.get(i);
-				Handler mHandler = mCallbackHandlers.get(i);
-				mHandler.post(new Runnable(){
-					@Override
-					public void run() {
-						try{
-							Log.d(TAG, String.format("Triggering '%s()' with value '%s'", callback.toString(), value));
-							Method cb = mCallbackReceiver.getClass().getMethod(callback, int.class);
-							cb.invoke(mCallbackReceiver, value);
-						}catch (IllegalAccessException | IllegalArgumentException | InvocationTargetException | NoSuchMethodException e) {
-							e.printStackTrace();
-						}
+		for (String key : mRegisteredCallbacks.keySet()){
+			final CallbackHolder tempCallback = mRegisteredCallbacks.get(key);
+			final Handler mHandler = tempCallback.getHandler();
+			final IBusCallbackReceiver mCallbackReceiver = tempCallback.getReceiver();
+			mHandler.post(new Runnable(){
+				@Override
+				public void run() {
+					try{
+						Log.d(TAG, String.format("Triggering '%s()' with value '%s'", callback.toString(), value));
+						Method cb = mCallbackReceiver.getClass().getMethod(callback, int.class);
+						cb.invoke(mCallbackReceiver, value);
+					}catch (IllegalAccessException | IllegalArgumentException | InvocationTargetException | NoSuchMethodException e) {
+						e.printStackTrace();
 					}
-				});
-			}
+				}
+			});
 		}
 	}
 }

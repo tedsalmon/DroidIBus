@@ -4,7 +4,7 @@ package net.littlebigisland.droidibus.activity;
 import net.littlebigisland.droidibus.R;
 import net.littlebigisland.droidibus.ibus.IBusCommand;
 import net.littlebigisland.droidibus.ibus.IBusCommandsEnum;
-import net.littlebigisland.droidibus.ibus.IBusMessageReceiver;
+import net.littlebigisland.droidibus.ibus.IBusCallbackReceiver;
 import net.littlebigisland.droidibus.ibus.IBusMessageService;
 import net.littlebigisland.droidibus.ibus.IBusMessageService.IOIOBinder;
 import android.content.ComponentName;
@@ -29,7 +29,7 @@ public class SettingsFragment extends PreferenceFragment implements OnSharedPref
 	protected IBusMessageService mIBusService;
 	protected boolean mIBusBound = false;
 	
-	private IBusMessageReceiver mIBusUpdateListener = new IBusMessageReceiver(){
+	private IBusCallbackReceiver mIBusUpdateListener = new IBusCallbackReceiver(){
 		
 		@Override
 		public void onUpdateTime(final String time){
@@ -50,7 +50,11 @@ public class SettingsFragment extends PreferenceFragment implements OnSharedPref
             mIBusService = binder.getService();
     		if(mIBusService != null) {
     			mIBusBound = true;
-				mIBusService.addCallback(mIBusUpdateListener, mHandler);
+				try {
+					mIBusService.addCallback(mIBusUpdateListener, mHandler);
+				} catch (Exception e) {
+					e.printStackTrace();
+				}
 				sendIBusCommand(IBusCommandsEnum.BMToIKEGetTime);
 				sendIBusCommand(IBusCommandsEnum.BMToIKEGetDate);
     		}
@@ -166,9 +170,9 @@ public class SettingsFragment extends PreferenceFragment implements OnSharedPref
 	@Override
 	public void onDestroy(){
 		super.onDestroy();
+		mIBusService.removeCallback(mIBusUpdateListener);
 		if(mIBusBound){
 			unbindServices();
 		}
 	}
-	
 }

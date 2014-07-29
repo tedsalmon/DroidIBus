@@ -18,6 +18,13 @@ import java.util.Calendar;
 import java.util.HashMap;
 import java.util.Map;
 
+import net.littlebigisland.droidibus.ibus.systems.BoardMonitorSystemCommand;
+import net.littlebigisland.droidibus.ibus.systems.IKESystemCommand;
+import net.littlebigisland.droidibus.ibus.systems.LightControlModuleSystemCommand;
+import net.littlebigisland.droidibus.ibus.systems.NavigationSystemCommand;
+import net.littlebigisland.droidibus.ibus.systems.RadioSystemCommand;
+import net.littlebigisland.droidibus.ibus.systems.SteeringWheelSystemCommand;
+
 import ioio.lib.api.DigitalOutput;
 import ioio.lib.api.IOIO;
 import ioio.lib.api.Uart;
@@ -38,7 +45,7 @@ public class IBusMessageService extends IOIOService {
 	private String TAG = "DroidIBus";
 	private final IBinder mBinder = new IOIOBinder();
 	private ArrayList<IBusCommand> mCommandQueue = new ArrayList<IBusCommand>();
-	private ArrayList<IBusMessageReceiver> mCallbackListeners = new ArrayList<IBusMessageReceiver>();
+	private ArrayList<IBusCallbackReceiver> mCallbackListeners = new ArrayList<IBusCallbackReceiver>();
 	private ArrayList<Handler> mCallbackHandlers = new ArrayList<Handler>();
 	@SuppressLint("UseSparseArrays")
 	private Map<Byte, IBusSystemCommand> IBusSysMap = new HashMap<Byte, IBusSystemCommand>();
@@ -57,8 +64,6 @@ public class IBusMessageService extends IOIOService {
 	@Override
 	protected IOIOLooper createIOIOLooper() {
 		return new BaseIOIOLooper() {
-			private boolean mCallbackRegistered = false;
-			
 			private Uart IBusConn;
 			private InputStream busIn;
 			private OutputStream busOut;
@@ -136,9 +141,6 @@ public class IBusMessageService extends IOIOService {
 				if ((Calendar.getInstance().getTimeInMillis() - lastRead) > 30) {
 					readBuffer.clear();
 				}
-				// If we have callbacks setup we can start handling messages
-				if(!mCallbackRegistered && mCallbackListeners != null)
-					initiateHandlers();
 				try {
 					/* Handle incoming IBus data.
 					 * Read incoming bytes into readBuffer.
@@ -223,22 +225,6 @@ public class IBusMessageService extends IOIOService {
 			public void disconnected(){
 				mIsIOIOConnected = false;
 			}
-			
-			private void initiateHandlers(){
-				// Map Device source Addresses with the respective handler class
-				IBusSysMap.put(DeviceAddressEnum.Radio.toByte(), new RadioSystemCommand());
-				IBusSysMap.put(DeviceAddressEnum.InstrumentClusterElectronics.toByte(), new IKESystemCommand());
-				IBusSysMap.put(DeviceAddressEnum.NavigationEurope.toByte(), new NavigationSystemCommand());
-				IBusSysMap.put(DeviceAddressEnum.MultiFunctionSteeringWheel.toByte(), new SteeringWheelSystemCommand());
-				IBusSysMap.put(DeviceAddressEnum.OnBoardMonitor.toByte(), new BoardMonitorSystemCommand());
-				// Register the callback listener here ;)
-				for (Object key : IBusSysMap.keySet()){
-					for(int i = 0; i < mCallbackListeners.size(); i++){
-						IBusSysMap.get(key).registerCallback(mCallbackListeners.get(i), mCallbackHandlers.get(i));
-					}
-				}
-				mCallbackRegistered = true;
-			}
 				
 			/**
 			 * Verify that the IBus Message is legitimate 
@@ -279,14 +265,23 @@ public class IBusMessageService extends IOIOService {
 		mCommandQueue.add(cmd);
 	}
 	
-	public void addCallback(IBusMessageReceiver listener, Handler handler){
+	public void addCallback(IBusCallbackReceiver listener, Handler handler) throws Exception{
 		mCallbackListeners.add(listener);
 		mCallbackHandlers.add(handler);
 		if(IBusSysMap.size() > 0){
 			for (Object key : IBusSysMap.keySet())
 				IBusSysMap.get(key).registerCallback(listener, handler);
+		}else{
+			throw new Exception("IBus devices not initialized, cannot add listeners");
 		}
 			
+	}
+	
+	public void removeCallback(IBusCallbackReceiver listener){
+		if(IBusSysMap.size() > 0){
+			for (Object key : IBusSysMap.keySet())
+				IBusSysMap.get(key).unregisterCallback(listener);
+		}
 	}
 	
 	public void disable(){
@@ -319,6 +314,13 @@ public class IBusMessageService extends IOIOService {
 	private void handleStartup(Intent intent) {
 		for(DeviceAddressEnum d : DeviceAddressEnum.values())
 			mDeviceLookup.put(d.toByte(), d.name());
+		// Initiate values for IBus System handlers
+		IBusSysMap.put(DeviceAddressEnum.Radio.toByte(), new RadioSystemCommand());
+		IBusSysMap.put(DeviceAddressEnum.InstrumentClusterElectronics.toByte(), new IKESystemCommand());
+		IBusSysMap.put(DeviceAddressEnum.NavigationEurope.toByte(), new NavigationSystemCommand());
+		IBusSysMap.put(DeviceAddressEnum.MultiFunctionSteeringWheel.toByte(), new SteeringWheelSystemCommand());
+		IBusSysMap.put(DeviceAddressEnum.OnBoardMonitor.toByte(), new BoardMonitorSystemCommand());
+		IBusSysMap.put(DeviceAddressEnum.LightControlModule.toByte(), new LightControlModuleSystemCommand());
 	}
 	
 	@Override
