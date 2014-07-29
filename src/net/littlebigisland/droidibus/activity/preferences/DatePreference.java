@@ -6,19 +6,19 @@ import android.util.AttributeSet;
 import android.view.View;
 import android.widget.DatePicker;
 
-public class SettingsCarDatePreference extends DialogPreference{
+public class DatePreference extends DialogPreference{
 	private DatePicker mDatePicker = null;
 	private String mCurrentDate = "";
 	
-	public SettingsCarDatePreference(Context ctxt) {
+	public DatePreference(Context ctxt) {
         this(ctxt, null);
     }
 
-    public SettingsCarDatePreference(Context ctxt, AttributeSet attrs) {
+    public DatePreference(Context ctxt, AttributeSet attrs) {
         this(ctxt, attrs, 0);
     }
 
-    public SettingsCarDatePreference(Context ctxt, AttributeSet attrs, int defStyle) {
+    public DatePreference(Context ctxt, AttributeSet attrs, int defStyle) {
         super(ctxt, attrs, defStyle);
         setPositiveButtonText("Set");
         setNegativeButtonText("Cancel");

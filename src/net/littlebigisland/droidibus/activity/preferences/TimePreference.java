@@ -6,7 +6,7 @@ import android.util.AttributeSet;
 import android.view.View;
 import android.widget.TimePicker;
 
-public class SettingsCarTimePreference extends DialogPreference {
+public class TimePreference extends DialogPreference {
     private int lastHour=0;
     private int lastMinute=0;
     private TimePicker picker = null;
@@ -21,15 +21,15 @@ public class SettingsCarTimePreference extends DialogPreference {
         return(Integer.parseInt(pieces[1]));
     }
 
-    public SettingsCarTimePreference(Context ctxt) {
+    public TimePreference(Context ctxt) {
         this(ctxt, null);
     }
 
-    public SettingsCarTimePreference(Context ctxt, AttributeSet attrs) {
+    public TimePreference(Context ctxt, AttributeSet attrs) {
         this(ctxt, attrs, 0);
     }
 
-    public SettingsCarTimePreference(Context ctxt, AttributeSet attrs, int defStyle) {
+    public TimePreference(Context ctxt, AttributeSet attrs, int defStyle) {
         super(ctxt, attrs, defStyle);
 
         setPositiveButtonText("Set");
