@@ -3,7 +3,7 @@ package net.littlebigisland.droidibus.ibus;
 /**
  * The address off all the systems linked via IBus
  */
-enum DeviceAddressEnum {
+public enum DeviceAddressEnum {
 	// System constants
 	BodyModule((byte) 0x00),
 	SunroofControl((byte) 0x08),

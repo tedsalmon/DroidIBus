@@ -1,6 +1,9 @@
-package net.littlebigisland.droidibus.ibus;
+package net.littlebigisland.droidibus.ibus.systems;
 
 import java.util.ArrayList;
+
+import net.littlebigisland.droidibus.ibus.DeviceAddressEnum;
+import net.littlebigisland.droidibus.ibus.IBusSystemCommand;
 
 public class SteeringWheelSystemCommand extends IBusSystemCommand{
 	final private byte mRadioAddress = DeviceAddressEnum.Radio.toByte();
@@ -40,7 +43,7 @@ public class SteeringWheelSystemCommand extends IBusSystemCommand{
 	/**
 	 * Cstruct - Register destination systems
 	 */
-	SteeringWheelSystemCommand(){
+	public SteeringWheelSystemCommand(){
 		IBusDestinationSystems.put(mRadioAddress, new Radio());
 		IBusDestinationSystems.put(mTelephoneAddress, new Telephone());
 	}

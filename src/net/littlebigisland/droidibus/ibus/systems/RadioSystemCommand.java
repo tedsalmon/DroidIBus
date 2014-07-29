@@ -1,11 +1,14 @@
-package net.littlebigisland.droidibus.ibus;
+package net.littlebigisland.droidibus.ibus.systems;
 
 import java.util.ArrayList;
+
+import net.littlebigisland.droidibus.ibus.DeviceAddressEnum;
+import net.littlebigisland.droidibus.ibus.IBusSystemCommand;
 
 /**
  * Handle messages emitted by the Radio unit
  */
-class RadioSystemCommand extends IBusSystemCommand{
+public class RadioSystemCommand extends IBusSystemCommand{
 	
 	/**
 	 * Handle messages bound for the BoardMonitor from the Radio in the trunk
@@ -95,7 +98,7 @@ class RadioSystemCommand extends IBusSystemCommand{
 	/**
 	 * Cstruct - Register destination systems
 	 */
-	RadioSystemCommand(){
+	public RadioSystemCommand(){
 		IBusDestinationSystems.put(DeviceAddressEnum.GraphicsNavigationDriver.toByte(), new GFXNavigationSystem());
 		IBusDestinationSystems.put(DeviceAddressEnum.OnBoardMonitor.toByte(), new OnBoardMonitorSystem());
 	}

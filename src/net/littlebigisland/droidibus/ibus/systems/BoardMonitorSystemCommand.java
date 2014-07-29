@@ -1,6 +1,9 @@
-package net.littlebigisland.droidibus.ibus;
+package net.littlebigisland.droidibus.ibus.systems;
 
 import java.math.BigInteger;
+
+import net.littlebigisland.droidibus.ibus.DeviceAddressEnum;
+import net.littlebigisland.droidibus.ibus.IBusSystemCommand;
 
 /**
  * Implements functions of the BoardMonitor. For the most part 

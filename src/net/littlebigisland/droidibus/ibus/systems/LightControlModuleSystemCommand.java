@@ -1,6 +1,9 @@
-package net.littlebigisland.droidibus.ibus;
+package net.littlebigisland.droidibus.ibus.systems;
 
 import java.util.ArrayList;
+
+import net.littlebigisland.droidibus.ibus.DeviceAddressEnum;
+import net.littlebigisland.droidibus.ibus.IBusSystemCommand;
 
 public class LightControlModuleSystemCommand extends IBusSystemCommand{
 	
@@ -20,7 +23,7 @@ public class LightControlModuleSystemCommand extends IBusSystemCommand{
 	/**
 	 * Cstruct - Register destination systems
 	 */
-	LightControlModuleSystemCommand(){
+	public LightControlModuleSystemCommand(){
 		IBusDestinationSystems.put(DeviceAddressEnum.GlobalBroadcastAddress.toByte(), new GlobalBroadcast());
 	}
 }

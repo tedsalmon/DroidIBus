@@ -1,6 +1,9 @@
-package net.littlebigisland.droidibus.ibus;
+package net.littlebigisland.droidibus.ibus.systems;
 
 import java.util.ArrayList;
+
+import net.littlebigisland.droidibus.ibus.DeviceAddressEnum;
+import net.littlebigisland.droidibus.ibus.IBusSystemCommand;
 
 public class IKESystemCommand extends IBusSystemCommand {
 	
@@ -87,7 +90,7 @@ public class IKESystemCommand extends IBusSystemCommand {
 	/**
 	 * Cstruct - Bind all child classes to the object 
 	 */
-	IKESystemCommand(){
+	public IKESystemCommand(){
 		IBusDestinationSystems.put(DeviceAddressEnum.Broadcast.toByte(), new IKEBroadcast());
 		IBusDestinationSystems.put(DeviceAddressEnum.GlobalBroadcastAddress.toByte(), new IKEGlobalBroadcast());
 	}

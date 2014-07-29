@@ -1,11 +1,15 @@
-package net.littlebigisland.droidibus.ibus;
+package net.littlebigisland.droidibus.ibus.systems;
 
+import android.annotation.SuppressLint;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+
+import net.littlebigisland.droidibus.ibus.DeviceAddressEnum;
+import net.littlebigisland.droidibus.ibus.IBusSystemCommand;
 
 /** 
  * Handle messages from the Navi System
@@ -20,6 +24,8 @@ public class NavigationSystemCommand extends IBusSystemCommand {
 		
 		private byte locationData = (byte) 0xA4;
 		private byte gpsData = (byte) 0xA2;
+		
+		@SuppressLint("UseSparseArrays") 
 		private Map<Byte, Method> IBusTelephoneMap = new HashMap<Byte, Method>();
 		
 		public void parseGPSData(){
@@ -115,7 +121,7 @@ public class NavigationSystemCommand extends IBusSystemCommand {
 	/**
 	 * Cstruct - Register destination systems
 	 */
-	NavigationSystemCommand(){
+	public NavigationSystemCommand(){
 		IBusDestinationSystems.put(DeviceAddressEnum.Telephone.toByte(), new Telephone());
 	}
 }
