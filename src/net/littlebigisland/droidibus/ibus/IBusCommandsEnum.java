@@ -53,8 +53,8 @@ public enum IBusCommandsEnum {
 	SWToRadioVolumeDown(DeviceAddressEnum.MultiFunctionSteeringWheel, "sendVolumeDown"),
 	SWToRadioTuneFwdPress(DeviceAddressEnum.MultiFunctionSteeringWheel, "sendTuneFwdPress"),
 	SWToRadioTuneFwdRelease(DeviceAddressEnum.MultiFunctionSteeringWheel, "sendTuneFwdRelease"),
-	SWToRadioTunePrevPress(DeviceAddressEnum.MultiFunctionSteeringWheel, "sendTunePrevPress"),
-	SWToRadioTunePrevRelease(DeviceAddressEnum.MultiFunctionSteeringWheel, "sendTunePrevRelease");
+	SWToRadioTuneRevPress(DeviceAddressEnum.MultiFunctionSteeringWheel, "sendTunePrevPress"),
+	SWToRadioTuneRevRelease(DeviceAddressEnum.MultiFunctionSteeringWheel, "sendTunePrevRelease");
 	
 	private final DeviceAddressEnum system;
 	private final String methodName;
