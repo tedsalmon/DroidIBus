@@ -10,7 +10,7 @@ package net.littlebigisland.droidibus.ibus;
 /**
  * Interface to build call backs off of
  */
-public abstract class IBusMessageReceiver{
+public abstract class IBusCallbackReceiver{
 
 	// Radio System
 	public void onUpdateRadioStation(final String text) {}
