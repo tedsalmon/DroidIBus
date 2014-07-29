@@ -94,7 +94,6 @@ public class MusicControllerService extends NotificationListenerService implemen
 	 * Sends "next" media key press.
 	 */
 	public void sendNextKey() {
-		Log.d(TAG, "Sending next key");
 		sendKeyEvent(KeyEvent.KEYCODE_MEDIA_NEXT);
 	}
 	
@@ -194,13 +193,19 @@ public class MusicControllerService extends NotificationListenerService implemen
 	 * @return true if both clicks were delivered, else false
 	 */
 	private boolean sendKeyEvent(int keyCode) {
-		boolean keyDown = mAudioController.sendMediaKeyEvent(
-			new KeyEvent(KeyEvent.ACTION_DOWN, keyCode)
-		);
-		boolean keyUp = mAudioController.sendMediaKeyEvent(
-			new KeyEvent(KeyEvent.ACTION_UP, keyCode)
-		);
-		return keyDown && keyUp;
+		KeyEvent keyDown  = new KeyEvent(KeyEvent.ACTION_DOWN, keyCode);
+		KeyEvent keyUp  = new KeyEvent(KeyEvent.ACTION_UP, keyCode);
+		boolean keyDownRes = mAudioController.sendMediaKeyEvent(keyDown);
+		boolean keyUpRes = mAudioController.sendMediaKeyEvent(keyUp);
+		if(! keyDownRes && ! keyUpRes){
+			Intent downIntent = new Intent(Intent.ACTION_MEDIA_BUTTON, null);
+			downIntent.putExtra(Intent.EXTRA_KEY_EVENT, keyDown);
+			getBaseContext().sendOrderedBroadcast(downIntent, null);
+			Intent upIntent = new Intent(Intent.ACTION_MEDIA_BUTTON, null);
+			upIntent.putExtra(Intent.EXTRA_KEY_EVENT, keyUp);
+			getBaseContext().sendOrderedBroadcast(downIntent, null);
+		}
+		return keyDownRes && keyUpRes;
 	}
 	
 	/**
