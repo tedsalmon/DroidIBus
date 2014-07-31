@@ -137,11 +137,11 @@ public class SettingsFragment extends PreferenceFragment implements OnSharedPref
 				sendIBusCommand(IBusCommandsEnum.BMToIKESetDate, day, month, year);
 				break;
 			case "obcTime":
-				String time = sharedPreferences.getString(key, "");
-				int hour = Integer.parseInt(time.substring(0, 2));
-				int minute = Integer.parseInt(time.substring(3, 5));
+				String[] time = sharedPreferences.getString(key, "").split(":");
+				int hour = Integer.parseInt(time[0]);
+				int minute = Integer.parseInt(time[1]);
 				sendIBusCommand(IBusCommandsEnum.BMToIKESetTime, hour, minute);
-				prefVal = time;
+				prefVal = sharedPreferences.getString(key, "");
 				break;
 			case "settingRadioType":
 				prefVal = sharedPreferences.getString(key, "");
