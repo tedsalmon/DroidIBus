@@ -604,7 +604,7 @@ public class DashboardFragment extends Fragment {
 		
 		// Radio Type
 		String radioType = mSettings.getString("radioType", "BM53");
-		mRadioType = (radioType == "BM53") ? RadioTypes.BM53 : RadioTypes.CD53;
+		mRadioType = (radioType.equals("BM53")) ? RadioTypes.BM53 : RadioTypes.CD53;
 		
 		// Keep a wake lock
     	changeScreenState(true);
