@@ -227,7 +227,7 @@ public class BoardMonitorSystemCommand extends IBusSystemCommand {
 		byte[] completedMessage = new byte[]{
 			gfxDriver, 0x06, IKESystem, OBCRequestSet, 0x01, (byte)hours, (byte)minutes, 0x00
 		};
-		completedMessage[6] = genMessageCRC(completedMessage);
+		completedMessage[completedMessage.length - 1] = genMessageCRC(completedMessage);
 		return completedMessage;
 	}
 	
@@ -246,7 +246,7 @@ public class BoardMonitorSystemCommand extends IBusSystemCommand {
 		byte[] completedMessage = new byte[]{
 			gfxDriver, 0x07, IKESystem, OBCRequestSet, 0x02, (byte)day, (byte)month, (byte)year, 0x00
 		};
-		completedMessage[7] = genMessageCRC(completedMessage);
+		completedMessage[completedMessage.length - 1] = genMessageCRC(completedMessage);
 		return completedMessage;
 	}
 	
