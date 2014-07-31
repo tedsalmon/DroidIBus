@@ -19,7 +19,6 @@ import android.os.Binder;
 import android.os.IBinder;
 import android.service.notification.NotificationListenerService;
 import android.service.notification.StatusBarNotification;
-import android.util.Log;
 import android.view.KeyEvent;
  
  
@@ -28,7 +27,6 @@ public class MusicControllerService extends NotificationListenerService implemen
 	private static final int ARTWORK_HEIGHT = 114;
 	private static final int ARTWORK_WIDTH = 114;
 	
-	private String TAG = "DroidIBus";
 	private IBinder mBinder = new PlayerBinder();
 	
 	private RemoteController mAudioController;
