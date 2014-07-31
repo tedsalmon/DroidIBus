@@ -123,10 +123,9 @@ public abstract class IBusSystemCommand {
 	 * @throws NoSuchMethodException 
 	 */
 	public void mapReceived(ArrayList<Byte> msg){
-		try{
-			IBusDestinationSystems.get((byte) msg.get(2)).mapReceived(msg);
-		}catch(NullPointerException npe){
-			npe.printStackTrace();
+		IBusSystemCommand targetSystem = IBusDestinationSystems.get((byte) msg.get(2));
+		if(targetSystem != null){
+			targetSystem.mapReceived(msg);
 		}
 	}
 	
