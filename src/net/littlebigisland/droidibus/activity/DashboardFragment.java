@@ -810,7 +810,7 @@ public class DashboardFragment extends Fragment {
 		btnPrev.setOnTouchListener(touchAction);
 		btnNext.setOnTouchListener(touchAction);
 		
-		// Act on preferences
+		//Act on preferences
 		boolean geoAvailable = mSettings.getBoolean("navAvailable", false);
 		if(!geoAvailable){
 			View geoLayout = v.findViewById(R.id.geoLayout);
@@ -820,10 +820,15 @@ public class DashboardFragment extends Fragment {
 			geoLocation.setVisibility(View.GONE);
 		}
 		
+		return v;
+	}
+	
+	@Override
+	public void onActivityCreated (Bundle savedInstanceState){
+		super.onActivityCreated(savedInstanceState);
 		// Bind required background services last since the callback
 		// functions depend on the view items being initialized 
     	bindServices();
-		return v;
 	}
 	
 	private void changeRadioMode(final RadioModes mode){
