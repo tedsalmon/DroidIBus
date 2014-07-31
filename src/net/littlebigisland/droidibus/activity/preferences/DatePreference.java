@@ -45,7 +45,7 @@ public class DatePreference extends DialogPreference{
         		"%s %s %s",
         		mDatePicker.getDayOfMonth(),
         		mDatePicker.getMonth() + 1,
-        		mDatePicker.getYear()
+        		mDatePicker.getYear() - 2000 // BEWARE POTENTIAL BUGS
         	);
             if (callChangeListener(mCurrentDate)) {
                 persistString(mCurrentDate);
