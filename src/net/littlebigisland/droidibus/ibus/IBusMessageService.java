@@ -298,15 +298,9 @@ public class IBusMessageService extends IOIOService {
 		// and super.onStartCommand is not implemented
 		super.onStart(intent, startId);
 		handleStartup(intent);
+		Log.d(TAG, "IBusMessageService: onStartCommand()");
 		return START_STICKY;
 	}
-	
-	@Override
-	public void onStart(Intent intent, int startId) {
-		super.onStart(intent, startId);
-		handleStartup(intent);
-	}
-
 	/**
 	 * Take care of tasks to be done on every start up
 	 * @param intent Intent from onStart/onStartCommand
@@ -315,18 +309,21 @@ public class IBusMessageService extends IOIOService {
 		for(DeviceAddressEnum d : DeviceAddressEnum.values())
 			mDeviceLookup.put(d.toByte(), d.name());
 		// Initiate values for IBus System handlers
-		IBusSysMap.put(DeviceAddressEnum.Radio.toByte(), new RadioSystemCommand());
-		IBusSysMap.put(DeviceAddressEnum.InstrumentClusterElectronics.toByte(), new IKESystemCommand());
-		IBusSysMap.put(DeviceAddressEnum.NavigationEurope.toByte(), new NavigationSystemCommand());
-		IBusSysMap.put(DeviceAddressEnum.MultiFunctionSteeringWheel.toByte(), new SteeringWheelSystemCommand());
-		IBusSysMap.put(DeviceAddressEnum.OnBoardMonitor.toByte(), new BoardMonitorSystemCommand());
-		IBusSysMap.put(DeviceAddressEnum.LightControlModule.toByte(), new LightControlModuleSystemCommand());
+		if(IBusSysMap.size() == 0){
+			Log.d(TAG, "IBusMessageService: IBusSysMap == 0; Filling");
+			IBusSysMap.put(DeviceAddressEnum.Radio.toByte(), new RadioSystemCommand());
+			IBusSysMap.put(DeviceAddressEnum.InstrumentClusterElectronics.toByte(), new IKESystemCommand());
+			IBusSysMap.put(DeviceAddressEnum.NavigationEurope.toByte(), new NavigationSystemCommand());
+			IBusSysMap.put(DeviceAddressEnum.MultiFunctionSteeringWheel.toByte(), new SteeringWheelSystemCommand());
+			IBusSysMap.put(DeviceAddressEnum.OnBoardMonitor.toByte(), new BoardMonitorSystemCommand());
+			IBusSysMap.put(DeviceAddressEnum.LightControlModule.toByte(), new LightControlModuleSystemCommand());
+		}
 	}
 	
 	@Override
 	public void onDestroy(){
 		super.onDestroy();
-		Log.d(TAG, "IBusMessageService stopping via onDestroy");
+		Log.d(TAG, "IBusMessageService: Stopping via onDestroy");
 	}
 	/** 
 	 * A class to create our IOIO service.

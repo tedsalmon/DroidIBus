@@ -115,10 +115,18 @@ public class SettingsFragment extends PreferenceFragment implements OnSharedPref
 	public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
 		final View v = inflater.inflate(R.layout.settings, container, false);
 		addPreferencesFromResource(R.xml.settings_data);
+		return v;
+	}
+	
+	@Override
+	public void onActivityCreated (Bundle savedInstanceState){
+		super.onActivityCreated(savedInstanceState);
+		Log.d(TAG, "Settings: onActivityCreated Called");
+		// Bind required background services last since the callback
+		// functions depend on the view items being initialized
 		if(!mIBusBound){
 			bindServices();
 		}
-		return v;
 	}
 
 	@Override
@@ -158,19 +166,21 @@ public class SettingsFragment extends PreferenceFragment implements OnSharedPref
 	public void onResume() {
 	    super.onResume();
 	    getPreferenceManager().getSharedPreferences().registerOnSharedPreferenceChangeListener(this);
-
+	    Log.d(TAG, "Settings: onResume Called");
 	}
 
 	@Override
 	public void onPause() {
 	    getPreferenceManager().getSharedPreferences().unregisterOnSharedPreferenceChangeListener(this);
 	    super.onPause();
+	    Log.d(TAG, "Settings: onPause Called");
 	}
 	
 	@Override
 	public void onDestroy(){
 		super.onDestroy();
 		mIBusService.removeCallback(mIBusUpdateListener);
+		Log.d(TAG, "Settings: onDestroy Called");
 		if(mIBusBound){
 			unbindServices();
 		}

@@ -425,7 +425,6 @@ public class DashboardFragment extends Fragment {
     	@Override
     	public void onServiceConnected(ComponentName className, IBinder service){
     		// Getting the binder and activating RemoteController instantly
-    		Log.d(TAG, "Getting Music Player Binder object");
     		MusicControllerService.PlayerBinder binder = (MusicControllerService.PlayerBinder) service;
     		mPlayerService = binder.getService();
     		try{
@@ -457,20 +456,9 @@ public class DashboardFragment extends Fragment {
 				} catch (Exception e) {
 					showToast("Unable to start; Cannot bind ourselves to the IBus Service");
 				}
-				// Emulate BM Boot Up
-				sendIBusCommand(IBusCommandsEnum.BMToGlobalBroadcastAliveMessage);
-				sendIBusCommand(IBusCommandsEnum.BMToIKEGetIgnitionStatus);
-				sendIBusCommand(IBusCommandsEnum.BMToLCMGetDimmerStatus);
-				sendIBusCommand(IBusCommandsEnum.BMToGMGetDoorStatus);
-				// Send a "get" request to populate the values on screen
-				// Do it here because this is when the service methods come into scope
-				sendIBusCommand(IBusCommandsEnum.BMToIKEGetTime);
-				sendIBusCommand(IBusCommandsEnum.BMToIKEGetDate);
-				sendIBusCommand(IBusCommandsEnum.BMToIKEGetFuel1);
-				sendIBusCommand(IBusCommandsEnum.BMToIKEGetFuel2);
-				sendIBusCommand(IBusCommandsEnum.BMToIKEGetOutdoorTemp);
-				sendIBusCommand(IBusCommandsEnum.BMToIKEGetRange);
-				sendIBusCommand(IBusCommandsEnum.BMToIKEGetAvgSpeed);
+				
+				// Emulate the BM
+				BMBootup();
 				
 				/* This thread should make sure to send out and request
 				 * any IBus messages that the BM usually would.
@@ -537,6 +525,23 @@ public class DashboardFragment extends Fragment {
 		}
 	};
 	
+	private void BMBootup(){
+		// Emulate BM Boot Up
+		sendIBusCommand(IBusCommandsEnum.BMToGlobalBroadcastAliveMessage);
+		sendIBusCommand(IBusCommandsEnum.BMToIKEGetIgnitionStatus);
+		sendIBusCommand(IBusCommandsEnum.BMToLCMGetDimmerStatus);
+		sendIBusCommand(IBusCommandsEnum.BMToGMGetDoorStatus);
+		// Send a "get" request to populate the values on screen
+		// Do it here because this is when the service methods come into scope
+		sendIBusCommand(IBusCommandsEnum.BMToIKEGetTime);
+		sendIBusCommand(IBusCommandsEnum.BMToIKEGetDate);
+		sendIBusCommand(IBusCommandsEnum.BMToIKEGetFuel1);
+		sendIBusCommand(IBusCommandsEnum.BMToIKEGetFuel2);
+		sendIBusCommand(IBusCommandsEnum.BMToIKEGetOutdoorTemp);
+		sendIBusCommand(IBusCommandsEnum.BMToIKEGetRange);
+		sendIBusCommand(IBusCommandsEnum.BMToIKEGetAvgSpeed);
+	}
+	
 	private void bindServices() {
 		Context applicationContext = getActivity();
 		
@@ -594,11 +599,13 @@ public class DashboardFragment extends Fragment {
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setRetainInstance(true);
+        Log.d(TAG, "Dashboard: onCreate Called");
     }
     
 	@Override
 	public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
 		final View v = inflater.inflate(R.layout.dashboard, container, false);
+		Log.d(TAG, "Dashboard: onCreateView Called");
 		// Load Activity Settings
 		mSettings = PreferenceManager.getDefaultSharedPreferences(getActivity());
 		
@@ -826,9 +833,12 @@ public class DashboardFragment extends Fragment {
 	@Override
 	public void onActivityCreated (Bundle savedInstanceState){
 		super.onActivityCreated(savedInstanceState);
+		Log.d(TAG, "Dashboard: onActivityCreated Called");
 		// Bind required background services last since the callback
-		// functions depend on the view items being initialized 
-    	bindServices();
+		// functions depend on the view items being initialized
+		if(!mIBusBound){
+			bindServices();
+		}
 	}
 	
 	private void changeRadioMode(final RadioModes mode){
@@ -844,7 +854,7 @@ public class DashboardFragment extends Fragment {
 						changeRadioMode(mode);
 					}
 				}catch(InterruptedException e){
-					// Who cares? Yeah I probably should. I will later on, I promise!
+					e.printStackTrace();
 				}
 			}
 		}).start();
@@ -908,26 +918,32 @@ public class DashboardFragment extends Fragment {
 			}
 		}, delayMillis);
 	}
-	
-    @Override
-    public void onDestroy() {
-    	super.onDestroy();
-    	Log.d(TAG, "onDestroy called");
-    	mIBusService.removeCallback(mIBusUpdateListener);
-    	releaseWakelock();
-    	unbindServices();
-    }
     
     @Override
     public void onPause() {
     	super.onPause();
-    	Log.d(TAG, "onPause called");
+    	Log.d(TAG, "Dashboard: onPause called");
+    	/**if(mIBusBound){
+    		unbindServices();
+    	}*/
     }
     
     @Override
     public void onResume() {
     	super.onResume();
-    	Log.d(TAG, "onResume called");
-    	bindServices();
+    	Log.d(TAG, "Dashboard: onResume called");
+		// Emulate the BM to repopulate the view
+		BMBootup();
+    }
+    
+    @Override
+    public void onDestroy() {
+    	super.onDestroy();
+    	Log.d(TAG, "Dashboard: onDestroy called");
+    	mIBusService.removeCallback(mIBusUpdateListener);
+    	releaseWakelock();
+    	if(mIBusBound){
+    		unbindServices();
+    	}
     }
 }
