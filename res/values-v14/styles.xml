@@ -5,8 +5,22 @@
         AppBaseTheme from BOTH res/values/styles.xml and
         res/values-v11/styles.xml on API 14+ devices.
     -->
-    <style name="AppBaseTheme" parent="android:Theme.Holo.NoActionBar">
+    <style name="AppBaseTheme" parent="android:Theme.Holo">
         <!-- API 14 theme customizations can go here. -->
+    </style>
+    <style name="AppTheme" parent="AppBaseTheme">
+        <item name="android:actionBarStyle">@style/ActionBar</item>
+    </style>
+    <style name="ActionBar" parent="android:Widget.Holo.ActionBar.Solid" />
+    <style name="ActionBarWithoutTitle" parent="@style/ActionBar">
+        <item name="android:displayOptions">useLogo</item>
+        <item name="android:background">@null</item>
+        <item name="android:windowBackground">@null</item>
+        <item name="android:height">45dp</item>
+    </style>
+    <style name="DroidIBusTheme" parent="AppTheme">
+        <item name="android:actionBarStyle">@style/ActionBarWithoutTitle</item>
+        <item name="android:windowActionBarOverlay">true</item>
     </style>
     <style name="mediaBtn">
         <item name="android:layout_width">58dp</item>
