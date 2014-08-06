@@ -30,5 +30,9 @@
 	        android:key="obcDate"
 	        android:summary="@string/settings_date_summ"
 	        android:title="@string/settings_date" />
+		<Preference
+		    android:key="syncDateTime" 
+		    android:summary="@string/settings_datetime_sync_summ"
+            android:title="@string/settings_datetime_sync"/> 
 	</PreferenceCategory>
 </PreferenceScreen>
