@@ -138,7 +138,8 @@ public class IBusMessageService extends IOIOService {
 				 * This is the main logic loop where we communicate with the IBus
 				 */
 				// Timeout the buffer if we don't get data for 30ms
-				if ((Calendar.getInstance().getTimeInMillis() - lastRead) > 30) {
+				if ((Calendar.getInstance().getTimeInMillis() - lastRead) > 30 && readBuffer.size() > 0) {
+					Log.d(TAG, "Clearing buffer due to timeout");
 					readBuffer.clear();
 				}
 				try {
@@ -159,6 +160,9 @@ public class IBusMessageService extends IOIOService {
 						}else if (readBuffer.size() == 2){
 							msgLength = (int) readBuffer.get(1);
 						}
+						if(msgLength == 0){
+							Log.d(TAG, "IBusMessageService: Got Buffer size of 0?!");
+						}
 						// Read until readBuffer contains msgLength plus two more bytes for the full message
 						if (readBuffer.size() == msgLength + 2) {
 							// Make sure the message checksum checks out and that it's at least 3 bytes in length
@@ -175,6 +179,8 @@ public class IBusMessageService extends IOIOService {
 									data
 								));
 								handleMessage(readBuffer);
+							}else{
+								Log.d(TAG, "Checksum failure or buffer too small");
 							}
 							readBuffer.clear();
 						}
