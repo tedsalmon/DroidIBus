@@ -923,9 +923,6 @@ public class DashboardFragment extends Fragment {
     public void onPause() {
     	super.onPause();
     	Log.d(TAG, "Dashboard: onPause called");
-    	/**if(mIBusBound){
-    		unbindServices();
-    	}*/
     }
     
     @Override
