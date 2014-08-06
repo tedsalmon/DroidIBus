@@ -1,5 +1,7 @@
 <resources>
     <string name="app_name">Droid IBus</string>
+    <string name="drawer_open">Open</string>
+    <string name="drawer_close">Close</string>
     <string name="stationTextLbl">Station</string>
     <string name="speedFieldLbl">Speed:</string>
     <string name="rpmFieldLbl">RPM:</string>
@@ -50,4 +52,6 @@
     <string name="settings_time_summ">Set the vehicle time</string>
     <string name="settings_units">Unit Types</string>
     <string name="settings_units_summ">Set the vehicle Units (eg. Metric and Imperial)</string>
+    <string name="settings_datetime_sync">Sync Date/Time</string>
+    <string name="settings_datetime_sync_summ">Sync the car\'s date and time with the tablet</string>
 </resources>
