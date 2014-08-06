@@ -1,5 +1,7 @@
 package net.littlebigisland.droidibus.activity.preferences;
 
+import java.util.Calendar;
+
 import android.content.Context;
 import android.preference.DialogPreference;
 import android.util.AttributeSet;
@@ -8,7 +10,7 @@ import android.widget.DatePicker;
 
 public class DatePreference extends DialogPreference{
 	private DatePicker mDatePicker = null;
-	private String mCurrentDate = "";
+	private String mCurrentDate = null;
 	
 	public DatePreference(Context ctxt) {
         this(ctxt, null);
@@ -27,13 +29,28 @@ public class DatePreference extends DialogPreference{
     @Override
     protected void onBindDialogView(View v) {
         super.onBindDialogView(v);
-        mDatePicker.updateDate(2014, 07, 25);
+        if(mCurrentDate != null){
+        	String[] tDate = mCurrentDate.split("-");
+        	mDatePicker.updateDate(
+        		Integer.parseInt(tDate[0]),
+        		Integer.parseInt(tDate[1]) - 1,
+        		Integer.parseInt(tDate[2])
+        	);
+        }else{
+        	// Default to the tablets date
+        	Calendar tempDate = Calendar.getInstance();
+        	mDatePicker.updateDate(
+    			tempDate.get(Calendar.YEAR),
+    			tempDate.get(Calendar.MONTH),
+    			tempDate.get(Calendar.DATE)
+        	);
+        }
     }
     
     @Override
     protected View onCreateDialogView() {
     	mDatePicker = new DatePicker(getContext());
-        return(mDatePicker);
+        return mDatePicker;
     }
     
     @Override
@@ -51,5 +68,10 @@ public class DatePreference extends DialogPreference{
                 persistString(mCurrentDate);
             }
         }
+    }
+    
+    @Override
+	public void setDefaultValue(Object value){
+    	mCurrentDate = (String) value;
     }
 }

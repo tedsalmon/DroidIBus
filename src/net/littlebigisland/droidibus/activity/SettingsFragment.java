@@ -1,6 +1,8 @@
 package net.littlebigisland.droidibus.activity;
 
 
+import java.util.Calendar;
+
 import net.littlebigisland.droidibus.R;
 import net.littlebigisland.droidibus.ibus.IBusCommand;
 import net.littlebigisland.droidibus.ibus.IBusCommandsEnum;
@@ -16,11 +18,13 @@ import android.content.SharedPreferences.OnSharedPreferenceChangeListener;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.IBinder;
+import android.preference.Preference;
 import android.preference.PreferenceFragment;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Toast;
 
 public class SettingsFragment extends PreferenceFragment implements OnSharedPreferenceChangeListener{
 	public String TAG = "DroidIBus";
@@ -29,16 +33,35 @@ public class SettingsFragment extends PreferenceFragment implements OnSharedPref
 	protected IBusMessageService mIBusService;
 	protected boolean mIBusBound = false;
 	
+	private boolean mPreferencesAdded = false;
+	
+	private Preference mOBCTime = null;
+	private Preference mOBCDate = null;
+	
 	private IBusCallbackReceiver mIBusUpdateListener = new IBusCallbackReceiver(){
 		
 		@Override
 		public void onUpdateTime(final String time){
-			//timeField.setText(time);
+			String[] mTimeParts = time.split(":");
+			mOBCTime.setDefaultValue(
+				String.format("%02d:%02d", mTimeParts[0], mTimeParts[1])
+			);
 		}
 		
 		@Override
 		public void onUpdateDate(final String date){
-			//dateField.setText(date);
+			// Check to see what the date format is
+			if(date.contains(".")){
+				String[] tDate = date.split(".");
+				mOBCDate.setDefaultValue(
+					String.format("%s-%s-%s", tDate[2], tDate[1], tDate[0])
+				);
+			}else{
+				String[] tDate = date.split("/");
+				mOBCDate.setDefaultValue(
+					String.format("%s-%s-%s", tDate[2], tDate[0], tDate[1])
+				);
+			}
 		}
 	};
 	
@@ -113,15 +136,43 @@ public class SettingsFragment extends PreferenceFragment implements OnSharedPref
     
 	@Override
 	public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
+		setRetainInstance(true);
 		final View v = inflater.inflate(R.layout.settings, container, false);
-		addPreferencesFromResource(R.xml.settings_data);
+		if(!mPreferencesAdded){
+			addPreferencesFromResource(R.xml.settings_data);
+			mPreferencesAdded = true;
+		}
+		Preference syncCarDateTime = (Preference) findPreference("syncDateTime");
+		
+		syncCarDateTime.setOnPreferenceClickListener(new Preference.OnPreferenceClickListener(){
+			@Override
+			public boolean onPreferenceClick(Preference preference) {
+				Calendar tDate = Calendar.getInstance();
+				sendIBusCommand(
+					IBusCommandsEnum.BMToIKESetDate,
+					tDate.get(Calendar.DATE), 
+					tDate.get(Calendar.MONTH) + 1,
+					tDate.get(Calendar.YEAR) - 2000
+				);
+				sendIBusCommand(
+					IBusCommandsEnum.BMToIKESetTime,
+					tDate.get(Calendar.HOUR_OF_DAY), 
+					tDate.get(Calendar.MINUTE)
+				);
+				showToast("Successfully synced date and time with car!");
+				return true;
+			}
+		});
 		return v;
 	}
 	
 	@Override
 	public void onActivityCreated (Bundle savedInstanceState){
 		super.onActivityCreated(savedInstanceState);
+		setRetainInstance(true);
 		Log.d(TAG, "Settings: onActivityCreated Called");
+		mOBCTime = (Preference) findPreference("obcTime");
+		mOBCDate = (Preference) findPreference("obcDate");
 		// Bind required background services last since the callback
 		// functions depend on the view items being initialized
 		if(!mIBusBound){
@@ -184,5 +235,10 @@ public class SettingsFragment extends PreferenceFragment implements OnSharedPref
 		if(mIBusBound){
 			unbindServices();
 		}
+	}
+	
+	private void showToast(String toastText){
+		Context appContext = getActivity();
+		Toast.makeText(appContext, toastText, Toast.LENGTH_LONG).show();
 	}
 }
