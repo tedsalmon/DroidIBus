@@ -10,7 +10,7 @@
 	
     <uses-sdk
         android:minSdkVersion="19"
-        android:targetSdkVersion="19" />
+        android:targetSdkVersion="20" />
     
     <application
         android:allowBackup="true"
@@ -24,6 +24,7 @@
             android:screenOrientation="landscape"
         	android:configChanges="orientation|keyboardHidden"
             android:label="@string/app_name"
+            android:theme="@style/DroidIBusTheme"
             android:launchMode="singleInstance" >
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
