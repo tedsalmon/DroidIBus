@@ -70,6 +70,9 @@ public class DashboardFragment extends Fragment {
 					   geoCoordinatesField ,geoStreetField, geoLocaleField,
 					   geoAltitudeField, dateField, timeField;
 	
+	private TextView speedUnit, avgSpeedUnit, rangeFieldUnit, consumption1Unit,
+		consumption2Unit, outdoorTempUnit, coolantTempUnit;
+	
 	// Views in the Activity
 	protected LinearLayout radioLayout, tabletLayout;
 	protected ImageButton mPlayerPrevBtn, mPlayerControlBtn, mPlayerNextBtn;
@@ -260,14 +263,16 @@ public class DashboardFragment extends Fragment {
 		 */
 		@Override
 		public void onUpdateSpeed(final int speed){
-			final int speedMPH = ((int) ((speed * 2) * 0.621371));
-			speedField.setText(String.format("%d MPH", speedMPH));
+			if(mSettings.getString("speedUnit", "1").equals("0")){
+				speedField.setText(String.valueOf(speed));
+			}else{
+				speedField.setText(String.valueOf((int) ((speed * 2) * 0.621371)));
+			}
 		}
 		
 		@Override
 		public void onUpdateRPM(final int rpm){
 			rpmField.setText(Integer.toString(rpm));
-			
 		}
 		
 		@Override
@@ -282,7 +287,13 @@ public class DashboardFragment extends Fragment {
 		
 		@Override
 		public void onUpdateCoolantTemp(final int temp){
-			coolantTempField.setText(Integer.toString(temp));
+			if(mSettings.getString("temperatureUnit", "1").equals("0")){
+				coolantTempField.setText(Integer.toString(temp));
+			}else{
+				coolantTempField.setText(
+					"+" + Integer.toString(((temp * 9) / 5) + 32)
+				);
+			}
 		}
 		
 		@Override
@@ -322,6 +333,7 @@ public class DashboardFragment extends Fragment {
 	    				new Handler(getActivity().getMainLooper()).postDelayed(new Runnable(){
 							@Override
 							public void run() {
+								mIsPlaying = true;
 								mPlayerService.sendPlayKey();
 							}
 						}, 3500);
@@ -333,6 +345,7 @@ public class DashboardFragment extends Fragment {
 	    			// Pause the music as we exit the vehicle
 	    			if(mPlayerBound && mCurrentRadioMode == RadioModes.AUX && mIsPlaying){
 	    				mPlayerService.sendPauseKey();
+	    				mIsPlaying = false;
 	    			}
 	    			changeScreenState(false);
 	    			// Blank out values that aren't set while the car isn't on
@@ -383,8 +396,10 @@ public class DashboardFragment extends Fragment {
 	    	if(mPlayerBound && mCurrentRadioMode == RadioModes.AUX){
 	    		if(mIsPlaying){
 					mPlayerService.sendPauseKey();
+					mIsPlaying = true;
 	    		}else{
 					mPlayerService.sendPlayKey();
+					mIsPlaying = false;
 	    		}
 	    	}
 		}
@@ -416,6 +431,22 @@ public class DashboardFragment extends Fragment {
 			if(mSettings.getBoolean("nightColorsWithInterior", false)){
 				showToast("Got Light status and Night colors enabled");
 			}
+		}
+		
+		@Override
+		public void onUpdateUnits(String units){
+			// Split the binary strings spat out by space
+			String[] unitTypes = units.split(";");
+			// Split the binary into an array
+			String[] aUnits = unitTypes[0].split("(?!^)");
+			String[] cUnits = unitTypes[1].split("(?!^)");
+			// Access each array for the values of the units
+			mSettings.edit().putString("speedUnit", aUnits[3]).apply();
+			mSettings.edit().putString("distanceUnit", aUnits[1]).apply();
+			mSettings.edit().putString("temperatureUnit", aUnits[6]).apply();
+			mSettings.edit().putString("timeUnit", aUnits[7]).apply();
+			mSettings.edit().putString("consumptionUnit", cUnits[6]+cUnits[7]).apply();
+			updateDisplayedUnits();
 		}
 		
 	};
@@ -606,8 +637,20 @@ public class DashboardFragment extends Fragment {
 	public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
 		final View v = inflater.inflate(R.layout.dashboard, container, false);
 		Log.d(TAG, "Dashboard: onCreateView Called");
-		// Load Activity Settings
+
+		// Load Activity Settings		
 		mSettings = PreferenceManager.getDefaultSharedPreferences(getActivity());
+		
+		speedUnit = (TextView) v.findViewById(R.id.speedFieldUnit);
+		avgSpeedUnit = (TextView) v.findViewById(R.id.avgSpeedUnit);
+		rangeFieldUnit = (TextView) v.findViewById(R.id.rangeFieldUnit);
+		consumption1Unit = (TextView) v.findViewById(R.id.consumption1Unit);
+		consumption2Unit = (TextView) v.findViewById(R.id.consumption2Unit);
+		outdoorTempUnit = (TextView) v.findViewById(R.id.outdoorTempUnit);
+		coolantTempUnit = (TextView) v.findViewById(R.id.coolantTempUnit);
+
+		// Set the settings
+		updateDisplayedUnits();
 		
 		// Radio Type
 		String radioType = mSettings.getString("radioType", "BM53");
@@ -646,8 +689,10 @@ public class DashboardFragment extends Fragment {
 							break;
 						case R.id.playerPlayPauseBtn:
 							if(mIsPlaying) {
+								mIsPlaying = false;
 								mPlayerService.sendPauseKey();
 							} else {
+								mIsPlaying = true;
 								mPlayerService.sendPlayKey();
 							}
 							break;
@@ -860,6 +905,50 @@ public class DashboardFragment extends Fragment {
 		}).start();
 	}
 	
+	public void updateDisplayedUnits(){
+		// Set the units
+		
+		// Consumption
+		switch(mSettings.getString("consumptionUnit", "10")){
+			case "00":
+				consumption1Unit.setText("L/100");
+				consumption2Unit.setText("L/100");
+				break;
+			case "01":
+				consumption1Unit.setText("MPG");
+				consumption2Unit.setText("MPG");
+				break;
+			case "11":
+				consumption1Unit.setText("KM/L");
+				consumption2Unit.setText("KM/L");
+				break;
+		}
+		
+		// Speed - Avg Speed and Current Speed
+		if(mSettings.getString("speedUnit", "1").equals("0")){
+			speedUnit.setText("KM/H");
+			avgSpeedUnit.setText("KM/H");
+		}else{
+			speedUnit.setText("MPH");
+			avgSpeedUnit.setText("MPH");
+		}
+		// Distance
+		if(mSettings.getString("distanceUnit", "1").equals("0")){
+			rangeFieldUnit.setText("Km");
+		}else{
+			rangeFieldUnit.setText("Mi");
+		}
+		
+		// Temperature
+		if(mSettings.getString("temperatureUnit", "1").equals("0")){
+			outdoorTempUnit.setText("C");
+			coolantTempUnit.setText("C");
+		}else{
+			outdoorTempUnit.setText("F");
+			coolantTempUnit.setText("F");
+		}
+	}
+	
 	/**
 	 * Acquire a screen wake lock to either turn the screen on or off
 	 * @param screenState if true, turn the screen on, else turn it off
@@ -896,7 +985,9 @@ public class DashboardFragment extends Fragment {
 	
 	private void releaseWakelock(){
     	if(screenWakeLock != null){
-    		if(screenWakeLock.isHeld()) screenWakeLock.release();
+    		if(screenWakeLock.isHeld()){
+    			screenWakeLock.release();
+    		}
     	}
 	}
 	

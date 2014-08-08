@@ -33,21 +33,39 @@ public class SettingsFragment extends PreferenceFragment implements OnSharedPref
 	protected IBusMessageService mIBusService;
 	protected boolean mIBusBound = false;
 	
-	private boolean mPreferencesAdded = false;
-	
 	private Preference mOBCTime = null;
 	private Preference mOBCDate = null;
 	
+	private SharedPreferences mSettings = null;
+	
 	private IBusCallbackReceiver mIBusUpdateListener = new IBusCallbackReceiver(){
 		
+		/**
+		 * Update the time picker object with the time from the IKE
+		 */
 		@Override
 		public void onUpdateTime(final String time){
-			String[] mTimeParts = time.split(":");
+			String[] mTimeParts = {};
+			if(time.contains("AM") || time.contains("PM")){
+				// Convert AM/PM to 24-hour clock for use in settings
+				// Make the spaces zeros, get the time without AM/PM then split by the separator
+				mTimeParts = time.replace(" ", "0").substring(0, 5).split(":");
+				// Covert to 24 hour clock by adding 12 hours if it's PM
+				if(time.contains("PM")){
+					mTimeParts[0] = String.valueOf(Integer.parseInt(mTimeParts[0]) + 12);
+				}
+			}else{
+				// 24 hour clock so nothing to do but split
+				mTimeParts = time.split(":");
+			}
 			mOBCTime.setDefaultValue(
-				String.format("%02d:%02d", mTimeParts[0], mTimeParts[1])
+				String.format("%s:%s", mTimeParts[0], mTimeParts[1])
 			);
 		}
 		
+		/**
+		 * Update the date picker object with the date from the IKE
+		 */
 		@Override
 		public void onUpdateDate(final String date){
 			// Check to see what the date format is
@@ -62,6 +80,21 @@ public class SettingsFragment extends PreferenceFragment implements OnSharedPref
 					String.format("%s-%s-%s", tDate[2], tDate[0], tDate[1])
 				);
 			}
+		}
+		
+		@Override
+		public void onUpdateUnits(String units){
+			// Split the binary strings spat out by space
+			String[] unitTypes = units.split(";");
+			// Split the binary into an array
+			String[] aUnits = unitTypes[0].split("(?!^)");
+			String[] cUnits = unitTypes[1].split("(?!^)");
+			// Access each array for the values of the units
+			mSettings.edit().putString("speedUnit", aUnits[3]).apply();
+			mSettings.edit().putString("distanceUnit", aUnits[1]).apply();
+			mSettings.edit().putString("temperatureUnit", aUnits[6]).apply();
+			mSettings.edit().putString("timeUnit", aUnits[7]).apply();
+			mSettings.edit().putString("consumptionUnit", cUnits[6]+cUnits[7]).apply();
 		}
 	};
 	
@@ -132,16 +165,24 @@ public class SettingsFragment extends PreferenceFragment implements OnSharedPref
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setRetainInstance(true);
+		addPreferencesFromResource(R.xml.settings_data);
     }
     
 	@Override
 	public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
 		setRetainInstance(true);
 		final View v = inflater.inflate(R.layout.settings, container, false);
-		if(!mPreferencesAdded){
-			addPreferencesFromResource(R.xml.settings_data);
-			mPreferencesAdded = true;
-		}
+		mSettings = getPreferenceManager().getSharedPreferences();
+		return v;
+	}
+	
+	@Override
+	public void onActivityCreated (Bundle savedInstanceState){
+		super.onActivityCreated(savedInstanceState);
+		setRetainInstance(true);
+		Log.d(TAG, "Settings: onActivityCreated Called");
+		mOBCTime = (Preference) findPreference("obcTime");
+		mOBCDate = (Preference) findPreference("obcDate");
 		Preference syncCarDateTime = (Preference) findPreference("syncDateTime");
 		
 		syncCarDateTime.setOnPreferenceClickListener(new Preference.OnPreferenceClickListener(){
@@ -163,16 +204,6 @@ public class SettingsFragment extends PreferenceFragment implements OnSharedPref
 				return true;
 			}
 		});
-		return v;
-	}
-	
-	@Override
-	public void onActivityCreated (Bundle savedInstanceState){
-		super.onActivityCreated(savedInstanceState);
-		setRetainInstance(true);
-		Log.d(TAG, "Settings: onActivityCreated Called");
-		mOBCTime = (Preference) findPreference("obcTime");
-		mOBCDate = (Preference) findPreference("obcDate");
 		// Bind required background services last since the callback
 		// functions depend on the view items being initialized
 		if(!mIBusBound){
@@ -208,6 +239,21 @@ public class SettingsFragment extends PreferenceFragment implements OnSharedPref
 			case "nightColorsWithInterior":
 			case "navAvailable":
 				prefVal = (sharedPreferences.getBoolean(key, false)) ? "true" : "false";
+				break;
+			case "timeUnit":
+			case "distanceUnit":
+			case "speedUnit":
+			case "temperatureUnit":
+			case "consumptionUnit":
+				prefVal = sharedPreferences.getString(key, "WAT");
+				sendIBusCommand(
+					IBusCommandsEnum.BMToIKESetUnits,
+					Integer.parseInt(sharedPreferences.getString("speedUnit", "1")),
+					Integer.parseInt(sharedPreferences.getString("distanceUnit", "1")),
+					Integer.parseInt(sharedPreferences.getString("temperatureUnit", "1")),
+					Integer.parseInt(sharedPreferences.getString("timeUnit", "0")),
+					Integer.parseInt(sharedPreferences.getString("consumptionUnit", "01"))
+				);
 				break;
 		}
 		Log.d(TAG, String.format("Got preference change for %s -> %s", key, prefVal));
