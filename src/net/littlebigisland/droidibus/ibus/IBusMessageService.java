@@ -139,7 +139,10 @@ public class IBusMessageService extends IOIOService {
 				 */
 				// Timeout the buffer if we don't get data for 30ms
 				if ((Calendar.getInstance().getTimeInMillis() - lastRead) > 30 && readBuffer.size() > 0) {
-					Log.d(TAG, "Clearing buffer due to timeout");
+					String data = "";
+					for(int i = 0; i<readBuffer.size(); i++)
+						data = String.format("%s%02X ", data, readBuffer.get(i));
+					Log.d(TAG, String.format("Clearing buffer of < %s > due to timeout", data));
 					readBuffer.clear();
 				}
 				try {
@@ -180,7 +183,10 @@ public class IBusMessageService extends IOIOService {
 								));
 								handleMessage(readBuffer);
 							}else{
-								Log.d(TAG, "Checksum failure or buffer too small");
+								String data = "";
+								for(int i = 0; i<readBuffer.size(); i++)
+									data = String.format("%s%02X ", data, readBuffer.get(i));
+								Log.d(TAG, String.format("Checksum failure or buffer too small < %s >", data));
 							}
 							readBuffer.clear();
 						}
@@ -207,7 +213,8 @@ public class IBusMessageService extends IOIOService {
 									outboundMsg = (byte[]) requestedMethod.invoke(clsInstance, cmdArgs);
 								}
 							}catch(IllegalAccessException | IllegalArgumentException | InvocationTargetException | NoSuchMethodException e){
-								Log.d(TAG, "Error invoking method in IBus outbound queue: " + e.getMessage());
+								Log.d(TAG, "Error invoking method in IBus outbound queue: " + e.toString() + " " + e.getMessage());
+								e.printStackTrace();
 							}
 							// Write the message out to the bus byte by byte
 							String out = String.format("Sending %s Command out: ", cmdType.toString());
