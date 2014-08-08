@@ -46,22 +46,22 @@ public class MainActivity extends Activity {
 		
 		mDrawerLayout = (DrawerLayout) findViewById(R.id.drawer_layout);
 		
-		mDrawerToggle = new ActionBarDrawerToggle(this, mDrawerLayout,
-                R.drawable.ic_drawer, R.string.drawer_open, R.string.drawer_close) {
-
-            // Called when a drawer has settled in a completely closed state.
-            public void onDrawerClosed(View view) {
-                super.onDrawerClosed(view);
-                invalidateOptionsMenu();
-            }
-
-            // Called when a drawer has settled in a completely open state.
-            public void onDrawerOpened(View drawerView) {
-                super.onDrawerOpened(drawerView);
-                invalidateOptionsMenu();
-            }
-            
-        };
+		mDrawerToggle = new ActionBarDrawerToggle(
+			this, mDrawerLayout, R.drawable.ic_drawer, R.string.drawer_open, R.string.drawer_close
+		){
+			// Called when a drawer has settled in a completely closed state.
+			public void onDrawerClosed(View view) {
+			    super.onDrawerClosed(view);
+			    invalidateOptionsMenu();
+			}
+			
+			// Called when a drawer has settled in a completely open state.
+			public void onDrawerOpened(View drawerView) {
+			    super.onDrawerOpened(drawerView);
+			    invalidateOptionsMenu();
+			}
+		    
+		};
         mDrawerLayout.post(new Runnable() {
             @Override
             public void run() {
@@ -82,7 +82,6 @@ public class MainActivity extends Activity {
 			fragmentTx.replace(R.id.main, mFragments[0]);
 			getActionBar().setDisplayShowTitleEnabled(true);
 			getActionBar().setTitle(mFragmentTitles[0]);
-			fragmentTx.addToBackStack(null);
 			fragmentTx.commit();
 		}
 	}
