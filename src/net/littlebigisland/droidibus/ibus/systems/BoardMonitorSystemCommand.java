@@ -1,7 +1,6 @@
 package net.littlebigisland.droidibus.ibus.systems;
 
-import java.math.BigInteger;
-
+import android.annotation.SuppressLint;
 import net.littlebigisland.droidibus.ibus.DeviceAddressEnum;
 import net.littlebigisland.droidibus.ibus.IBusSystemCommand;
 
@@ -259,24 +258,32 @@ public class BoardMonitorSystemCommand extends IBusSystemCommand {
 	 * 	int day, int month, int year
 	 * @return Byte array of composed message to send to IBus
 	 */
+	@SuppressLint("DefaultLocale") // TODO Fix me
 	public byte[] setUnits(Object... args){
-		int speedUnit = (Integer) args[0]; // 0 = KM/Km/h 1= Miles/MPH
-		int tempUnit = (Integer) args[1]; // 0 = C 1 = F
-		int dateTimeUnit = (Integer) args[2]; // 0 = 24h 1 = 12h
+		int speedUnit = (Integer) args[0]; // 0 = Km/h 1 = /MPH
+		int distanceUnit = (Integer) args[1]; // 0 = Km 1 = Mi
+		int tempUnit = (Integer) args[2]; // 0 = C 1 = F
+		int dateTimeUnit = (Integer) args[3]; // 0 = 24h 1 = 12h
+		int consumptionUnit = (Integer) args[4]; // 0 = L/100 1 = MPG 11 = KM/L
 		
-		byte[] allUnits = new BigInteger(
-			String.format("%s%s00%s%s%s%s",dateTimeUnit, tempUnit, speedUnit, speedUnit, speedUnit, dateTimeUnit ),
-		2).toByteArray();
-		String consumptionType = (speedUnit == 0) ? "11" : "01";
-		byte[] consumptionUnits = new BigInteger(
-			String.format("0000%s%s", consumptionType, consumptionType),
-		2).toByteArray();
+		byte allUnits = (byte) Integer.parseInt(
+			String.format(
+				"%s%s%s%s00%s%s", dateTimeUnit, distanceUnit, distanceUnit, speedUnit, tempUnit, dateTimeUnit 
+			),
+			2
+		);
+		
+		String consumptionType = String.format("%02d", consumptionUnit);
+		byte consumptionUnits =(byte) Integer.parseInt(
+			String.format("0%s%s%s%s%s", dateTimeUnit, dateTimeUnit, distanceUnit, consumptionType, consumptionType),
+			2
+		);
 
 		byte[] completedMessage = new byte[]{
-			gfxDriver, 0x07, IKESystem, OBCUnitSet, (byte)0xF2, allUnits[1], consumptionUnits[1], 0x00, 0x00
+			gfxDriver, 0x07, IKESystem, OBCUnitSet, (byte)0xF2, allUnits, consumptionUnits, 0x00, 0x00
 		};
 		
-		completedMessage[8] = genMessageCRC(completedMessage);
+		completedMessage[completedMessage.length - 1] = genMessageCRC(completedMessage);
 		return completedMessage;
 	}
 	
