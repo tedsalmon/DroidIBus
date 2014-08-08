@@ -45,6 +45,7 @@ import android.widget.CompoundButton.OnCheckedChangeListener;
 import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
+import android.widget.RelativeLayout;
 import android.widget.SeekBar;
 import android.widget.SeekBar.OnSeekBarChangeListener;
 import android.widget.Switch;
@@ -73,6 +74,7 @@ public class DashboardFragment extends Fragment {
 		consumption2Unit, outdoorTempUnit, coolantTempUnit;
 	
 	// Views in the Activity
+	protected RelativeLayout dashboardLayout;
 	protected LinearLayout radioLayout, tabletLayout;
 	protected ImageButton mPlayerPrevBtn, mPlayerControlBtn, mPlayerNextBtn;
 	protected TextView mPlayerArtistText, mPlayerTitleText, mPlayerAlbumText;
@@ -182,6 +184,8 @@ public class DashboardFragment extends Fragment {
 	 * IBus Callback Functions
 	 */ 	
 	private IBusCallbackReceiver mIBusUpdateListener = new IBusCallbackReceiver() {
+		private int mCurrentTextColor = R.color.dayColor;
+		
 		/**
 		 * Callback to handle any updates to the station text when in Radio Mode
 		 * @param text Text to set
@@ -426,9 +430,13 @@ public class DashboardFragment extends Fragment {
 
 		@Override
 		public void onLightStatus(int lightStatus){
-			// TODO Act on light status
 			if(mSettings.getBoolean("nightColorsWithInterior", false)){
-				showToast("Got Light status and Night colors enabled");
+				int color = (lightStatus == 1) ? R.color.nightColor : R.color.dayColor;
+				// Only change the color if it's different
+				if(color != mCurrentTextColor){
+					mCurrentTextColor = color;
+					changeTextColors(dashboardLayout, color);
+				}
 			}
 		}
 		
@@ -636,8 +644,8 @@ public class DashboardFragment extends Fragment {
 	public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
 		final View v = inflater.inflate(R.layout.dashboard, container, false);
 		Log.d(TAG, "Dashboard: onCreateView Called");
-
-		// Load Activity Settings		
+		
+		// Load Activity Settings
 		mSettings = PreferenceManager.getDefaultSharedPreferences(getActivity());
 		
 		speedUnit = (TextView) v.findViewById(R.id.speedFieldUnit);
@@ -659,9 +667,10 @@ public class DashboardFragment extends Fragment {
     	changeScreenState(true);
     	
 		// Layouts
+    	dashboardLayout = (RelativeLayout) v.findViewById(R.id.dashboardLayout);
     	radioLayout = (LinearLayout) v.findViewById(R.id.radioAudio);
     	tabletLayout = (LinearLayout) v.findViewById(R.id.tabletAudio);
-    	
+
 		// Music Player
 		mPlayerPrevBtn = (ImageButton) v.findViewById(R.id.playerPrevBtn);
 		mPlayerControlBtn = (ImageButton) v.findViewById(R.id.playerPlayPauseBtn);
@@ -958,6 +967,23 @@ public class DashboardFragment extends Fragment {
 			coolantTempUnit.setText("F");
 		}
 	}
+	
+	/**
+	 * Change TextView colors recursively; Used to support night colors
+	 */
+    public void changeTextColors(ViewGroup view, int colorId){
+		for(int i = 0; i < view.getChildCount(); i++){
+			View child = view.getChildAt(i);
+			 // TextView, change it's color
+			if(child instanceof TextView){
+				TextView c = (TextView) child;
+				c.setTextColor(getResources().getColor(colorId));
+			} // ViewGroup; Recurse children to find TextViews
+			else if(child instanceof ViewGroup){
+	            changeTextColors((ViewGroup) child, colorId);
+	        }
+		}
+    }
 	
 	/**
 	 * Acquire a screen wake lock to either turn the screen on or off
