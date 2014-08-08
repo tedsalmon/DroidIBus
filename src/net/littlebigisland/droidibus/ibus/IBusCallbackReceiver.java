@@ -50,6 +50,8 @@ public abstract class IBusCallbackReceiver{
 	
 	public void onUpdateIgnitionSate(final int state) {}
 	
+	public void onUpdateUnits(final String units) {}
+	
 	// Navigation System
 	public void onUpdateStreetLocation(final String streetName) {}
 	
