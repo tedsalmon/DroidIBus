@@ -33,6 +33,41 @@
 		<Preference
 		    android:key="syncDateTime" 
 		    android:summary="@string/settings_datetime_sync_summ"
-            android:title="@string/settings_datetime_sync"/> 
+            android:title="@string/settings_datetime_sync" /> 
+        <ListPreference
+            android:title="@string/settings_timeUnit"
+            android:summary="@string/settings_timeUnit_summ"
+            android:key="timeUnit"
+            android:entries="@array/settings_timeUnit_options"
+            android:entryValues="@array/settings_timeUnit_options_values"
+            android:defaultValue="0" />
+        <ListPreference
+            android:title="@string/settings_distanceUnit"
+            android:summary="@string/settings_distanceUnit_summ"
+            android:key="distanceUnit"
+            android:entries="@array/settings_distanceUnit_options"
+            android:entryValues="@array/settings_distanceUnit_options_values"
+            android:defaultValue="1" />
+        <ListPreference
+            android:title="@string/settings_speedUnit"
+            android:summary="@string/settings_speedUnit_summ"
+            android:key="speedUnit"
+            android:entries="@array/settings_speedUnit_options"
+            android:entryValues="@array/settings_speedUnit_options_values"
+            android:defaultValue="1" />
+        <ListPreference
+            android:title="@string/settings_temperatureUnit"
+            android:summary="@string/settings_temperatureUnit_summ"
+            android:key="temperatureUnit"
+            android:entries="@array/settings_temperatureUnit_options"
+            android:entryValues="@array/settings_temperatureUnit_options_values"
+            android:defaultValue="1" />
+        <ListPreference
+            android:title="@string/settings_consumptionUnit"
+            android:summary="@string/settings_consumptionUnit_summ"
+            android:key="consumptionUnit"
+            android:entries="@array/settings_consumptionUnit_options"
+            android:entryValues="@array/settings_consumptionUnit_options_values"
+            android:defaultValue="10" />
 	</PreferenceCategory>
 </PreferenceScreen>
