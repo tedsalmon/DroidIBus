@@ -18,6 +18,16 @@ public class IKESystemCommand extends IBusSystemCommand {
 					int state = (msg.get(4) < 2) ? msg.get(4) : (0x02 & msg.get(4));
 					triggerCallback("onUpdateIgnitionSate", state);
 					break;
+				case 0x15: // Unit Set
+					triggerCallback(
+						"onUpdateUnits", 
+						String.format(
+							"%8s;%8s", 
+							Integer.toBinaryString(msg.get(5) & 0xFF),
+							Integer.toBinaryString(msg.get(6) & 0xFF)
+						).replace(' ', '0')
+					);
+					break;
 				case 0x18: // Speed and RPM
 					triggerCallback("onUpdateSpeed", (int)msg.get(4));
 					triggerCallback("onUpdateRPM", (int)msg.get(5) * 100);
@@ -41,8 +51,14 @@ public class IKESystemCommand extends IBusSystemCommand {
 			int endByte = currentMessage.size() - 2;
 			switch(currentMessage.get(4)){
 				case 0x01: // Time
+					String curTime = "";
 					// The time contains spaces instead of zeros for hours less than 10
-					String curTime = decodeMessage(currentMessage, 6, endByte - 2).replace(" ", "0");
+					if(currentMessage.get(endByte) == 0x20){
+						curTime = decodeMessage(currentMessage, 6, endByte - 2).replace(" ", "0");
+					}else{
+						// AM/PM Support
+						curTime = decodeMessage(currentMessage, 6, endByte);
+					}
 					triggerCallback("onUpdateTime", curTime);
 					break;
 				case 0x02: // Date
@@ -54,6 +70,8 @@ public class IKESystemCommand extends IBusSystemCommand {
 				case 0x03: //Outdoor Temperature
 					// Handle triple digit temperature
 					int startByte = (currentMessage.get(6) != 0x20) ? 6 : 7;
+					// Clean up the ending space
+					endByte = (currentMessage.get(endByte) == 0x20) ? endByte - 1 : endByte; 
 					triggerCallback("onUpdateOutdoorTemp", decodeMessage(currentMessage, startByte, endByte));
 					break;
 				case 0x04: // Fuel 1
