@@ -63,7 +63,14 @@
         <item name="android:layout_centerVertical">true</item>
 	    <item name="android:paddingRight">10dp</item>
     </style>
-        <style name="geoItemText">
+    <style name="statItemUnit">
+        <item name="android:textSize">12sp</item>
+        <item name="android:layout_marginTop">10dp</item>
+        <item name="android:layout_marginLeft">5dp</item>
+        <item name="android:layout_width">wrap_content</item>
+        <item name="android:layout_height">wrap_content</item>
+    </style>
+    <style name="geoItemText">
         <item name="android:textSize">22.5sp</item>
         <item name="android:layout_marginTop">10dp</item>
         <item name="android:layout_marginLeft">2.5dp</item>

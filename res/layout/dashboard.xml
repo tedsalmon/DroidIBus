@@ -229,13 +229,18 @@
 	            android:id="@+id/speedFieldLbl"
 	            style="@style/majorStatItemLabelText"
 	            android:layout_below="@+id/vehicleStatLbl"
-	            android:text="@string/speedFieldLbl" />
-
-	        <TextView
+	            android:text="@string/speedFieldLbl" /> 
+	        <TextView 
 	            android:id="@+id/speedField"
 	            style="@style/majorStatItemValueText"
 	            android:layout_below="@+id/speedFieldLbl"
 	            android:text="@string/defaultText" />
+	        <TextView
+	            android:id="@+id/speedFieldUnit"
+                style="@style/statItemUnit"
+                android:layout_below="@+id/speedFieldLbl"
+                android:layout_toRightOf="@+id/speedField"
+                android:text="@string/defaultText" />
 
 	        <TextView
 	            android:id="@+id/rpmFieldLbl"
@@ -260,6 +265,13 @@
 	            style="@style/majorStatItemValueText"
 	            android:layout_below="@+id/rangeFieldLbl"
 	            android:text="@string/defaultText" />
+	        
+	        <TextView 
+	            android:id="@+id/rangeFieldUnit"
+                style="@style/statItemUnit"
+                android:layout_toRightOf="@+id/rangeField"
+                android:layout_below="@+id/rangeFieldLbl"
+                android:text="@string/defaultText" />
 	    </RelativeLayout>
 
 	    <RelativeLayout
@@ -287,6 +299,13 @@
 	                style="@style/statItemValueText"
 	                android:layout_below="@+id/consumption1Lbl"
 	                android:text="@string/defaultText" />
+	            
+	            <TextView 
+	                android:id="@+id/consumption1Unit"
+                    style="@style/statItemUnit"
+                    android:layout_toRightOf="@+id/consumption1"
+                    android:layout_below="@+id/consumption1Lbl"
+                    android:text="@string/defaultText" />
 	        </RelativeLayout>
 	        
 	        <RelativeLayout
@@ -304,6 +323,13 @@
 	                style="@style/statItemValueText"
 	                android:layout_below="@+id/consumption2Lbl"
 	                android:text="@string/defaultText" />
+	            
+	            <TextView 
+	                android:id="@+id/consumption2Unit"
+                    style="@style/statItemUnit"
+                    android:layout_toRightOf="@+id/consumption2"
+                    android:layout_below="@+id/consumption2Lbl"
+                    android:text="@string/defaultText" />
 	        </RelativeLayout>
 
 	        <RelativeLayout
@@ -321,6 +347,13 @@
 	                style="@style/statItemValueText"
 	                android:layout_below="@+id/avgSpeedLbl"
 	                android:text="@string/defaultText" />
+	            
+	            <TextView
+	                android:id="@+id/avgSpeedUnit"
+                    style="@style/statItemUnit"
+                    android:layout_toRightOf="@+id/avgSpeed"
+                    android:layout_below="@+id/avgSpeedLbl"
+                    android:text="@string/defaultText" />
 	        </RelativeLayout>
 	    </RelativeLayout>
 	    
@@ -379,6 +412,13 @@
 	            style="@style/majorStatItemValueText"
 	            android:layout_below="@+id/outdoorTempFieldLbl"
 	            android:text="@string/defaultText" />
+	        
+	        <TextView 
+	            android:id="@+id/outdoorTempUnit"
+	            style="@style/statItemUnit"
+	            android:layout_toRightOf="@+id/outdoorTempField"
+	            android:layout_below="@+id/outdoorTempFieldLbl"
+	            android:text="@string/defaultText" />
 
 	        <TextView
 	            android:id="@+id/coolantTempFieldLbl"
@@ -391,6 +431,14 @@
 	            style="@style/majorStatItemValueText"
 	            android:layout_below="@+id/coolantTempFieldLbl"
 	            android:text="@string/defaultText" />
+	        
+	        <TextView 
+	            android:id="@+id/coolantTempUnit"
+                style="@style/statItemUnit"
+                android:layout_toRightOf="@+id/coolantTempField"
+                android:layout_below="@+id/coolantTempFieldLbl"
+                android:text="@string/defaultText" />
+	                   
 	    </RelativeLayout>
 	</LinearLayout>
 	<LinearLayout 
