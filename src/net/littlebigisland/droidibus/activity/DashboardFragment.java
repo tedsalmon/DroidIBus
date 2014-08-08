@@ -39,7 +39,6 @@ import android.view.View.OnClickListener;
 import android.view.View.OnLongClickListener;
 import android.view.Window;
 import android.view.WindowManager;
-import android.view.WindowManager.LayoutParams;
 import android.widget.Button;
 import android.widget.CompoundButton;
 import android.widget.CompoundButton.OnCheckedChangeListener;
@@ -865,11 +864,22 @@ public class DashboardFragment extends Fragment {
 		//Act on preferences
 		boolean geoAvailable = mSettings.getBoolean("navAvailable", false);
 		if(!geoAvailable){
+			int layoutMargin =  (int) (230 * getResources().getDisplayMetrics().density + 0.5f);
 			View geoLayout = v.findViewById(R.id.geoLayout);
 			View geoLocation = v.findViewById(R.id.geoLocation);
-			// TODO Edit the geometry of other view objects to fill the screen
 			geoLayout.setVisibility(View.GONE);
 			geoLocation.setVisibility(View.GONE);
+			// Edit the geometry of the adjacent items for fit
+			LinearLayout.LayoutParams tempLayoutParams = (
+				LinearLayout.LayoutParams
+			) v.findViewById(R.id.tempLayout).getLayoutParams();
+			tempLayoutParams.setMargins(layoutMargin, 0, 0, 0);
+			
+			LinearLayout.LayoutParams consumptionLayoutParams = (
+				LinearLayout.LayoutParams
+			) v.findViewById(R.id.consumptionLayout).getLayoutParams();
+			consumptionLayoutParams.setMargins(layoutMargin, 0, 0, 0);
+			
 		}
 		
 		return v;
@@ -965,7 +975,7 @@ public class DashboardFragment extends Fragment {
 			mScreenOn = true;
 			layoutP.screenBrightness = -1;
 			screenWakeLock = mPowerManager.newWakeLock(PowerManager.FULL_WAKE_LOCK | PowerManager.ACQUIRE_CAUSES_WAKEUP, "screenWakeLock");
-			window.addFlags(LayoutParams.FLAG_DISMISS_KEYGUARD); 
+			window.addFlags(WindowManager.LayoutParams.FLAG_DISMISS_KEYGUARD); 
 		}
 		
 		if(!screenState && mScreenOn){

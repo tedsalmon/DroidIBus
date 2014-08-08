@@ -275,6 +275,7 @@
 	    </RelativeLayout>
 
 	    <RelativeLayout
+	        android:id="@+id/consumptionLayout"
 	        android:layout_width="250dp"
 	        android:layout_height="wrap_content"
 	        android:layout_marginLeft="80dp" >
@@ -393,6 +394,7 @@
 	    </RelativeLayout>
 	    
 	    <RelativeLayout
+	        android:id="@+id/tempLayout"
 	        android:layout_width="100dp"
 	        android:layout_height="wrap_content"
 	        android:layout_marginLeft="80dp" >
