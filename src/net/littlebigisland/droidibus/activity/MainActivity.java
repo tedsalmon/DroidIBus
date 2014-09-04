@@ -7,6 +7,8 @@ package net.littlebigisland.droidibus.activity;
 import net.littlebigisland.droidibus.R;
 import android.app.Activity;
 import android.app.Fragment;
+import android.app.FragmentManager;
+import android.app.FragmentManager.OnBackStackChangedListener;
 import android.app.FragmentTransaction;
 import android.os.Bundle;
 import android.support.v4.app.ActionBarDrawerToggle;
@@ -28,7 +30,7 @@ public class MainActivity extends Activity {
 		new SettingsFragment(),
 	};
 	
-	private CharSequence[] mFragmentTitles = {
+	private String[] mFragmentTitles = {
 		"Dashboard",
 		"Navigation",
 		"Settings"
@@ -45,7 +47,7 @@ public class MainActivity extends Activity {
 		String[] mSettingsItems = getResources().getStringArray(R.array.options_array);
 		
 		mDrawerLayout = (DrawerLayout) findViewById(R.id.drawer_layout);
-		
+
 		mDrawerToggle = new ActionBarDrawerToggle(
 			this, mDrawerLayout, R.drawable.ic_drawer, R.string.drawer_open, R.string.drawer_close
 		){
@@ -54,7 +56,6 @@ public class MainActivity extends Activity {
 			    super.onDrawerClosed(view);
 			    invalidateOptionsMenu();
 			}
-			
 			// Called when a drawer has settled in a completely open state.
 			public void onDrawerOpened(View drawerView) {
 			    super.onDrawerOpened(drawerView);
@@ -78,10 +79,28 @@ public class MainActivity extends Activity {
 		mDrawerList.setAdapter(new ArrayAdapter<String>(this, R.layout.drawer_item, mSettingsItems));
 		mDrawerList.setOnItemClickListener(new DrawerItemClickListener());
 		if(savedInstanceState == null){
+			// This callback sets the fragment title every time the fragment changes
+			getFragmentManager().addOnBackStackChangedListener(new OnBackStackChangedListener() {
+				public void onBackStackChanged() {
+					FragmentManager manager = getFragmentManager();
+					if (manager != null) {
+						int backStackSize = manager.getBackStackEntryCount();
+						if(backStackSize != 0){
+							FragmentManager.BackStackEntry backEntry = getFragmentManager().getBackStackEntryAt(
+								backStackSize - 1
+							);
+							getActionBar().setTitle(backEntry.getName());
+						}else{
+							finish(); // Go back to the launcher since this is the first fragment
+						}
+					}
+				}
+			});
+			// Add the main fragment.
 			FragmentTransaction fragmentTx = getFragmentManager().beginTransaction();
 			fragmentTx.replace(R.id.main, mFragments[0]);
 			getActionBar().setDisplayShowTitleEnabled(true);
-			getActionBar().setTitle(mFragmentTitles[0]);
+			fragmentTx.addToBackStack(mFragmentTitles[0]);
 			fragmentTx.commit();
 		}
 	}
@@ -111,15 +130,13 @@ public class MainActivity extends Activity {
         		public void onDrawerClosed(View drawerView){
         			super.onDrawerClosed(drawerView);
         			getActionBar().setDisplayShowTitleEnabled(true);
-        			getActionBar().setTitle(mFragmentTitles[position]);
         			FragmentTransaction fragmentTx = getFragmentManager().beginTransaction();
         			fragmentTx.replace(R.id.main, mFragments[position]);
-        			fragmentTx.addToBackStack(null);
+        			fragmentTx.addToBackStack(mFragmentTitles[position]);
         			fragmentTx.commit();
         		}
         	});
         	mDrawerLayout.closeDrawer(mDrawerList);
         }
     }
-
 }
