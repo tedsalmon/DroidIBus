@@ -86,6 +86,7 @@ public class DashboardFragment extends Fragment {
 	protected boolean mPlayerBound = false;
 
 	protected boolean mIsPlaying = false;
+	protected boolean mWasPlaying = false; // Was the song playing before we shut
 	protected long mSongDuration = 1;
 	
 	protected PowerManager mPowerManager = null;
@@ -331,7 +332,7 @@ public class DashboardFragment extends Fragment {
 	    		// The screen isn't on but the car is, turn it on
 	    		if(!mScreenOn){
 	    			changeScreenState(true);
-	    			if(mPlayerBound && mCurrentRadioMode == RadioModes.AUX && !mIsPlaying){
+	    			if(mPlayerBound && mCurrentRadioMode == RadioModes.AUX && !mIsPlaying && mWasPlaying){
 	    				// Post a runnable to play the last song in 3.5 seconds
 	    				new Handler(getActivity().getMainLooper()).postDelayed(new Runnable(){
 							@Override
@@ -340,6 +341,7 @@ public class DashboardFragment extends Fragment {
 								mPlayerService.sendPlayKey();
 							}
 						}, 3500);
+	    				mWasPlaying = false;
 	    			}
     			}
 	    	}else{
@@ -349,6 +351,7 @@ public class DashboardFragment extends Fragment {
 	    			if(mPlayerBound && mCurrentRadioMode == RadioModes.AUX && mIsPlaying){
 	    				mPlayerService.sendPauseKey();
 	    				mIsPlaying = false;
+	    				mWasPlaying = true;
 	    			}
 	    			changeScreenState(false);
 	    			// Blank out values that aren't set while the car isn't on
