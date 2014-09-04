@@ -384,14 +384,14 @@ public class DashboardFragment extends Fragment {
 
 		@Override
 		public void onTrackFwd(){
-			if(mPlayerBound && mIsPlaying){
+			if(mPlayerBound){
 				mPlayerService.sendNextKey();
 			}
 		}
 
 		@Override
 		public void onTrackPrev(){
-			if(mPlayerBound && mIsPlaying){
+			if(mPlayerBound){
 				mPlayerService.sendPreviousKey();
 			}
 		}
