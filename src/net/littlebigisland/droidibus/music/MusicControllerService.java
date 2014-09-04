@@ -19,6 +19,7 @@ import android.os.Binder;
 import android.os.IBinder;
 import android.service.notification.NotificationListenerService;
 import android.service.notification.StatusBarNotification;
+import android.util.Log;
 import android.view.KeyEvent;
  
  
@@ -92,6 +93,7 @@ public class MusicControllerService extends NotificationListenerService implemen
 	 * Sends "next" media key press.
 	 */
 	public void sendNextKey() {
+		Log.d("DroidIBus", "Sending Next Key");
 		sendKeyEvent(KeyEvent.KEYCODE_MEDIA_NEXT);
 	}
 	
@@ -99,6 +101,7 @@ public class MusicControllerService extends NotificationListenerService implemen
 	 * Sends "previous" media key press.
 	 */
 	public void sendPreviousKey() {
+		Log.d("DroidIBus", "Sending Prev Key");
 		sendKeyEvent(KeyEvent.KEYCODE_MEDIA_PREVIOUS);
 	}
 	
@@ -115,6 +118,7 @@ public class MusicControllerService extends NotificationListenerService implemen
 	 * Sends "play" button press, or, if player ignored it, "play/pause".
 	 */
 	public void sendPlayKey() {
+		Log.d("DroidIBus", "Sending Play Key");
 		if(!sendKeyEvent(KeyEvent.KEYCODE_MEDIA_PLAY)) {
 			sendKeyEvent(KeyEvent.KEYCODE_MEDIA_PLAY_PAUSE);
 		}
