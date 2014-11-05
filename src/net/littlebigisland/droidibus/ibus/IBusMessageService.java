@@ -301,7 +301,7 @@ public class IBusMessageService extends IOIOService {
 		stopSelf();
 	}
 	
-	public boolean isIBusActive(){
+	public boolean getLinkState(){
 		return mIsIOIOConnected;
 	}
 	
