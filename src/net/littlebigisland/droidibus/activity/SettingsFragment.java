@@ -123,40 +123,47 @@ public class SettingsFragment extends PreferenceFragment implements OnSharedPref
         }
     };
 	
-	private void bindServices() {
+	@SuppressWarnings("rawtypes")
+	private void serviceStarter(Class cls, ServiceConnection svcConn){
 		Context applicationContext = getActivity();
-		
-		Intent IBusIntent = new Intent(applicationContext, IBusMessageService.class);
+		Intent svcIntent = new Intent(applicationContext, cls);
 		try {
-			Log.d(TAG, "Starting IBus service");
-			applicationContext.bindService(IBusIntent, mIBusConnection, Context.BIND_AUTO_CREATE);
-			applicationContext.startService(IBusIntent);
+			Log.d(TAG, String.format("Starting %s Service", cls.toString()));
+			applicationContext.bindService(svcIntent, svcConn, Context.BIND_AUTO_CREATE);
+			applicationContext.startService(svcIntent);
 		}
 		catch(Exception ex) {
-			Log.e(TAG, "Unable to Start IBusService!");
+			Log.d(TAG, String.format("Unable to start %s Service", cls.toString()));
 		}
 	}
 	
-	private void unbindServices() {
+	@SuppressWarnings("rawtypes")
+	private void serviceStopper(Class cls, ServiceConnection svcConn){
 		Context applicationContext = getActivity();
+		Intent svcIntent = new Intent(applicationContext, cls);
+		try {
+			Log.d(TAG, String.format("Unbinding from  %s Service", cls.toString()));
+			applicationContext.unbindService(svcConn);
+			applicationContext.stopService(svcIntent);
+		}
+		catch(Exception ex) {
+			Log.e(TAG, String.format("Unable to unbind the %s - '%s'!", cls.toString(), ex.getMessage()));
+		}
+	}
+	
+	private void bindServices() {
+		serviceStarter(IBusMessageService.class, mIBusConnection);
+	}
+	
+	private void unbindServices() {
 		if(mIBusBound){
-			try {
-				Log.d(TAG, "Unbinding from IBusMessageService");
-				mIBusService.disable();
-				applicationContext.unbindService(mIBusConnection);
-				applicationContext.stopService(
-					new Intent(applicationContext, IBusMessageService.class)
-				);
-				mIBusBound = false;
-			}
-			catch(Exception ex) {
-				Log.e(TAG, String.format("Unable to unbind the IBusMessageService - '%s'!", ex.getMessage()));
-			}
+			mIBusService.disable();
+			serviceStopper(IBusMessageService.class, mIBusConnection);
 		}
 	}
 	
 	private void sendIBusCommand(final IBusCommandsEnum cmd, final Object... args){
-		if(mIBusBound && mIBusService.isIBusActive()){
+		if(mIBusBound && mIBusService.getLinkState()){
 			mIBusService.sendCommand(new IBusCommand(cmd, args));
 		}
 	}
