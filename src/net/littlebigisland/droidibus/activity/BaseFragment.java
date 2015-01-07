@@ -9,6 +9,9 @@ import android.content.Intent;
 import android.content.ServiceConnection;
 import android.os.Handler;
 import android.util.Log;
+import android.view.View;
+import android.view.ViewGroup;
+import android.widget.TextView;
 import android.widget.Toast;
 
 public class BaseFragment extends Fragment{
@@ -17,6 +20,23 @@ public class BaseFragment extends Fragment{
 	public Handler mHandler = new Handler();
 	public IBusMessageService mIBusService;
 	public boolean mIBusBound = false;
+	
+	/**
+	 * Change TextView colors recursively; Used to support night colors
+	 */
+    public void changeTextColors(ViewGroup view, int colorId){
+		for(int i = 0; i < view.getChildCount(); i++){
+			View child = view.getChildAt(i);
+			 // TextView, change it's color
+			if(child instanceof TextView){
+				TextView c = (TextView) child;
+				c.setTextColor(getResources().getColor(colorId));
+			} // ViewGroup; Recurse children to find TextViews
+			else if(child instanceof ViewGroup){
+	            changeTextColors((ViewGroup) child, colorId);
+	        }
+		}
+    }
 	
 	@SuppressWarnings("rawtypes")
 	public void serviceStarter(Class cls, ServiceConnection svcConn){
@@ -50,6 +70,14 @@ public class BaseFragment extends Fragment{
 		if(mIBusBound && mIBusService.getLinkState()){
 			mIBusService.sendCommand(new IBusCommand(cmd, args));
 		}
+	}
+	
+	public void sendIBusCommandDelayed(final IBusCommandsEnum cmd, final long delayMillis, final Object... args){
+		new Handler(getActivity().getMainLooper()).postDelayed(new Runnable(){
+			public void run(){
+				sendIBusCommand(cmd, args);
+			}
+		}, delayMillis);
 	}
 	
 	public void showToast(String toastText){
