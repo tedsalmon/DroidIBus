@@ -824,6 +824,7 @@ public class DashboardFragment extends Fragment {
 		
 		// Hide the toggle slider for CD53 units
 		if(mRadioType == RadioTypes.CD53){
+			mCurrentRadioMode = RadioModes.AUX;
 			mBtnMusicMode.setVisibility(View.GONE);
     		radioLayout.setVisibility(View.GONE);
     		tabletLayout.setVisibility(View.VISIBLE);

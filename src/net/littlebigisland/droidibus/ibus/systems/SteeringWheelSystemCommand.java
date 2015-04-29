@@ -50,13 +50,13 @@ public class SteeringWheelSystemCommand extends IBusSystemCommand{
 	
 	public byte[] sendVolumeUp(){
 		return new byte[]{
-			mSteeringWheelAddress, 0x04, mRadioAddress, 0x32, 0x31, 0x3F
+			mSteeringWheelAddress, 0x04, mRadioAddress, 0x32, 0x11, 0x1F
 		};
 	}
 	
 	public byte[] sendVolumeDown(){
 		return new byte[]{
-			mSteeringWheelAddress, 0x04, mRadioAddress, 0x32, 0x30, 0x3E
+			mSteeringWheelAddress, 0x04, mRadioAddress, 0x32, 0x10, 0x1E
 		};
 	}
 	
