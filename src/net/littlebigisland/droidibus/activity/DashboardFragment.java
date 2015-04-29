@@ -115,15 +115,46 @@ public class DashboardFragment extends Fragment {
 	
 	private RadioTypes mRadioType = null;
 	
-	private BroadcastReceiver mChargingReceiver = new BroadcastReceiver() {
-		
+	 private BroadcastReceiver receiver = new BroadcastReceiver() {
 		@Override
 		public void onReceive(Context context, Intent intent) {
-		    int chargeType = intent.getIntExtra(BatteryManager.EXTRA_PLUGGED, -1);
-		    boolean isCharging = chargeType == BatteryManager.BATTERY_PLUGGED_USB || chargeType == BatteryManager.BATTERY_PLUGGED_AC;
-		    carPowerChange(isCharging);
+	        int chargeType = intent.getIntExtra(BatteryManager.EXTRA_PLUGGED, -1);
+	        boolean isCharging = chargeType == BatteryManager.BATTERY_PLUGGED_USB || chargeType == BatteryManager.BATTERY_PLUGGED_AC;
+	        Log.d(TAG, "Charging state change!");
+	    	if(isCharging){
+	    		// The screen isn't on but the car is, turn it on
+	    		if(!mScreenOn){
+	    			changeScreenState(true);
+	    			if(mPlayerBound && mCurrentRadioMode == RadioModes.AUX && !mIsPlaying && mWasPlaying){
+	    				// Post a runnable to play the last song in 3.5 seconds
+	    				new Handler(getActivity().getMainLooper()).postDelayed(new Runnable(){
+							@Override
+							public void run() {
+								mIsPlaying = true;
+								mPlayerService.sendPlayKey();
+							}
+						}, 1000);
+	    				mWasPlaying = false;
+	    			}
+    			}
+	    	}else{
+	    		// The car is not on and the screen is, turn it off
+	    		if(mScreenOn){
+	    			// Pause the music as we exit the vehicle
+	    			if(mPlayerBound && mCurrentRadioMode == RadioModes.AUX && mIsPlaying){
+	    				mPlayerService.sendPauseKey();
+	    				mIsPlaying = false;
+	    				mWasPlaying = true;
+	    			}
+	    			changeScreenState(false);
+	    			// Blank out values that aren't set while the car isn't on
+	    			speedField.setText(R.string.defaultText);
+	    			rpmField.setText(R.string.defaultText);
+	    			coolantTempField.setText(R.string.defaultText);
+	    		}
+	    	}
 		}
-	};
+	 };
 	
 	private RemoteController.OnClientUpdateListener mPlayerUpdateListener = new RemoteController.OnClientUpdateListener() {
 
@@ -341,7 +372,38 @@ public class DashboardFragment extends Fragment {
 		@Override
 		public void onUpdateIgnitionSate(final int state) {
 	    	boolean carState = (state > 0) ? true : false;
-	    	carPowerChange(carState);
+	    	if(carState){
+	    		// The screen isn't on but the car is, turn it on
+	    		if(!mScreenOn){
+	    			changeScreenState(true);
+	    			if(mPlayerBound && mCurrentRadioMode == RadioModes.AUX && !mIsPlaying && mWasPlaying){
+	    				// Post a runnable to play the last song in 3.5 seconds
+	    				new Handler(getActivity().getMainLooper()).postDelayed(new Runnable(){
+							@Override
+							public void run() {
+								mIsPlaying = true;
+								mPlayerService.sendPlayKey();
+							}
+						}, 3500);
+	    				mWasPlaying = false;
+	    			}
+    			}
+	    	}else{
+	    		// The car is not on and the screen is, turn it off
+	    		if(mScreenOn){
+	    			// Pause the music as we exit the vehicle
+	    			if(mPlayerBound && mCurrentRadioMode == RadioModes.AUX && mIsPlaying){
+	    				mPlayerService.sendPauseKey();
+	    				mIsPlaying = false;
+	    				mWasPlaying = true;
+	    			}
+	    			changeScreenState(false);
+	    			// Blank out values that aren't set while the car isn't on
+	    			speedField.setText(R.string.defaultText);
+	    			rpmField.setText(R.string.defaultText);
+	    			coolantTempField.setText(R.string.defaultText);
+	    		}
+	    	}
 		}
 
 		@Override
@@ -614,7 +676,7 @@ public class DashboardFragment extends Fragment {
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setRetainInstance(true);
-        getActivity().registerReceiver(mChargingReceiver, new IntentFilter(Intent.ACTION_BATTERY_CHANGED));
+        getActivity().registerReceiver(receiver, new IntentFilter(Intent.ACTION_BATTERY_CHANGED));
         Log.d(TAG, "Dashboard: onCreate Called");
     }
     
@@ -883,42 +945,6 @@ public class DashboardFragment extends Fragment {
 		}
 	}
 	
-	public void carPowerChange(boolean isCarOn){
-        Log.d(TAG, "Charging state change!");
-    	if(isCarOn){
-    		// The screen isn't on but the car is, turn it on
-    		if(!mScreenOn){
-    			changeScreenState(true);
-    			if(mPlayerBound && mCurrentRadioMode == RadioModes.AUX && !mIsPlaying && mWasPlaying){
-    				// Post a runnable to play the last song in 3.5 seconds
-    				new Handler(getActivity().getMainLooper()).postDelayed(new Runnable(){
-						@Override
-						public void run() {
-							mIsPlaying = true;
-							mPlayerService.sendPlayKey();
-						}
-					}, 1000);
-    				mWasPlaying = false;
-    			}
-			}
-    	}else{
-    		// The car is not on and the screen is, turn it off
-    		if(mScreenOn){
-    			// Pause the music as we exit the vehicle
-    			if(mPlayerBound && mCurrentRadioMode == RadioModes.AUX && mIsPlaying){
-    				mPlayerService.sendPauseKey();
-    				mIsPlaying = false;
-    				mWasPlaying = true;
-    			}
-    			changeScreenState(false);
-    			// Blank out values that aren't set while the car isn't on
-    			speedField.setText(R.string.defaultText);
-    			rpmField.setText(R.string.defaultText);
-    			coolantTempField.setText(R.string.defaultText);
-    		}
-    	}
-	}
-	
 	private void changeRadioMode(final RadioModes mode){
 		new Thread(new Runnable(){
 			public void run(){
@@ -1094,6 +1120,6 @@ public class DashboardFragment extends Fragment {
     	if(mIBusBound){
     		unbindServices();
     	}
-    	getActivity().unregisterReceiver(mChargingReceiver);
+    	getActivity().unregisterReceiver(receiver);
     }
 }
