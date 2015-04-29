@@ -193,42 +193,46 @@ public class DashboardFragment extends Fragment {
 		 */
 		@Override
 		public void onUpdateRadioStation(final String text){
-			RadioModes lastState = mCurrentRadioMode; 
-	    	switch(text){
-	    		case "TR 01 ":
-	    		case "NO CD":
-	    			mCurrentRadioMode = RadioModes.CD;
-	    			break;
-	    		case "AUX":
-	    			mCurrentRadioMode = RadioModes.AUX;
-	    			break;
-	    		default:
-	    			mCurrentRadioMode = RadioModes.Radio;
-	    			break;
-	    	}
-	    	
-	    	if(lastState != mCurrentRadioMode){
-	    		mLastModeChange = Calendar.getInstance().getTimeInMillis();
-	    	}
-	    	
-	    	/* 
-	    	 We're not in the right mode, sync with the car
-	    	 Make sure this isn't CD mode and that we're not in the middle of a mode change
-	    	 by making sure we've been in the current mode for at least 1.5 seconds
-	    	 If lastState is null then we should also check as this is the first bit of data
-	    	 see about radio mode 
-	    	 */
-	    	if((!(mCurrentRadioMode == RadioModes.CD) && (Calendar.getInstance().getTimeInMillis() - mLastModeChange) > 1500) || lastState == null){
-	    		if(mCurrentRadioMode == RadioModes.AUX && tabletLayout.getVisibility() == View.GONE){
-	    			mBtnMusicMode.toggle();
-	    		}
-	    		if(!(mCurrentRadioMode == RadioModes.AUX) && tabletLayout.getVisibility() == View.VISIBLE){
-	    			mBtnMusicMode.toggle();
-	    		}
-	    	}
-	    	
-	    	mLastRadioStatus = Calendar.getInstance().getTimeInMillis();
-	    	stationText.setText(text);
+			// If this is a BM53 unit, we should listen for
+			// Updates to the station text
+			if(mRadioType == RadioTypes.BM53){
+				RadioModes lastState = mCurrentRadioMode; 
+		    	switch(text){
+		    		case "TR 01 ":
+		    		case "NO CD":
+		    			mCurrentRadioMode = RadioModes.CD;
+		    			break;
+		    		case "AUX":
+		    			mCurrentRadioMode = RadioModes.AUX;
+		    			break;
+		    		default:
+		    			mCurrentRadioMode = RadioModes.Radio;
+		    			break;
+		    	}
+		    	
+		    	if(lastState != mCurrentRadioMode){
+		    		mLastModeChange = Calendar.getInstance().getTimeInMillis();
+		    	}
+		    	
+		    	/* 
+		    	 We're not in the right mode, sync with the car
+		    	 Make sure this isn't CD mode and that we're not in the middle of a mode change
+		    	 by making sure we've been in the current mode for at least 1.5 seconds
+		    	 If lastState is null then we should also check as this is the first bit of data
+		    	 see about radio mode 
+		    	 */
+		    	if((!(mCurrentRadioMode == RadioModes.CD) && (Calendar.getInstance().getTimeInMillis() - mLastModeChange) > 1500) || lastState == null){
+		    		if(mCurrentRadioMode == RadioModes.AUX && tabletLayout.getVisibility() == View.GONE){
+		    			mBtnMusicMode.toggle();
+		    		}
+		    		if(!(mCurrentRadioMode == RadioModes.AUX) && tabletLayout.getVisibility() == View.VISIBLE){
+		    			mBtnMusicMode.toggle();
+		    		}
+		    	}
+		    	
+		    	mLastRadioStatus = Calendar.getInstance().getTimeInMillis();
+		    	stationText.setText(text);
+			}
 		}
 		
 		@Override
@@ -513,7 +517,7 @@ public class DashboardFragment extends Fragment {
 							mLastRadioStatus = 0;
 							while(mIBusBound){
 								try{
-									if(mIBusService.isIBusActive()){
+									if(mIBusService.getLinkState()){
 		    							getActivity().runOnUiThread(new Runnable(){
 		    								@Override
 		    								public void run(){
@@ -817,6 +821,13 @@ public class DashboardFragment extends Fragment {
 		        }
 		    }
 		});
+		
+		// Hide the toggle slider for CD53 units
+		if(mRadioType == RadioTypes.CD53){
+			mBtnMusicMode.setVisibility(View.GONE);
+    		radioLayout.setVisibility(View.GONE);
+    		tabletLayout.setVisibility(View.VISIBLE);
+		}
 
 		// Set the long press of values for IKE resets
 		OnLongClickListener valueResetter = new OnLongClickListener() {
@@ -912,13 +923,15 @@ public class DashboardFragment extends Fragment {
 		new Thread(new Runnable(){
 			public void run(){
 				try{
-					Log.d(TAG, String.format("Current mode = %s, desired mode = %s", mCurrentRadioMode.toString(), mode.toString() ));
-					if( (mode == RadioModes.AUX && !(mCurrentRadioMode== RadioModes.AUX)) ||  
-						(mode == RadioModes.Radio && (mCurrentRadioMode != RadioModes.Radio)) ){
-						sendIBusCommand(IBusCommandsEnum.BMToRadioModePress);
-						sendIBusCommandDelayed(IBusCommandsEnum.BMToRadioModeRelease, 300);
-						Thread.sleep(1000);
-						changeRadioMode(mode);
+					if(mRadioType == RadioTypes.BM53){
+						Log.d(TAG, String.format("Current mode = %s, desired mode = %s", mCurrentRadioMode.toString(), mode.toString() ));
+						if((mode == RadioModes.AUX && !(mCurrentRadioMode== RadioModes.AUX)) ||  
+							(mode == RadioModes.Radio && (mCurrentRadioMode != RadioModes.Radio)) ){
+							sendIBusCommand(IBusCommandsEnum.BMToRadioModePress);
+							sendIBusCommandDelayed(IBusCommandsEnum.BMToRadioModeRelease, 300);
+							Thread.sleep(1000);
+							changeRadioMode(mode);
+						}
 					}
 				}catch(InterruptedException e){
 					e.printStackTrace();
@@ -1036,7 +1049,7 @@ public class DashboardFragment extends Fragment {
 	}
 	
 	private void sendIBusCommand(IBusCommandsEnum cmd, Object... args){
-		if(mIBusBound && mIBusService.isIBusActive()){
+		if(mIBusBound && mIBusService.getLinkState()){
 			mIBusService.sendCommand(new IBusCommand(cmd, args));
 		}
 	}
