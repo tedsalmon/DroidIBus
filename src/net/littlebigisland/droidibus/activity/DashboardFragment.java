@@ -12,18 +12,15 @@ import net.littlebigisland.droidibus.ibus.IBusCallbackReceiver;
 import net.littlebigisland.droidibus.ibus.IBusMessageService;
 import net.littlebigisland.droidibus.ibus.IBusMessageService.IOIOBinder;
 import net.littlebigisland.droidibus.music.MusicControllerService;
-import android.content.BroadcastReceiver;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
-import android.content.IntentFilter;
 import android.content.ServiceConnection;
 import android.content.SharedPreferences;
 import android.media.MediaMetadataRetriever;
 import android.media.RemoteControlClient;
 import android.media.RemoteController;
 import android.media.RemoteController.MetadataEditor;
-import android.os.BatteryManager;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.IBinder;
@@ -114,47 +111,6 @@ public class DashboardFragment extends Fragment {
 	}
 	
 	private RadioTypes mRadioType = null;
-	
-	 private BroadcastReceiver receiver = new BroadcastReceiver() {
-		@Override
-		public void onReceive(Context context, Intent intent) {
-	        int chargeType = intent.getIntExtra(BatteryManager.EXTRA_PLUGGED, -1);
-	        boolean isCharging = chargeType == BatteryManager.BATTERY_PLUGGED_USB || chargeType == BatteryManager.BATTERY_PLUGGED_AC;
-	        Log.d(TAG, "Charging state change!");
-	    	if(isCharging){
-	    		// The screen isn't on but the car is, turn it on
-	    		if(!mScreenOn){
-	    			changeScreenState(true);
-	    			if(mPlayerBound && mCurrentRadioMode == RadioModes.AUX && !mIsPlaying && mWasPlaying){
-	    				// Post a runnable to play the last song in 3.5 seconds
-	    				new Handler(getActivity().getMainLooper()).postDelayed(new Runnable(){
-							@Override
-							public void run() {
-								mIsPlaying = true;
-								mPlayerService.sendPlayKey();
-							}
-						}, 1000);
-	    				mWasPlaying = false;
-	    			}
-    			}
-	    	}else{
-	    		// The car is not on and the screen is, turn it off
-	    		if(mScreenOn){
-	    			// Pause the music as we exit the vehicle
-	    			if(mPlayerBound && mCurrentRadioMode == RadioModes.AUX && mIsPlaying){
-	    				mPlayerService.sendPauseKey();
-	    				mIsPlaying = false;
-	    				mWasPlaying = true;
-	    			}
-	    			changeScreenState(false);
-	    			// Blank out values that aren't set while the car isn't on
-	    			speedField.setText(R.string.defaultText);
-	    			rpmField.setText(R.string.defaultText);
-	    			coolantTempField.setText(R.string.defaultText);
-	    		}
-	    	}
-		}
-	 };
 	
 	private RemoteController.OnClientUpdateListener mPlayerUpdateListener = new RemoteController.OnClientUpdateListener() {
 
@@ -557,7 +513,7 @@ public class DashboardFragment extends Fragment {
 							mLastRadioStatus = 0;
 							while(mIBusBound){
 								try{
-									if(mIBusService.getLinkState()){
+									if(mIBusService.isIBusActive()){
 		    							getActivity().runOnUiThread(new Runnable(){
 		    								@Override
 		    								public void run(){
@@ -627,48 +583,56 @@ public class DashboardFragment extends Fragment {
 		sendIBusCommand(IBusCommandsEnum.BMToIKEGetAvgSpeed);
 	}
 	
-	@SuppressWarnings("rawtypes")
-	private void serviceStarter(Class cls, ServiceConnection svcConn){
-		Context applicationContext = getActivity();
-		Intent svcIntent = new Intent(applicationContext, cls);
-		try {
-			Log.d(TAG, String.format("Starting %s Service", cls.toString()));
-			applicationContext.bindService(svcIntent, svcConn, Context.BIND_AUTO_CREATE);
-			applicationContext.startService(svcIntent);
-		}
-		catch(Exception ex) {
-			Log.d(TAG, String.format("Unable to start %s Service", cls.toString()));
-		}
-	}
-	
-	@SuppressWarnings("rawtypes")
-	private void serviceStopper(Class cls, ServiceConnection svcConn){
-		Context applicationContext = getActivity();
-		Intent svcIntent = new Intent(applicationContext, cls);
-		try {
-			Log.d(TAG, String.format("Unbinding from  %s Service", cls.toString()));
-			applicationContext.unbindService(svcConn);
-			applicationContext.stopService(svcIntent);
-		}
-		catch(Exception ex) {
-			Log.e(TAG, String.format("Unable to unbind the %s - '%s'!", cls.toString(), ex.getMessage()));
-		}
-	}
-	
 	private void bindServices() {
-		serviceStarter(IBusMessageService.class, mIBusConnection);
-		serviceStarter(MusicControllerService.class, mPlayerConnection);
+		Context applicationContext = getActivity();
+		
+		Intent IBusIntent = new Intent(applicationContext, IBusMessageService.class);
+		try {
+			Log.d(TAG, "Starting IBus service");
+			applicationContext.bindService(IBusIntent, mIBusConnection, Context.BIND_AUTO_CREATE);
+			applicationContext.startService(IBusIntent);
+		}
+		catch(Exception ex) {
+			Log.e(TAG, "Unable to Start IBusService!");
+		}
+		
+		Intent playerIntent = new Intent(applicationContext, MusicControllerService.class);
+		try{
+			Log.d(TAG, "Starting Music Player service");
+			applicationContext.bindService(playerIntent, mPlayerConnection, Context.BIND_AUTO_CREATE);
+		}
+		catch(Exception ex){
+			Log.e(TAG, "Unable to Start Music Player service!");
+		}
 	}
 	
 	private void unbindServices() {
+		Context applicationContext = getActivity();
 		if(mIBusBound){
-			mIBusService.disable();
-			serviceStopper(IBusMessageService.class, mIBusConnection);
+			try {
+				Log.d(TAG, "Unbinding from IBusMessageService");
+				mIBusService.disable();
+				applicationContext.unbindService(mIBusConnection);
+				applicationContext.stopService(
+					new Intent(applicationContext, IBusMessageService.class)
+				);
+				mIBusBound = false;
+			}
+			catch(Exception ex) {
+				Log.e(TAG, String.format("Unable to unbind the IBusMessageService - '%s'!", ex.getMessage()));
+			}
 		}
 		
 		if(mPlayerBound){
 			mPlayerService.disableController();
-			serviceStopper(MusicControllerService.class, mPlayerConnection);
+			try{
+				Log.d(TAG, "Unbinding from Music Player service");
+				applicationContext.unbindService(mPlayerConnection);
+				mPlayerBound = false;
+			}
+			catch(Exception ex){
+				Log.e(TAG, "Unable to unbind the Music Player service!");
+			}
 		}
 	}
 
@@ -676,7 +640,6 @@ public class DashboardFragment extends Fragment {
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setRetainInstance(true);
-        getActivity().registerReceiver(receiver, new IntentFilter(Intent.ACTION_BATTERY_CHANGED));
         Log.d(TAG, "Dashboard: onCreate Called");
     }
     
@@ -1042,22 +1005,22 @@ public class DashboardFragment extends Fragment {
 			layoutP.screenBrightness = -1;
 			screenWakeLock = mPowerManager.newWakeLock(PowerManager.FULL_WAKE_LOCK | PowerManager.ACQUIRE_CAUSES_WAKEUP, "screenWakeLock");
 			window.addFlags(WindowManager.LayoutParams.FLAG_DISMISS_KEYGUARD); 
-			screenWakeLock.acquire();
 		}
 		
 		if(!screenState && mScreenOn){
-			Log.d(TAG, "Shutting off the screen");
 			modeChange = true;
 			mScreenOn = false;
 			layoutP.screenBrightness = 0;
-			releaseWakelock();
+			screenWakeLock = mPowerManager.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "screenWakeLock");
 		}
 		
 		if(modeChange){
+			// Release the previous wakeLock before acquiring the next one
+			releaseWakelock();
 			window.setAttributes(layoutP); // Set the given layout
+			screenWakeLock.acquire();
 		}
 	}
-
 	
 	private void releaseWakelock(){
     	if(screenWakeLock != null){
@@ -1073,7 +1036,7 @@ public class DashboardFragment extends Fragment {
 	}
 	
 	private void sendIBusCommand(IBusCommandsEnum cmd, Object... args){
-		if(mIBusBound && mIBusService.getLinkState()){
+		if(mIBusBound && mIBusService.isIBusActive()){
 			mIBusService.sendCommand(new IBusCommand(cmd, args));
 		}
 	}
@@ -1096,17 +1059,6 @@ public class DashboardFragment extends Fragment {
     public void onResume() {
     	super.onResume();
     	Log.d(TAG, "Dashboard: onResume called");
-    	if(mIBusBound){
-    		Log.d(TAG, "Dashboard: IOIO bound in onResume");
-    		if(!mIBusService.getLinkState()){
-    			serviceStopper(IBusMessageService.class, mIBusConnection);
-    			serviceStarter(IBusMessageService.class, mIBusConnection);
-    			Log.d(TAG, "Dashboard: IOIO Not connected in onResume");
-    		}
-    	}else{
-    		Log.d(TAG, "Dashboard: IOIO NOT bound in onResume");
-    		serviceStarter(IBusMessageService.class, mIBusConnection);
-    	}
 		// Emulate the BM to repopulate the view
 		BMBootup();
     }
@@ -1120,6 +1072,5 @@ public class DashboardFragment extends Fragment {
     	if(mIBusBound){
     		unbindServices();
     	}
-    	getActivity().unregisterReceiver(receiver);
     }
 }
