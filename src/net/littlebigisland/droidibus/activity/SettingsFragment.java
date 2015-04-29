@@ -156,7 +156,7 @@ public class SettingsFragment extends PreferenceFragment implements OnSharedPref
 	}
 	
 	private void sendIBusCommand(final IBusCommandsEnum cmd, final Object... args){
-		if(mIBusBound && mIBusService.isIBusActive()){
+		if(mIBusBound && mIBusService.getLinkState()){
 			mIBusService.sendCommand(new IBusCommand(cmd, args));
 		}
 	}
