@@ -5,43 +5,14 @@ import java.util.ArrayList;
 import net.littlebigisland.droidibus.ibus.DeviceAddressEnum;
 import net.littlebigisland.droidibus.ibus.IBusSystemCommand;
 
-public class IKESystemCommand extends IBusSystemCommand {
+public class BroadcastSystemCommand extends IBusSystemCommand{
 	
 	/**
-	 * Handle globally broadcast messages from IKE
+	 * Messages from IKE to the Broadcast
 	 */
-	class IKEGlobalBroadcast extends IBusSystemCommand{
+	class IKESystem extends IBusSystemCommand{
 		
-		public void mapReceived(ArrayList<Byte> msg){
-			switch(msg.get(3)){
-				case 0x11: // Ignition State
-					int state = (msg.get(4) < 2) ? msg.get(4) : (0x02 & msg.get(4));
-					triggerCallback("onUpdateIgnitionSate", state);
-					break;
-				case 0x15: // Unit Set
-					triggerCallback(
-						"onUpdateUnits", 
-						String.format(
-							"%8s;%8s", 
-							Integer.toBinaryString(msg.get(5) & 0xFF),
-							Integer.toBinaryString(msg.get(6) & 0xFF)
-						).replace(' ', '0')
-					);
-					break;
-				case 0x18: // Speed and RPM
-					triggerCallback("onUpdateSpeed", (int)msg.get(4));
-					triggerCallback("onUpdateRPM", (int)msg.get(5) * 100);
-					break;
-				case 0x19: // Coolant Temperature
-					triggerCallback("onUpdateCoolantTemp", (int)msg.get(5));
-					break;
-			}
-		}
-	}
-	
-	class IKEBroadcast extends IBusSystemCommand{
 		private final byte mOBCData = 0x24;
-		
 		/**
 		 * Handle OBC messages sent from IKE
 		 * IBus Message: 80 0C FF 24 <System> 00 32 31 3A 31 30 20 20 6E 
@@ -103,13 +74,11 @@ public class IKESystemCommand extends IBusSystemCommand {
 			if(operation == mOBCData)
 				OBCData();
 		}
+		
 	}
 	
-	/**
-	 * Cstruct - Bind all child classes to the object 
-	 */
-	public IKESystemCommand(){
-		IBusDestinationSystems.put(DeviceAddressEnum.Broadcast.toByte(), new IKEBroadcast());
-		IBusDestinationSystems.put(DeviceAddressEnum.GlobalBroadcastAddress.toByte(), new IKEGlobalBroadcast());
+	public BroadcastSystemCommand(){
+		IBusDestinationSystems.put(DeviceAddressEnum.InstrumentClusterElectronics.toByte(), new IKESystem());
 	}
+
 }
