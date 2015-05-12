@@ -1,5 +1,7 @@
 package net.littlebigisland.droidibus.ibus.systems;
 
+import java.util.ArrayList;
+
 import android.annotation.SuppressLint;
 import net.littlebigisland.droidibus.ibus.DeviceAddressEnum;
 import net.littlebigisland.droidibus.ibus.IBusSystemCommand;
@@ -12,11 +14,11 @@ import net.littlebigisland.droidibus.ibus.IBusSystemCommand;
 public class BoardMonitorSystemCommand extends IBusSystemCommand {
 
 	// Main Systems
-	private byte boardMonitor = DeviceAddressEnum.OnBoardMonitor.toByte();
-	private byte gfxDriver = DeviceAddressEnum.GraphicsNavigationDriver.toByte();
+	private byte boardMonitor = DeviceAddressEnum.BoardMonitor.toByte();
+	private byte gfxDriver = DeviceAddressEnum.GFXNavigationDriver.toByte();
 	private byte IKESystem = DeviceAddressEnum.InstrumentClusterElectronics.toByte();
 	private byte radioSystem = DeviceAddressEnum.Radio.toByte();
-	private byte globalSystem = DeviceAddressEnum.GlobalBroadcastAddress.toByte();
+	private byte globalSystem = DeviceAddressEnum.GlobalBroadcast.toByte();
 	private byte lightControlSystem = DeviceAddressEnum.LightControlModule.toByte();
 	private byte generalModuleSystem = DeviceAddressEnum.BodyModule.toByte();
 	
@@ -26,6 +28,33 @@ public class BoardMonitorSystemCommand extends IBusSystemCommand {
 	private byte OBCRequestReset = 0x10;
 	private byte OBCRequestSet = 0x40;
 	private byte OBCUnitSet = 0x15;
+	
+	/**
+	 * Handle messages destined for the BM from the Radio
+	 */
+	class RadioSystem extends IBusSystemCommand{
+		
+		public void mapReceived(ArrayList<Byte> msg){
+			currentMessage = msg;
+			switch(currentMessage.get(3)){
+				case 0x4A: // Radio On/Off Status Message
+					// 68 04 F0 4A <data> <CRC>
+					// I believe 0x00 is the broadcasted state when the radio is coming online?
+					// Either way it's not something we want to catch as it'll throw off our states
+					if(currentMessage.get(4) != (byte) 0x00){
+						// 1 for on, 0 for off
+						int radioStatus = (currentMessage.get(4) == (byte)0xFF) ? 1 : 0;
+						triggerCallback("onUpdateRadioStatus", radioStatus);
+					}
+					break;
+				case 0x38:
+					// IBus Message: 68 06 F0 38 00 00 00 A6
+					triggerCallback("onRadioCDStatusRequest");
+					break;
+			}
+		}
+		
+	}
 	
 	/**
 	 * Generate an IKE message requesting a value reset for the given system.
@@ -396,6 +425,10 @@ public class BoardMonitorSystemCommand extends IBusSystemCommand {
 		return new byte[]{
 			boardMonitor, 0x04, radioSystem, 0x48, (byte)0xB0, 0x64
 		};
+	}
+	
+	public BoardMonitorSystemCommand(){
+		IBusDestinationSystems.put(radioSystem, new RadioSystem());
 	}
 	
 }
