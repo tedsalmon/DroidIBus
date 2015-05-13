@@ -6,12 +6,18 @@
 	        android:summary="@string/settings_radioType_summ"
 	        android:key="radioType"
 	        android:entries="@array/settings_radioType_options"
-	        android:entryValues="@array/settings_radioType_options" />
+	        android:entryValues="@array/settings_radioType_options"
+	        android:defaultValue="BM53" />
 	    <CheckBoxPreference
 	        android:title="@string/settings_navAvailable"
 	        android:summary="@string/settings_navAvailable_summ"
 	        android:key="navAvailable"
 	        android:defaultValue="true"  />
+	    <CheckBoxPreference
+            android:title="@string/settings_soneAvailable"
+            android:summary="@string/settings_soneAvailable_summ"
+            android:key="stealthOneAvailable"
+            android:defaultValue="false"  />
 	</PreferenceCategory>
 	<PreferenceCategory android:title="@string/settings_personalize">
 	    <CheckBoxPreference

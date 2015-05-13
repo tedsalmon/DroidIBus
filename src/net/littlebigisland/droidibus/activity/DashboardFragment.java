@@ -68,7 +68,7 @@ public class DashboardFragment extends Fragment {
 					   speedField, rpmField, rangeField, outTempField,
 					   coolantTempField, fuel1Field, fuel2Field, avgSpeedField,
 					   geoCoordinatesField ,geoStreetField, geoLocaleField,
-					   geoAltitudeField, dateField, timeField;
+					   geoAltitudeField, dateField, timeField, ikeDisplayField;
 	
 	private TextView speedUnit, avgSpeedUnit, rangeFieldUnit, consumption1Unit,
 		consumption2Unit, outdoorTempUnit, coolantTempUnit;
@@ -463,6 +463,11 @@ public class DashboardFragment extends Fragment {
 			updateDisplayedUnits();
 		}
 		
+		@Override
+		public void onUpdateIKEDisplay(String text){
+			ikeDisplayField.setText(text);
+		}
+		
 	};
 	
     private ServiceConnection mPlayerConnection = new ServiceConnection(){
@@ -781,6 +786,14 @@ public class DashboardFragment extends Fragment {
 		// Time & Date Fields
 		dateField = (TextView) v.findViewById(R.id.dateField);
 		timeField = (TextView) v.findViewById(R.id.timeField);
+		
+		// IKE Display Field [Current for StealthOne Support]
+		ikeDisplayField = (TextView) v.findViewById(R.id.ikeDisplayField);
+		
+		boolean stealthOneAvailable = mSettings.getBoolean("stealthOneAvailable", false);
+		if(stealthOneAvailable == false){
+			ikeDisplayField.setVisibility(View.GONE);
+		}
 
 		// Register Button actions
 		if(mRadioType == RadioTypes.BM53){

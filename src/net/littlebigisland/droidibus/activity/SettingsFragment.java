@@ -238,6 +238,7 @@ public class SettingsFragment extends PreferenceFragment implements OnSharedPref
 				break;
 			case "nightColorsWithInterior":
 			case "navAvailable":
+			case "stealthOneAvailable":
 				prefVal = (sharedPreferences.getBoolean(key, false)) ? "true" : "false";
 				break;
 			case "timeUnit":

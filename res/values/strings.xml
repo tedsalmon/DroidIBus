@@ -84,6 +84,8 @@
     </string-array>
     <string name="settings_navAvailable">Display Nav Data</string>
     <string name="settings_navAvailable_summ">Enable only if your vehicle is equipped with the nav unit and it\'s DVD</string>
+    <string name="settings_soneAvailable">Enable StealthOne Support</string>
+    <string name="settings_soneAvailable_summ">If you have a StealthOne and you want to display it\'s data in the app, enable this</string>
     <string name="settings_personalize">Personalization</string>
     <string name="settings_changeTextColor">Change Text Color With Lights</string>
     <string name="settings_changeTextColor_summ">Changes the color of the tablet text to amber when the interior lights come on</string>
