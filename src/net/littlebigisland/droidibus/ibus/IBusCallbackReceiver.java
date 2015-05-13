@@ -70,6 +70,8 @@ public abstract class IBusCallbackReceiver{
 	
 	public void onVoiceBtnPress() {}
 	
+	// Telephone System
+	public void onUpdateIKEDisplay(final String text) {}
 	
 	// Light Control System
 	public void onLightStatus(final int lightStatus) {}
