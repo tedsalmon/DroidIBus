@@ -123,42 +123,35 @@ public class SettingsFragment extends PreferenceFragment implements OnSharedPref
         }
     };
 	
-	@SuppressWarnings("rawtypes")
-	private void serviceStarter(Class cls, ServiceConnection svcConn){
-		Context applicationContext = getActivity();
-		Intent svcIntent = new Intent(applicationContext, cls);
-		try {
-			Log.d(TAG, String.format("Starting %s Service", cls.toString()));
-			applicationContext.bindService(svcIntent, svcConn, Context.BIND_AUTO_CREATE);
-			applicationContext.startService(svcIntent);
-		}
-		catch(Exception ex) {
-			Log.d(TAG, String.format("Unable to start %s Service", cls.toString()));
-		}
-	}
-	
-	@SuppressWarnings("rawtypes")
-	private void serviceStopper(Class cls, ServiceConnection svcConn){
-		Context applicationContext = getActivity();
-		Intent svcIntent = new Intent(applicationContext, cls);
-		try {
-			Log.d(TAG, String.format("Unbinding from  %s Service", cls.toString()));
-			applicationContext.unbindService(svcConn);
-			applicationContext.stopService(svcIntent);
-		}
-		catch(Exception ex) {
-			Log.e(TAG, String.format("Unable to unbind the %s - '%s'!", cls.toString(), ex.getMessage()));
-		}
-	}
-	
 	private void bindServices() {
-		serviceStarter(IBusMessageService.class, mIBusConnection);
+		Context applicationContext = getActivity();
+		
+		Intent IBusIntent = new Intent(applicationContext, IBusMessageService.class);
+		try {
+			Log.d(TAG, "Starting IBus service");
+			applicationContext.bindService(IBusIntent, mIBusConnection, Context.BIND_AUTO_CREATE);
+			applicationContext.startService(IBusIntent);
+		}
+		catch(Exception ex) {
+			Log.e(TAG, "Unable to Start IBusService!");
+		}
 	}
 	
 	private void unbindServices() {
+		Context applicationContext = getActivity();
 		if(mIBusBound){
-			mIBusService.disable();
-			serviceStopper(IBusMessageService.class, mIBusConnection);
+			try {
+				Log.d(TAG, "Unbinding from IBusMessageService");
+				mIBusService.disable();
+				applicationContext.unbindService(mIBusConnection);
+				applicationContext.stopService(
+					new Intent(applicationContext, IBusMessageService.class)
+				);
+				mIBusBound = false;
+			}
+			catch(Exception ex) {
+				Log.e(TAG, String.format("Unable to unbind the IBusMessageService - '%s'!", ex.getMessage()));
+			}
 		}
 	}
 	
@@ -245,6 +238,7 @@ public class SettingsFragment extends PreferenceFragment implements OnSharedPref
 				break;
 			case "nightColorsWithInterior":
 			case "navAvailable":
+			case "stealthOneAvailable":
 				prefVal = (sharedPreferences.getBoolean(key, false)) ? "true" : "false";
 				break;
 			case "timeUnit":

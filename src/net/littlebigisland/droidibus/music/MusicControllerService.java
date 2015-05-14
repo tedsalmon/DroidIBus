@@ -109,9 +109,7 @@ public class MusicControllerService extends NotificationListenerService implemen
 	 * Sends "pause" media key press, or, if player ignored this button, "play/pause".
 	 */
 	public void sendPauseKey() {
-		Log.d("DroidIBus", "Sending Pause Key");
 		if(!sendKeyEvent(KeyEvent.KEYCODE_MEDIA_PAUSE)) {
-			Log.d("DroidIBus", "Sending Pause Key Failed, Send Combo");
 			sendKeyEvent(KeyEvent.KEYCODE_MEDIA_PLAY_PAUSE);
 		}
 	}
@@ -122,10 +120,7 @@ public class MusicControllerService extends NotificationListenerService implemen
 	public void sendPlayKey() {
 		Log.d("DroidIBus", "Sending Play Key");
 		if(!sendKeyEvent(KeyEvent.KEYCODE_MEDIA_PLAY)) {
-			Log.d("DroidIBus", "Sending Play Key Failed, Send Combo");
 			sendKeyEvent(KeyEvent.KEYCODE_MEDIA_PLAY_PAUSE);
-			Log.d("DroidIBus", "Resending Play request");
-			sendKeyEvent(KeyEvent.KEYCODE_MEDIA_PLAY);
 		}
 	}
 	
@@ -204,11 +199,6 @@ public class MusicControllerService extends NotificationListenerService implemen
 		KeyEvent keyUp  = new KeyEvent(KeyEvent.ACTION_UP, keyCode);
 		boolean keyDownRes = mAudioController.sendMediaKeyEvent(keyDown);
 		boolean keyUpRes = mAudioController.sendMediaKeyEvent(keyUp);
-		if(keyUpRes && keyDownRes){
-			Log.d("DroidIBus", "Both are true");
-		}else{
-			Log.d("DroidIBus", "Both are NOT true");
-		}
 		if(! keyDownRes && ! keyUpRes){
 			Intent downIntent = new Intent(Intent.ACTION_MEDIA_BUTTON, null);
 			downIntent.putExtra(Intent.EXTRA_KEY_EVENT, keyDown);

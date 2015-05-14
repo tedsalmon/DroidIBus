@@ -19,11 +19,13 @@ import java.util.HashMap;
 import java.util.Map;
 
 import net.littlebigisland.droidibus.ibus.systems.BoardMonitorSystemCommand;
+import net.littlebigisland.droidibus.ibus.systems.BroadcastSystemCommand;
+import net.littlebigisland.droidibus.ibus.systems.GlobalBroadcastSystemCommand;
+import net.littlebigisland.droidibus.ibus.systems.GFXNavigationSystemCommand;
 import net.littlebigisland.droidibus.ibus.systems.IKESystemCommand;
-import net.littlebigisland.droidibus.ibus.systems.LightControlModuleSystemCommand;
-import net.littlebigisland.droidibus.ibus.systems.NavigationSystemCommand;
 import net.littlebigisland.droidibus.ibus.systems.RadioSystemCommand;
 import net.littlebigisland.droidibus.ibus.systems.SteeringWheelSystemCommand;
+import net.littlebigisland.droidibus.ibus.systems.TelephoneSystemCommand;
 
 import ioio.lib.api.DigitalOutput;
 import ioio.lib.api.IOIO;
@@ -137,13 +139,13 @@ public class IBusMessageService extends IOIOService {
 				/*
 				 * This is the main logic loop where we communicate with the IBus
 				 */
-				// Timeout the buffer if we don't get data for 30ms
-				if ((Calendar.getInstance().getTimeInMillis() - lastRead) > 30 && readBuffer.size() > 0) {
-					String data = "";
-					for(int i = 0; i<readBuffer.size(); i++)
-						data = String.format("%s%02X ", data, readBuffer.get(i));
-					Log.d(TAG, String.format("Clearing buffer of < %s > due to timeout", data));
-					readBuffer.clear();
+				// Timeout the buffer if we don't get data for 50ms 
+				if (((Calendar.getInstance().getTimeInMillis() - lastRead) > 75) && readBuffer.size() > 2) {
+						String data = "";
+						for(int i = 0; i<readBuffer.size(); i++)
+							data = String.format("%s%02X ", data, readBuffer.get(i));
+						Log.d(TAG, String.format("Clearing buffer of < %s > due to timeout", data));
+						readBuffer.clear();
 				}
 				try {
 					/* Handle incoming IBus data.
@@ -260,9 +262,9 @@ public class IBusMessageService extends IOIOService {
 			 * @param msg
 			 */
 			private void handleMessage(ArrayList<Byte> msg){
-				// The first item in the IBus message indicates the source system
+				// The third byte of the message indicates it's destination
 				try{
-					IBusSysMap.get(msg.get(0)).mapReceived(msg);
+					IBusSysMap.get(msg.get(2)).mapReceived(msg);
 				}catch(NullPointerException e){
 					// Things not in the map throw a NullPointerException
 				}
@@ -323,13 +325,15 @@ public class IBusMessageService extends IOIOService {
 			mDeviceLookup.put(d.toByte(), d.name());
 		// Initiate values for IBus System handlers
 		if(IBusSysMap.size() == 0){
-			Log.d(TAG, "IBusMessageService: IBusSysMap == 0; Filling");
-			IBusSysMap.put(DeviceAddressEnum.Radio.toByte(), new RadioSystemCommand());
+			Log.d(TAG, "IBusMessageService: Filling IBusSysMap");
+			IBusSysMap.put(DeviceAddressEnum.BoardMonitor.toByte(), new BoardMonitorSystemCommand());
+			IBusSysMap.put(DeviceAddressEnum.Broadcast.toByte(), new BroadcastSystemCommand());
+			IBusSysMap.put(DeviceAddressEnum.GFXNavigationDriver.toByte(), new GFXNavigationSystemCommand());
+			IBusSysMap.put(DeviceAddressEnum.GlobalBroadcast.toByte(), new GlobalBroadcastSystemCommand());
 			IBusSysMap.put(DeviceAddressEnum.InstrumentClusterElectronics.toByte(), new IKESystemCommand());
-			IBusSysMap.put(DeviceAddressEnum.NavigationEurope.toByte(), new NavigationSystemCommand());
+			IBusSysMap.put(DeviceAddressEnum.Radio.toByte(), new RadioSystemCommand());
 			IBusSysMap.put(DeviceAddressEnum.MultiFunctionSteeringWheel.toByte(), new SteeringWheelSystemCommand());
-			IBusSysMap.put(DeviceAddressEnum.OnBoardMonitor.toByte(), new BoardMonitorSystemCommand());
-			IBusSysMap.put(DeviceAddressEnum.LightControlModule.toByte(), new LightControlModuleSystemCommand());
+			IBusSysMap.put(DeviceAddressEnum.Telephone.toByte(), new TelephoneSystemCommand());
 		}
 	}
 	
