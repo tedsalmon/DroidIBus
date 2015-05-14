@@ -22,6 +22,7 @@ import net.littlebigisland.droidibus.ibus.systems.BoardMonitorSystemCommand;
 import net.littlebigisland.droidibus.ibus.systems.BroadcastSystemCommand;
 import net.littlebigisland.droidibus.ibus.systems.GlobalBroadcastSystemCommand;
 import net.littlebigisland.droidibus.ibus.systems.GFXNavigationSystemCommand;
+import net.littlebigisland.droidibus.ibus.systems.IKESystemCommand;
 import net.littlebigisland.droidibus.ibus.systems.RadioSystemCommand;
 import net.littlebigisland.droidibus.ibus.systems.SteeringWheelSystemCommand;
 import net.littlebigisland.droidibus.ibus.systems.TelephoneSystemCommand;
@@ -329,6 +330,7 @@ public class IBusMessageService extends IOIOService {
 			IBusSysMap.put(DeviceAddressEnum.Broadcast.toByte(), new BroadcastSystemCommand());
 			IBusSysMap.put(DeviceAddressEnum.GFXNavigationDriver.toByte(), new GFXNavigationSystemCommand());
 			IBusSysMap.put(DeviceAddressEnum.GlobalBroadcast.toByte(), new GlobalBroadcastSystemCommand());
+			IBusSysMap.put(DeviceAddressEnum.InstrumentClusterElectronics.toByte(), new IKESystemCommand());
 			IBusSysMap.put(DeviceAddressEnum.Radio.toByte(), new RadioSystemCommand());
 			IBusSysMap.put(DeviceAddressEnum.MultiFunctionSteeringWheel.toByte(), new SteeringWheelSystemCommand());
 			IBusSysMap.put(DeviceAddressEnum.Telephone.toByte(), new TelephoneSystemCommand());
