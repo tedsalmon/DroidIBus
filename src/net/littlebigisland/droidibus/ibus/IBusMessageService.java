@@ -139,7 +139,7 @@ public class IBusMessageService extends IOIOService {
 				 * This is the main logic loop where we communicate with the IBus
 				 */
 				// Timeout the buffer if we don't get data for 30ms
-				if ((Calendar.getInstance().getTimeInMillis() - lastRead) > 30 && readBuffer.size() > 0) {
+				if ((Calendar.getInstance().getTimeInMillis() - lastRead) > 15 && readBuffer.size() > 0) {
 					String data = "";
 					for(int i = 0; i<readBuffer.size(); i++)
 						data = String.format("%s%02X ", data, readBuffer.get(i));
