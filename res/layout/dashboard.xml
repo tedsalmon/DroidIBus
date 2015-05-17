@@ -9,7 +9,6 @@
 	android:paddingRight="@dimen/activity_horizontal_margin"
 	android:paddingTop="25dp"
 	android:orientation="vertical">
-	
 	<fragment
         android:id="@+id/music_fragment"
         android:name="net.littlebigisland.droidibus.activity.DashboardMusicFrament"
@@ -22,5 +21,4 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content" >
     </fragment>
-	
 </RelativeLayout>
