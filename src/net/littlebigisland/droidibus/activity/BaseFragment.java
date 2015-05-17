@@ -67,17 +67,17 @@ public class BaseFragment extends Fragment{
     }
 
     public void sendIBusCommand(final IBusCommandsEnum cmd, final Object... args){
-	if(mIBusBound && mIBusService.getLinkState()){
-	    mIBusService.sendCommand(new IBusCommand(cmd, args));
-	}
+		if(mIBusBound && mIBusService.getLinkState()){
+		    mIBusService.sendCommand(new IBusCommand(cmd, args));
+		}
     }
 	
     public void sendIBusCommandDelayed(final IBusCommandsEnum cmd, final long delayMillis, final Object... args){
-	new Handler(getActivity().getMainLooper()).postDelayed(new Runnable(){
-	    public void run(){
-		sendIBusCommand(cmd, args);
-	    }
-	}, delayMillis);
+		new Handler(getActivity().getMainLooper()).postDelayed(new Runnable(){
+		    public void run(){
+			sendIBusCommand(cmd, args);
+		    }
+		}, delayMillis);
     }
 	
     public void showToast(String toastText){

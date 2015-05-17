@@ -23,7 +23,6 @@ import android.widget.TextView;
 
 
 public class DashboardStatsFragment extends BaseFragment{
-    public String TAG = "DroidIBusStatsFragment";
     
     protected Handler mHandler = new Handler();
     protected SharedPreferences mSettings = null;
@@ -41,7 +40,7 @@ public class DashboardStatsFragment extends BaseFragment{
         mSpeedField, mRPMField, mRangeField, mOutTempField,
         mCoolantTempField, mFuel1Field, mFuel2Field, mAvgSpeedField,
         mGeoCoordinatesField, mGeoStreetField, mGeoLocaleField,
-        mGeoAltitudeField, mikeDisplayField, mDateField, mTimeField;
+        mGeoAltitudeField, mIKEDisplayField, mDateField, mTimeField;
 
     /** Service connection class for IBus
      */
@@ -54,9 +53,9 @@ public class DashboardStatsFragment extends BaseFragment{
             if(mIBusService != null) {
                 mIBusBound = true;
                 try {
-                        mIBusService.addCallback(mIBusUpdateListener, mHandler);
+                    mIBusService.addCallback(mIBusUpdateListener, mHandler);
                 } catch (Exception e) {
-                        showToast("Unable to start; Cannot bind ourselves to the IBus Service");
+                    showToast("Unable to start; Cannot bind ourselves to the IBus Service");
                 }
                 // Emulate BoardMonitor Bootup on connect 
                 boardMonitorBootup(); 
@@ -167,7 +166,7 @@ public class DashboardStatsFragment extends BaseFragment{
         public void onUpdateDate(final String date){
             mDateField.setText(date);
         }
-		
+
         /** Callback to handle updates from GPS about Street Location
          * @param String Street Name
          */
@@ -325,7 +324,7 @@ public class DashboardStatsFragment extends BaseFragment{
         // Set the settings
         updateDisplayedUnits();
     	
-	// Layouts
+	    // Layouts
     	mDashboardLayout = (RelativeLayout) v.findViewById(R.id.dashboardLayout);
 		
         // Setup the text fields for the view
@@ -348,7 +347,7 @@ public class DashboardStatsFragment extends BaseFragment{
         mGeoAltitudeField = (TextView) v.findViewById(R.id.geoAltitudeField);
         
         // IKE Display Field (Currently for StealthOne Support)
-	mikeDisplayField = (TextView) v.findViewById(R.id.ikeDisplayField);
+        mIKEDisplayField = (TextView) v.findViewById(R.id.ikeDisplayField);
                 
         // Time & Date Fields
         mDateField = (TextView) v.findViewById(R.id.dateField);
@@ -406,10 +405,10 @@ public class DashboardStatsFragment extends BaseFragment{
                 
         }
         
-	if(!mSettings.getBoolean("stealthOneAvailable", false)){
-	    ikeDisplayField.setVisibility(View.GONE);
-	}
-        
+	    if(!mSettings.getBoolean("stealthOneAvailable", false)){
+	        mIKEDisplayField.setVisibility(View.GONE);
+	    }
+	    
         return v;
     }
 	
@@ -422,12 +421,6 @@ public class DashboardStatsFragment extends BaseFragment{
         if(!mIBusBound){
             serviceStarter(IBusMessageService.class, mIBusConnection);
         }
-    }
-	
-    @Override
-    public void onPause() {
-    	super.onPause();
-    	Log.d(TAG, "Dashboard: onPause called");
     }
     
     @Override
@@ -455,8 +448,8 @@ public class DashboardStatsFragment extends BaseFragment{
     	Log.d(TAG, "Dashboard: onDestroy called");
     	mIBusService.removeCallback(mIBusUpdateListener);
     	if(mIBusBound){
-	    mIBusService.disable();
-	    serviceStopper(IBusMessageService.class, mIBusConnection);
+    		mIBusService.disable();
+    		serviceStopper(IBusMessageService.class, mIBusConnection);
     	}
     }
 }
