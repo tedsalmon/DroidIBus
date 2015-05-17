@@ -9,16 +9,16 @@
 	android:paddingRight="@dimen/activity_horizontal_margin"
 	android:paddingTop="25dp"
 	android:orientation="vertical">
-	<fragment
+	<LinearLayout
         android:id="@+id/music_fragment"
-        android:name="net.littlebigisland.droidibus.activity.DashboardMusicFrament"
         android:layout_width="wrap_content"
-        android:layout_height="wrap_content" >
-    </fragment>
-    <fragment
+        android:layout_height="wrap_content"
+        android:orientation="horizontal" />
+	
+    <LinearLayout
         android:id="@+id/stats_fragment"
-        android:name="net.littlebigisland.droidibus.activity.DashboardStatsFrament"
+        android:layout_below="@+id/music_fragment"
         android:layout_width="wrap_content"
-        android:layout_height="wrap_content" >
-    </fragment>
+        android:layout_height="wrap_content"
+        android:orientation="horizontal" />
 </RelativeLayout>

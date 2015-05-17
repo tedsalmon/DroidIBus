@@ -302,12 +302,11 @@ public class DashboardStatsFragment extends BaseFragment{
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setRetainInstance(true);
     }
 	
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
-        final View v = inflater.inflate(R.layout.dashboard, container, false);
+        final View v = inflater.inflate(R.layout.dashboard_stats, container, false);
         Log.d(TAG, "Dashboard: onCreateView Called");
         
         // Load Activity Settings

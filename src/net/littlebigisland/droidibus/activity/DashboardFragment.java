@@ -8,6 +8,7 @@ import net.littlebigisland.droidibus.R;
 import net.littlebigisland.droidibus.ibus.IBusCallbackReceiver;
 import net.littlebigisland.droidibus.ibus.IBusMessageService;
 import net.littlebigisland.droidibus.ibus.IBusMessageService.IOIOBinder;
+import android.app.Fragment;
 import android.content.BroadcastReceiver;
 import android.content.ComponentName;
 import android.content.Context;
@@ -91,7 +92,6 @@ public class DashboardFragment extends BaseFragment {
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setRetainInstance(true);
         getActivity().registerReceiver(mChargingReceiver, new IntentFilter(Intent.ACTION_BATTERY_CHANGED));
         Log.d(TAG, "Dashboard: onCreate Called");
     }
@@ -100,6 +100,10 @@ public class DashboardFragment extends BaseFragment {
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         final View v = inflater.inflate(R.layout.dashboard, container, false);
         Log.d(TAG, "Dashboard: onCreateView Called");
+        Fragment musicPlayerFragment = new DashboardMusicFragment();
+        Fragment statsFragment = new DashboardStatsFragment();
+        getChildFragmentManager().beginTransaction().add(R.id.music_fragment, musicPlayerFragment).commit();
+        getChildFragmentManager().beginTransaction().add(R.id.stats_fragment, statsFragment).commit();
         // Keep a wake lock
         changeScreenState(true);
         return v;
