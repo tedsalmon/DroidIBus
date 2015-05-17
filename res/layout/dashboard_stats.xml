@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout
-    android:orientation="horizontal"
+<RelativeLayout
+    android:orientation="vertical"
 	android:layout_height="wrap_content"
 	android:layout_width="wrap_content"
     xmlns:android="http://schemas.android.com/apk/res/android">
@@ -241,6 +241,8 @@
 	</LinearLayout>
 	<LinearLayout 
 	    android:id="@+id/miscDataLayout"
+	    android:layout_alignParentBottom="true"
+	    android:layout_below="@+id/obcLayout"
 	    android:layout_width="match_parent"
 	    android:layout_height="wrap_content"
 	    android:orientation="horizontal">
@@ -282,4 +284,4 @@
 	            android:text="@string/defaultText" />
 	    </LinearLayout>
 	</LinearLayout>
-</LinearLayout>
+</RelativeLayout>

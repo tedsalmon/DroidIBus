@@ -362,6 +362,10 @@ public class DashboardMusicFragment extends BaseFragment{
         String radioType = mSettings.getString("radioType", "BM53");
         mRadioType = (radioType.equals("BM53")) ? RadioTypes.BM53 : RadioTypes.CD53;
         
+        if(mCurrentRadioMode == null){
+        	mCurrentRadioMode = RadioModes.AUX;
+        }
+        
         // Layouts
         mRadioLayout = (LinearLayout) v.findViewById(R.id.radioAudio);
         mTabletLayout = (LinearLayout) v.findViewById(R.id.tabletAudio);
