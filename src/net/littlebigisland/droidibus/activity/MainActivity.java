@@ -26,13 +26,11 @@ public class MainActivity extends Activity {
 	
 	private Fragment[] mFragments = {
 		new DashboardFragment(),
-		new NavigationFragment(),
 		new SettingsFragment(),
 	};
 	
 	private String[] mFragmentTitles = {
 		"Dashboard",
-		"Navigation",
 		"Settings"
 	};
 	
