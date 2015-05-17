@@ -121,17 +121,19 @@ public class DashboardMusicFragment extends BaseFragment{
         new Thread(new Runnable(){
             public void run(){
                 try{
-                    Log.d(TAG, String.format("Current mode = %s, desired mode = %s", mCurrentRadioMode.toString(), mode.toString() ));
-                    if( (mode == RadioModes.AUX && !(mCurrentRadioMode== RadioModes.AUX)) ||  
-                        (mode == RadioModes.Radio && (mCurrentRadioMode != RadioModes.Radio)) ){
-                        sendIBusCommand(IBusCommandsEnum.BMToRadioModePress);
-                        sendIBusCommandDelayed(IBusCommandsEnum.BMToRadioModeRelease, 300);
-                        Thread.sleep(1000);
-                        changeRadioMode(mode);
-                    }
-                }catch(InterruptedException e){
-                    e.printStackTrace();
-                }
+                	if(mRadioType == RadioTypes.BM53){
+	                    Log.d(TAG, String.format("Current mode = %s, desired mode = %s", mCurrentRadioMode.toString(), mode.toString() ));
+	                    if( (mode == RadioModes.AUX && !(mCurrentRadioMode== RadioModes.AUX)) ||  
+	                        (mode == RadioModes.Radio && (mCurrentRadioMode != RadioModes.Radio)) ){
+	                        sendIBusCommand(IBusCommandsEnum.BMToRadioModePress);
+	                        sendIBusCommandDelayed(IBusCommandsEnum.BMToRadioModeRelease, 300);
+	                        Thread.sleep(1000);
+	                        changeRadioMode(mode);
+	                    }
+                	}
+	            }catch(InterruptedException e){
+	                e.printStackTrace();
+	            }
             }
         }).start();
     }
@@ -208,6 +210,57 @@ public class DashboardMusicFragment extends BaseFragment{
     };
     
     private IBusCallbackReceiver mIBusUpdateListener = new IBusCallbackReceiver(){
+    	
+    	private int mCurrentTextColor = R.color.dayColor;
+		
+		/**
+		 * Callback to handle any updates to the station text when in Radio Mode
+		 * @param text Text to set
+		 */
+		@Override
+		public void onUpdateRadioStation(final String text){
+			// If this is a BM53 unit, we should listen for
+			// Updates to the station text
+			if(mRadioType == RadioTypes.BM53){
+				RadioModes lastState = mCurrentRadioMode; 
+		    	switch(text){
+		    		case "TR 01 ":
+		    		case "NO CD":
+		    			mCurrentRadioMode = RadioModes.CD;
+		    			break;
+		    		case "AUX":
+		    			mCurrentRadioMode = RadioModes.AUX;
+		    			break;
+		    		default:
+		    			mCurrentRadioMode = RadioModes.Radio;
+		    			break;
+		    	}
+		    	
+		    	if(lastState != mCurrentRadioMode){
+		    		mLastModeChange = Calendar.getInstance().getTimeInMillis();
+		    	}
+		    	
+		    	/* 
+		    	 We're not in the right mode, sync with the car
+		    	 Make sure this isn't CD mode and that we're not in the middle of a mode change
+		    	 by making sure we've been in the current mode for at least 1.5 seconds
+		    	 If lastState is null then we should also check as this is the first bit of data
+		    	 see about radio mode 
+		    	 */
+		    	if((!(mCurrentRadioMode == RadioModes.CD) && (Calendar.getInstance().getTimeInMillis() - mLastModeChange) > 1500) || lastState == null){
+		    		if(mCurrentRadioMode == RadioModes.AUX && mTabletLayout.getVisibility() == View.GONE){
+		    			mBtnMusicMode.toggle();
+		    		}
+		    		if(!(mCurrentRadioMode == RadioModes.AUX) && mTabletLayout.getVisibility() == View.VISIBLE){
+		    			mBtnMusicMode.toggle();
+		    		}
+		    	}
+		    	
+		    	mLastRadioStatus = Calendar.getInstance().getTimeInMillis();
+		    	mStationText.setText(text);
+			}
+		}
+		
     	@Override
         public void onUpdateRadioBrodcasts(final String broadcastType){
             mLastRadioStatus = Calendar.getInstance().getTimeInMillis();
@@ -263,6 +316,19 @@ public class DashboardMusicFragment extends BaseFragment{
 	            }
 	    	}
 	    }
+	    
+		@Override
+		public void onLightStatus(int lightStatus){
+			if(mSettings.getBoolean("nightColorsWithInterior", false)){
+				int color = (lightStatus == 1) ? R.color.nightColor : R.color.dayColor;
+				// Only change the color if it's different
+				if(color != mCurrentTextColor){
+					mCurrentTextColor = color;
+					changeTextColors(mRadioLayout, color);
+				}
+			}
+		}
+
     };
     
     private ServiceConnection mIBusConnection = new ServiceConnection() {
@@ -464,6 +530,7 @@ public class DashboardMusicFragment extends BaseFragment{
             btnPrev.setTag("SWToRadioTuneRev");
             btnNext.setTag("SWToRadioTuneFwd");
         }
+        
         btnRadioFM.setTag("BMToRadioFM");
         btnRadioAM.setTag("BMToRadioAM");
 
