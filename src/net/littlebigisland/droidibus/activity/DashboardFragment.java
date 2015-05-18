@@ -1,21 +1,18 @@
 package net.littlebigisland.droidibus.activity;
 /**
- * Control Fragment for IBus UI 
- * @author Ted S <tass2001@gmail.com>
+ * Base Dashboard Fragment - Controls base functions
+ * and drops in the child fragments 
+ * @author Ted <tass2001@gmail.com>
  * @package net.littlebigisland.droidibus.activity
  */
 import net.littlebigisland.droidibus.R;
 import net.littlebigisland.droidibus.ibus.IBusCallbackReceiver;
 import net.littlebigisland.droidibus.ibus.IBusMessageService;
 import net.littlebigisland.droidibus.ibus.IBusMessageService.IOIOBinder;
-import android.content.BroadcastReceiver;
 import android.content.ComponentName;
 import android.content.Context;
-import android.content.Intent;
-import android.content.IntentFilter;
 import android.content.ServiceConnection;
 import android.content.SharedPreferences;
-import android.os.BatteryManager;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.IBinder;
@@ -29,7 +26,6 @@ import android.view.Window;
 import android.view.WindowManager;
 
 public class DashboardFragment extends BaseFragment {
-    public String TAG = "DroidIBus";
     
     protected Handler mHandler = new Handler();
     
@@ -41,15 +37,6 @@ public class DashboardFragment extends BaseFragment {
     
     protected IBusMessageService mIBusService;
     protected boolean mIBusBound = false;
-	
-    private BroadcastReceiver mChargingReceiver = new BroadcastReceiver() {
-        @Override
-        public void onReceive(Context context, Intent intent) {
-            int chargeType = intent.getIntExtra(BatteryManager.EXTRA_PLUGGED, -1);
-            boolean isCharging = chargeType == BatteryManager.BATTERY_PLUGGED_USB || chargeType == BatteryManager.BATTERY_PLUGGED_AC;
-            carPowerChange(isCharging);
-        }
-    };
     
     private IBusCallbackReceiver mIBusUpdateListener = new IBusCallbackReceiver() {
         /** Callback to handle Ignition State Updates
@@ -91,7 +78,6 @@ public class DashboardFragment extends BaseFragment {
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        getActivity().registerReceiver(mChargingReceiver, new IntentFilter(Intent.ACTION_BATTERY_CHANGED));
         Log.d(TAG, "Dashboard: onCreate Called");
     }
     
@@ -152,7 +138,8 @@ public class DashboardFragment extends BaseFragment {
         }
         
         if(modeChange){
-            window.setAttributes(layoutP); // Set the given layout
+        	// Set the given layout
+            window.setAttributes(layoutP);
         }
     }
 	
@@ -211,6 +198,5 @@ public class DashboardFragment extends BaseFragment {
             mIBusService.disable();
             serviceStopper(IBusMessageService.class, mIBusConnection);
     	}
-    	getActivity().unregisterReceiver(mChargingReceiver);
     }
 }

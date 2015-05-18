@@ -28,7 +28,7 @@ public class DashboardStatsFragment extends BaseFragment{
     protected SharedPreferences mSettings = null;
     protected IBusMessageService mIBusService;
     // Keep track of the connection state
-    protected boolean mIBusBound = false;
+    protected boolean mIBusConnected = false;
     
     // Views in the Activity
     protected RelativeLayout mDashboardLayout;
@@ -51,7 +51,7 @@ public class DashboardStatsFragment extends BaseFragment{
             IOIOBinder binder = (IOIOBinder) service;
             mIBusService = binder.getService();
             if(mIBusService != null) {
-                mIBusBound = true;
+                mIBusConnected = true;
                 try {
                     mIBusService.addCallback(mIBusUpdateListener, mHandler);
                 } catch (Exception e) {
@@ -66,7 +66,7 @@ public class DashboardStatsFragment extends BaseFragment{
         @Override
         public void onServiceDisconnected(ComponentName name) {
         	Log.d(TAG, "mIBusService disconnected");
-            mIBusBound = false;
+            mIBusConnected = false;
         }
     };
 	
@@ -417,7 +417,7 @@ public class DashboardStatsFragment extends BaseFragment{
         Log.d(TAG, "onActivityCreated Called");
         // Bind required background services last since the callback
         // functions depend on the view items being initialized
-        if(!mIBusBound){
+        if(!mIBusConnected){
             serviceStarter(IBusMessageService.class, mIBusConnection);
         }
     }
@@ -426,7 +426,7 @@ public class DashboardStatsFragment extends BaseFragment{
     public void onResume(){
     	super.onResume();
     	Log.d(TAG, "Dashboard: onResume called");
-    	if(mIBusBound){
+    	if(mIBusConnected){
             Log.d(TAG, "Dashboard: IOIO bound in onResume");
             if(!mIBusService.getLinkState()){
                 serviceStopper(IBusMessageService.class, mIBusConnection);
@@ -446,7 +446,7 @@ public class DashboardStatsFragment extends BaseFragment{
     	super.onDestroy();
     	Log.d(TAG, "Dashboard: onDestroy called");
     	mIBusService.removeCallback(mIBusUpdateListener);
-    	if(mIBusBound){
+    	if(mIBusConnected){
     		mIBusService.disable();
     		serviceStopper(IBusMessageService.class, mIBusConnection);
     	}

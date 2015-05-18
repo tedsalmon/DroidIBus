@@ -1,6 +1,9 @@
 package net.littlebigisland.droidibus.activity;
-
-
+/**
+ * Settings Fragment
+ * @author Ted <tass2001@gmail.com>
+ * @package net.littlebigisland.droidibus.activity
+ */
 import java.util.Calendar;
 
 import net.littlebigisland.droidibus.R;
@@ -31,7 +34,7 @@ public class SettingsFragment extends PreferenceFragment implements OnSharedPref
 	public String TAG = "DroidIBus";
     private Handler mHandler = new Handler();
     protected IBusMessageService mIBusService;
-    protected boolean mIBusBound = false;
+    protected boolean mIBusConnected = false;
     
     private Preference mOBCTime = null;
     private Preference mOBCDate = null;
@@ -67,7 +70,7 @@ public class SettingsFragment extends PreferenceFragment implements OnSharedPref
     }
 
     public void sendIBusCommand(final IBusCommandsEnum cmd, final Object... args){
-		if(mIBusBound && mIBusService.getLinkState()){
+		if(mIBusConnected && mIBusService.getLinkState()){
 		    mIBusService.sendCommand(new IBusCommand(cmd, args));
 		}
     }
@@ -136,6 +139,7 @@ public class SettingsFragment extends PreferenceFragment implements OnSharedPref
 	        mSettings.edit().putString("timeUnit", aUnits[7]).apply();
 	        mSettings.edit().putString("consumptionUnit", cUnits[6]+cUnits[7]).apply();
 	    }
+
 	};
     
     private ServiceConnection mIBusConnection = new ServiceConnection() {
@@ -145,7 +149,7 @@ public class SettingsFragment extends PreferenceFragment implements OnSharedPref
             IOIOBinder binder = (IOIOBinder) service;
             mIBusService = binder.getService();
             if(mIBusService != null) {
-                mIBusBound = true;
+                mIBusConnected = true;
                 try {
                     mIBusService.addCallback(mIBusUpdateListener, mHandler);
                 } catch (Exception e) {
@@ -159,7 +163,7 @@ public class SettingsFragment extends PreferenceFragment implements OnSharedPref
         @Override
         public void onServiceDisconnected(ComponentName name) {
             Log.e(TAG, "mIBusService is disconnected");
-            mIBusBound = false;
+            mIBusConnected = false;
         }
     };
 
@@ -210,14 +214,14 @@ public class SettingsFragment extends PreferenceFragment implements OnSharedPref
         });
         // Bind required background services last since the callback
         // functions depend on the view items being initialized
-        if(!mIBusBound){
+        if(!mIBusConnected){
         	serviceStarter(IBusMessageService.class, mIBusConnection);
         }
     }
 
     @Override
     public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, String key){
-        if(!mIBusBound){
+        if(!mIBusConnected){
         	serviceStarter(IBusMessageService.class, mIBusConnection);
         }
         String prefVal = "";
@@ -250,7 +254,7 @@ public class SettingsFragment extends PreferenceFragment implements OnSharedPref
             case "speedUnit":
             case "temperatureUnit":
             case "consumptionUnit":
-                prefVal = sharedPreferences.getString(key, "WAT");
+                prefVal = sharedPreferences.getString(key, "");
                 sendIBusCommand(
                     IBusCommandsEnum.BMToIKESetUnits,
                     Integer.parseInt(sharedPreferences.getString("speedUnit", "1")),
@@ -283,7 +287,7 @@ public class SettingsFragment extends PreferenceFragment implements OnSharedPref
         super.onDestroy();
         mIBusService.removeCallback(mIBusUpdateListener);
         Log.d(TAG, "Settings: onDestroy Called");
-        if(mIBusBound){
+        if(mIBusConnected){
         	serviceStopper(IBusMessageService.class, mIBusConnection);
         }
     }
