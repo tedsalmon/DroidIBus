@@ -383,7 +383,7 @@ public class DashboardMusicFragment extends BaseFragment{
 		    	    new Thread(new Runnable() {
 		    	        public void run() {
 		    	            mLastRadioStatus = 0;
-		    	            while(mIBusBound){
+		    	            while(mIBusConnected){
 		    	                try{
 		    	                    if(mIBusService.getLinkState()){
 		    	                        getActivity().runOnUiThread(new Runnable(){
