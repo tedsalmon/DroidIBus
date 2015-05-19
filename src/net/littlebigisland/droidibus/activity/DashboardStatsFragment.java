@@ -1,5 +1,10 @@
 package net.littlebigisland.droidibus.activity;
-
+/**
+ * Base Dashboard Fragment - Controls base functions
+ * and drops in the child fragments 
+ * @author Ted <tass2001@gmail.com>
+ * @package net.littlebigisland.droidibus.activity
+ */
 import net.littlebigisland.droidibus.R;
 import net.littlebigisland.droidibus.ibus.IBusCommandsEnum;
 import net.littlebigisland.droidibus.ibus.IBusCallbackReceiver;
@@ -26,9 +31,6 @@ public class DashboardStatsFragment extends BaseFragment{
     
     protected Handler mHandler = new Handler();
     protected SharedPreferences mSettings = null;
-    protected IBusMessageService mIBusService;
-    // Keep track of the connection state
-    protected boolean mIBusConnected = false;
     
     // Views in the Activity
     protected RelativeLayout mDashboardLayout;
@@ -42,8 +44,7 @@ public class DashboardStatsFragment extends BaseFragment{
         mGeoCoordinatesField, mGeoStreetField, mGeoLocaleField,
         mGeoAltitudeField, mIKEDisplayField, mDateField, mTimeField;
 
-    /** Service connection class for IBus
-     */
+    // Service connection class for IBus
     private ServiceConnection mIBusConnection = new ServiceConnection() {
 		
         @Override
@@ -65,7 +66,7 @@ public class DashboardStatsFragment extends BaseFragment{
 
         @Override
         public void onServiceDisconnected(ComponentName name) {
-        	Log.d(TAG, "mIBusService disconnected");
+            Log.d(TAG, "mIBusService disconnected");
             mIBusConnected = false;
         }
     };
@@ -120,9 +121,10 @@ public class DashboardStatsFragment extends BaseFragment{
             // Celsius 
             if(mSettings.getString("temperatureUnit", "1").equals("0")){
                 mCoolantTempField.setText(Integer.toString(temp));
-            }else{ // Freedom Units
+            }else{
+		// Freedom Units
                 mCoolantTempField.setText(
-                        "+" + Integer.toString(((temp * 9) / 5) + 32)
+                    "+" + Integer.toString(((temp * 9) / 5) + 32)
                 );
             }
         }
@@ -307,7 +309,7 @@ public class DashboardStatsFragment extends BaseFragment{
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         final View v = inflater.inflate(R.layout.dashboard_stats, container, false);
-        Log.d(TAG, "Dashboard: onCreateView Called");
+        Log.d(TAG, "DashboardStats: onCreateView Called");
         
         // Load Activity Settings
         mSettings = PreferenceManager.getDefaultSharedPreferences(getActivity());
@@ -414,7 +416,7 @@ public class DashboardStatsFragment extends BaseFragment{
     @Override
     public void onActivityCreated (Bundle savedInstanceState){
         super.onActivityCreated(savedInstanceState);
-        Log.d(TAG, "onActivityCreated Called");
+        Log.d(TAG, "DashboardStats: onActivityCreated Called");
         // Bind required background services last since the callback
         // functions depend on the view items being initialized
         if(!mIBusConnected){
@@ -425,7 +427,7 @@ public class DashboardStatsFragment extends BaseFragment{
     @Override
     public void onResume(){
     	super.onResume();
-    	Log.d(TAG, "Dashboard: onResume called");
+    	Log.d(TAG, "DashboardStats: onResume called");
     	if(mIBusConnected){
             Log.d(TAG, "Dashboard: IOIO bound in onResume");
             if(!mIBusService.getLinkState()){
@@ -444,7 +446,7 @@ public class DashboardStatsFragment extends BaseFragment{
     @Override
     public void onDestroy() {
     	super.onDestroy();
-    	Log.d(TAG, "Dashboard: onDestroy called");
+    	Log.d(TAG, "DashboardStats: onDestroy called");
     	mIBusService.removeCallback(mIBusUpdateListener);
     	if(mIBusConnected){
     		mIBusService.disable();

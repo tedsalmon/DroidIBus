@@ -15,11 +15,11 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 public class BaseFragment extends Fragment{
-    public String TAG = "DroidIBus";
     
-    public Handler mHandler = new Handler();
-    public IBusMessageService mIBusService;
-    public boolean mIBusBound = false;
+	public String TAG = "DroidIBus";
+	// NEVER override these in a child class! The service won't connected
+	public IBusMessageService mIBusService = null;
+	public boolean mIBusConnected = false;
 	
     /**
      * Change TextView colors recursively; Used to support night colors
@@ -67,7 +67,7 @@ public class BaseFragment extends Fragment{
     }
 
     public void sendIBusCommand(final IBusCommandsEnum cmd, final Object... args){
-		if(mIBusBound && mIBusService.getLinkState()){
+		if(mIBusConnected && mIBusService.getLinkState()){
 		    mIBusService.sendCommand(new IBusCommand(cmd, args));
 		}
     }
@@ -75,7 +75,8 @@ public class BaseFragment extends Fragment{
     public void sendIBusCommandDelayed(final IBusCommandsEnum cmd, final long delayMillis, final Object... args){
 		new Handler(getActivity().getMainLooper()).postDelayed(new Runnable(){
 		    public void run(){
-			sendIBusCommand(cmd, args);
+		    	Log.d(TAG, "Sending command delayed");
+		    	sendIBusCommand(cmd, args);
 		    }
 		}, delayMillis);
     }

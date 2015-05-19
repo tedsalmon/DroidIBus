@@ -7,6 +7,7 @@ package net.littlebigisland.droidibus.activity;
  */
 import net.littlebigisland.droidibus.R;
 import net.littlebigisland.droidibus.ibus.IBusCallbackReceiver;
+import net.littlebigisland.droidibus.ibus.IBusCommandsEnum;
 import net.littlebigisland.droidibus.ibus.IBusMessageService;
 import net.littlebigisland.droidibus.ibus.IBusMessageService.IOIOBinder;
 import android.content.ComponentName;
@@ -35,8 +36,7 @@ public class DashboardFragment extends BaseFragment {
     protected WakeLock mScreenWakeLock;
     protected boolean mScreenOn = false;
     
-    protected IBusMessageService mIBusService;
-    protected boolean mIBusBound = false;
+    protected boolean mPopulatedFragments = false;
     
     private IBusCallbackReceiver mIBusUpdateListener = new IBusCallbackReceiver() {
         /** Callback to handle Ignition State Updates
@@ -45,7 +45,7 @@ public class DashboardFragment extends BaseFragment {
         @Override
         public void onUpdateIgnitionSate(final int state) {
             boolean carState = (state > 0) ? true : false;
-            carPowerChange(carState);
+            changeScreenState(carState);
         }
     };
 	
@@ -57,65 +57,36 @@ public class DashboardFragment extends BaseFragment {
             IOIOBinder binder = (IOIOBinder) service;
             mIBusService = binder.getService();
             if(mIBusService != null) {
-                mIBusBound = true;
+                mIBusConnected = true;
                 try {
-                        mIBusService.addCallback(mIBusUpdateListener, mHandler);
+                    mIBusService.addCallback(mIBusUpdateListener, mHandler);
                 } catch (Exception e) {
-                        showToast("Unable to start; Cannot bind ourselves to the IBus Service");
+                    showToast("Unable to start; Cannot bind ourselves to the IBus Service");
                 }
                 // Emulate BoardMonitor Bootup on connect
                 Log.d(TAG, "mIBusService connected and BoardMonitor Bootup Performed");
+                sendIBusCommand(IBusCommandsEnum.BMToIKEGetIgnitionStatus);
+                sendIBusCommand(IBusCommandsEnum.BMToLCMGetDimmerStatus);
+                sendIBusCommand(IBusCommandsEnum.BMToGMGetDoorStatus);
             }
         }
 
         @Override
         public void onServiceDisconnected(ComponentName name) {
         	Log.d(TAG, "mIBusService disconnected");
-            mIBusBound = false;
+            mIBusConnected = false;
         }
     };
-
-    @Override
-    public void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        Log.d(TAG, "Dashboard: onCreate Called");
-    }
     
-    @Override
-    public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
-        final View v = inflater.inflate(R.layout.dashboard, container, false);
-        Log.d(TAG, "Dashboard: onCreateView Called");
-        getChildFragmentManager().beginTransaction().add(
-        	R.id.music_fragment, new DashboardMusicFragment()
-        ).commit();
-        getChildFragmentManager().beginTransaction().add(
-        	R.id.stats_fragment, new DashboardStatsFragment()
-        ).commit();
-        // Keep a wake lock
-        changeScreenState(true);
-        return v;
-    }
-    
-    @Override
-    public void onActivityCreated (Bundle savedInstanceState){
-        super.onActivityCreated(savedInstanceState);
-        Log.d(TAG, "Dashboard: onActivityCreated Called");
-        // Bind required background services last since the callback
-        // functions depend on the view items being initialized
-        if(!mIBusBound){
-            serviceStarter(IBusMessageService.class, mIBusConnection);
-        }
-    }
-	
-
-	
     /**
      * Acquire a screen wake lock to either turn the screen on or off
      * @param screenState if true, turn the screen on, else turn it off
      */
     @SuppressWarnings("deprecation")
     private void changeScreenState(boolean screenState){
-        if(mPowerManager == null) mPowerManager = (PowerManager) getActivity().getSystemService(Context.POWER_SERVICE);
+        if(mPowerManager == null){
+        	mPowerManager = (PowerManager) getActivity().getSystemService(Context.POWER_SERVICE);
+        }
         boolean modeChange = false;
         Window window = getActivity().getWindow();
         WindowManager.LayoutParams layoutP = window.getAttributes();
@@ -124,7 +95,10 @@ public class DashboardFragment extends BaseFragment {
             modeChange = true;
             mScreenOn = true;
             layoutP.screenBrightness = -1;
-            mScreenWakeLock = mPowerManager.newWakeLock(PowerManager.FULL_WAKE_LOCK | PowerManager.ACQUIRE_CAUSES_WAKEUP, "screenWakeLock");
+            mScreenWakeLock = mPowerManager.newWakeLock(
+            		PowerManager.FULL_WAKE_LOCK | PowerManager.ACQUIRE_CAUSES_WAKEUP,
+            		"screenWakeLock"
+            );
             window.addFlags(WindowManager.LayoutParams.FLAG_DISMISS_KEYGUARD); 
             mScreenWakeLock.acquire();
         }
@@ -150,19 +124,40 @@ public class DashboardFragment extends BaseFragment {
             }
         }
     }
+
+    @Override
+    public void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        Log.d(TAG, "Dashboard: onCreate Called");
+    }
     
-	
-    private void carPowerChange(boolean isCarOn){
-        Log.d(TAG, "Charging state change!");
-    	if(isCarOn){
-    	    // The screen isn't on but the car is, turn it on
-    	    //if(!mScreenOn){}
-    	}else{
-            // The car is not on and the screen is, turn it off
-            if(mScreenOn){
-                changeScreenState(false);
-            }
-    	}
+    @Override
+    public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
+        final View v = inflater.inflate(R.layout.dashboard, container, false);
+        Log.d(TAG, "Dashboard: onCreateView Called");
+        if(!mPopulatedFragments){
+	        getChildFragmentManager().beginTransaction().add(
+	        	R.id.music_fragment, new DashboardMusicFragment()
+	        ).commit();
+	        getChildFragmentManager().beginTransaction().add(
+	        	R.id.stats_fragment, new DashboardStatsFragment()
+	        ).commit();
+	        mPopulatedFragments = true;
+        }
+        // Keep a wake lock
+        changeScreenState(true);
+        return v;
+    }
+    
+    @Override
+    public void onActivityCreated (Bundle savedInstanceState){
+        super.onActivityCreated(savedInstanceState);
+        Log.d(TAG, "Dashboard: onActivityCreated Called");
+        // Bind required background services last since the callback
+        // functions depend on the view items being initialized
+        if(!mIBusConnected){
+            serviceStarter(IBusMessageService.class, mIBusConnection);
+        }
     }
 	
     @Override
@@ -175,7 +170,7 @@ public class DashboardFragment extends BaseFragment {
     public void onResume() {
     	super.onResume();
     	Log.d(TAG, "Dashboard: onResume called");
-    	if(mIBusBound){
+    	if(mIBusConnected){
             Log.d(TAG, "Dashboard: IOIO bound in onResume");
             if(!mIBusService.getLinkState()){
                 serviceStopper(IBusMessageService.class, mIBusConnection);
@@ -194,7 +189,7 @@ public class DashboardFragment extends BaseFragment {
     	Log.d(TAG, "Dashboard: onDestroy called");
     	mIBusService.removeCallback(mIBusUpdateListener);
     	releaseWakelock();
-    	if(mIBusBound){
+    	if(mIBusConnected){
             mIBusService.disable();
             serviceStopper(IBusMessageService.class, mIBusConnection);
     	}

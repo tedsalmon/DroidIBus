@@ -38,8 +38,10 @@ import android.widget.TextView;
 import android.widget.CompoundButton.OnCheckedChangeListener;
 import android.widget.SeekBar.OnSeekBarChangeListener;
 
+@SuppressWarnings("deprecation")
 public class DashboardMusicFragment extends BaseFragment{
-    
+
+	protected Handler mHandler = new Handler();
     protected SharedPreferences mSettings = null;
     
     // Fields in the activity
@@ -56,8 +58,6 @@ public class DashboardMusicFragment extends BaseFragment{
     
     protected MusicControllerService mPlayerService;
     protected boolean mMediaPlayerConnected = false;
-    
-    protected boolean mIBusConnected = false;
 
     protected boolean mIsPlaying = false;
     protected boolean mWasPlaying = false; // Was the song playing before we shut
@@ -70,16 +70,16 @@ public class DashboardMusicFragment extends BaseFragment{
     protected long mLastRadioStatusRequest = 0; // Time we last requested the Radio's status
     protected boolean mCDPlayerPlaying = false;
 
-    private enum RadioModes{
-        AUX,
-        CD,
-        Radio
-    }
-    
-    private enum RadioTypes{
-        BM53,
-        CD53
-    }
+	private enum RadioModes{
+		AUX,
+		CD,
+		Radio
+	}
+	
+	private enum RadioTypes{
+		BM53,
+		CD53
+	}
 
     private ServiceConnection mPlayerConnection = new ServiceConnection(){
         
@@ -116,29 +116,8 @@ public class DashboardMusicFragment extends BaseFragment{
             }
         }
     };
-    
-    private void changeRadioMode(final RadioModes mode){
-        new Thread(new Runnable(){
-            public void run(){
-                try{
-                	if(mRadioType == RadioTypes.BM53){
-	                    Log.d(TAG, String.format("Current mode = %s, desired mode = %s", mCurrentRadioMode.toString(), mode.toString() ));
-	                    if( (mode == RadioModes.AUX && !(mCurrentRadioMode== RadioModes.AUX)) ||  
-	                        (mode == RadioModes.Radio && (mCurrentRadioMode != RadioModes.Radio)) ){
-	                        sendIBusCommand(IBusCommandsEnum.BMToRadioModePress);
-	                        sendIBusCommandDelayed(IBusCommandsEnum.BMToRadioModeRelease, 300);
-	                        Thread.sleep(1000);
-	                        changeRadioMode(mode);
-	                    }
-                	}
-	            }catch(InterruptedException e){
-	                e.printStackTrace();
-	            }
-            }
-        }).start();
-    }
-    
-    private RemoteController.OnClientUpdateListener mPlayerUpdateListener = new RemoteController.OnClientUpdateListener() {
+
+	private RemoteController.OnClientUpdateListener mPlayerUpdateListener = new RemoteController.OnClientUpdateListener() {
 
         private boolean mScrubbingSupported = false;
         
@@ -290,6 +269,7 @@ public class DashboardMusicFragment extends BaseFragment{
             mLastRadioStatus = Calendar.getInstance().getTimeInMillis();
             mProgramField.setText(currentProgram);
         }
+        
 	    /** Callback to handle Ignition state updates
 	     * @param int Current Ignition State
 	     */
@@ -318,6 +298,55 @@ public class DashboardMusicFragment extends BaseFragment{
 	    }
 	    
 		@Override
+		public void onTrackFwd(){
+			if(mMediaPlayerConnected){
+				mPlayerService.sendNextKey();
+			}
+		}
+
+		@Override
+		public void onTrackPrev(){
+			if(mMediaPlayerConnected){
+				mPlayerService.sendPreviousKey();
+			}
+		}
+		
+		@Override
+		public void onVoiceBtnPress(){
+			// Re-purpose this button to pause/play music
+	    	if(mMediaPlayerConnected && mCurrentRadioMode == RadioModes.AUX){
+	    		if(mIsPlaying){
+					mPlayerService.sendPauseKey();
+					mIsPlaying = true;
+	    		}else{
+					mPlayerService.sendPlayKey();
+					mIsPlaying = false;
+	    		}
+	    	}
+		}
+
+		@Override
+		public void onUpdateRadioStatus(int status){
+			// Radio is off, turn it on
+			if(status == 0){
+				sendIBusCommand(IBusCommandsEnum.BMToRadioPwrPress);
+				sendIBusCommandDelayed(IBusCommandsEnum.BMToRadioPwrRelease, 500);
+			}
+		}
+
+		@Override
+		public void onRadioCDStatusRequest(){
+			// Tell the Radio we have a CD on track 1
+			byte trackAndCD = (byte) 0x01;
+	    	sendIBusCommand(IBusCommandsEnum.BMToRadioCDStatus, 0, trackAndCD, trackAndCD);
+			if(!mCDPlayerPlaying){
+				sendIBusCommand(IBusCommandsEnum.BMToRadioCDStatus, 0, trackAndCD, trackAndCD);
+			}else{
+				sendIBusCommand(IBusCommandsEnum.BMToRadioCDStatus, 1, trackAndCD, trackAndCD);
+			}
+		}
+	    
+		@Override
 		public void onLightStatus(int lightStatus){
 			if(mSettings.getBoolean("nightColorsWithInterior", false)){
 				int color = (lightStatus == 1) ? R.color.nightColor : R.color.dayColor;
@@ -343,12 +372,14 @@ public class DashboardMusicFragment extends BaseFragment{
                 } catch (Exception e) {
                 	showToast("Unable to start; Cannot bind handler to the IBus Service");
                 }
+                Log.d(TAG, "DashboardMusic: IBus Service Bound");
             	/* This thread should make sure to send out and request
     	         * any IBus messages that the BM usually would.
     	         * We should also make sure to keep the radio in "Info"
     	         * mode at all times here.
     	         *  *** This is only required if the user doesn't have a CD53 *** 
     	         */
+                /**
 		    	if(mRadioType == RadioTypes.BM53){
 		    	    new Thread(new Runnable() {
 		    	        public void run() {
@@ -385,7 +416,7 @@ public class DashboardMusicFragment extends BaseFragment{
 		    	            }
 		    	        }
 		    	    }).start();
-		    	}
+		    	}*/
             }
         }
 
@@ -394,18 +425,40 @@ public class DashboardMusicFragment extends BaseFragment{
             Log.e(TAG, "mIBusService is disconnected");
             mIBusConnected = false;
         }
+
     };
+    
+    private void changeRadioMode(final RadioModes mode){
+        new Thread(new Runnable(){
+            public void run(){
+                try{
+                	if(mRadioType == RadioTypes.BM53){
+	                    Log.d(TAG, String.format("Current mode = %s, desired mode = %s", mCurrentRadioMode.toString(), mode.toString() ));
+	                    if( (mode == RadioModes.AUX && !(mCurrentRadioMode== RadioModes.AUX)) ||  
+	                        (mode == RadioModes.Radio && (mCurrentRadioMode != RadioModes.Radio)) ){
+	                        sendIBusCommand(IBusCommandsEnum.BMToRadioModePress);
+	                        sendIBusCommandDelayed(IBusCommandsEnum.BMToRadioModeRelease, 300);
+	                        Thread.sleep(1000);
+	                        changeRadioMode(mode);
+	                    }
+                	}
+	            }catch(InterruptedException e){
+	                e.printStackTrace();
+	            }
+            }
+        }).start();
+    }
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        Log.d(TAG, "Dashboard: onCreate Called");
+        Log.d(TAG, "DashboardMusic: onCreate Called");
     }
     
     @Override
     public void onActivityCreated (Bundle savedInstanceState){
         super.onActivityCreated(savedInstanceState);
-        Log.d(TAG, "onActivityCreated Called");
+        Log.d(TAG, "DashboardMusic: onActivityCreated Called");
         // Bind required background services last since the callback
         // functions depend on the view items being initialized
         if(!mIBusConnected){
@@ -419,7 +472,7 @@ public class DashboardMusicFragment extends BaseFragment{
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         final View v = inflater.inflate(R.layout.dashboard_music, container, false);
-        Log.d(TAG, "Dashboard: onCreateView Called");
+        Log.d(TAG, "DashboardMusic: onCreateView Called");
         
         // Load Activity Settings
         mSettings = PreferenceManager.getDefaultSharedPreferences(getActivity());
@@ -599,7 +652,7 @@ public class DashboardMusicFragment extends BaseFragment{
     @Override
     public void onResume() {
         super.onResume();
-        Log.d(TAG, "Dashboard: onResume called");
+        Log.d(TAG, "DashboardMusic: onResume called");
         if(mIBusConnected){
             Log.d(TAG, "Dashboard: IOIO bound in onResume");
             if(!mIBusService.getLinkState()){

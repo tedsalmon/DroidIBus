@@ -1,7 +1,7 @@
 package net.littlebigisland.droidibus.music;
  
 /**
- * @author Ted S <tass2001@gmail.com>
+ * @author Ted <tass2001@gmail.com>
  * @package net.littlebigisland.droidibus
  *
  */
@@ -23,6 +23,7 @@ import android.util.Log;
 import android.view.KeyEvent;
  
  
+@SuppressWarnings("deprecation")
 public class MusicControllerService extends NotificationListenerService implements RemoteController.OnClientUpdateListener {
 	
 	private static final int ARTWORK_HEIGHT = 114;
