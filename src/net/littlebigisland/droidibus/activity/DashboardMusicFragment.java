@@ -379,7 +379,6 @@ public class DashboardMusicFragment extends BaseFragment{
     	         * mode at all times here.
     	         *  *** This is only required if the user doesn't have a CD53 *** 
     	         */
-                /**
 		    	if(mRadioType == RadioTypes.BM53){
 		    	    new Thread(new Runnable() {
 		    	        public void run() {
@@ -416,7 +415,7 @@ public class DashboardMusicFragment extends BaseFragment{
 		    	            }
 		    	        }
 		    	    }).start();
-		    	}*/
+		    	}
             }
         }
 
