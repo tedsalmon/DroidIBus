@@ -377,11 +377,12 @@ public class DashboardMusicFragment extends BaseFragment{
     	         * any IBus messages that the BM usually would.
     	         * We should also make sure to keep the radio in "Info"
     	         * mode at all times here.
-    	         *  *** This is only required if the user doesn't have a CD53 *** 
+    	         *  -This is only required if the user has a BM53-
     	         */
 		    	if(mRadioType == RadioTypes.BM53){
 		    	    new Thread(new Runnable() {
 		    	        public void run() {
+		    	        	final int radioStatusTimeout = 5000;
 		    	            mLastRadioStatus = 0;
 		    	            while(mIBusConnected){
 		    	                try{
@@ -393,13 +394,13 @@ public class DashboardMusicFragment extends BaseFragment{
 		    	                                // BM Emulation
 		    	                                
 		    	                                // Ask the radio for it's status
-		    	                                if((currentTime - mLastRadioStatusRequest) >= 10000){
+		    	                                if((currentTime - mLastRadioStatusRequest) >= radioStatusTimeout){
 		    	                                    sendIBusCommand(IBusCommandsEnum.BMToRadioGetStatus);
 		    	                                    mLastRadioStatusRequest = currentTime;
 		    	                                }
 		    	                                
 		    	                                long statusDiff = currentTime - mLastRadioStatus;
-		    	                                if(statusDiff > 10000 && ! (mCurrentRadioMode == RadioModes.AUX)){
+		    	                                if(statusDiff > radioStatusTimeout && ! (mCurrentRadioMode == RadioModes.AUX)){
 		    	                                    sendIBusCommand(IBusCommandsEnum.BMToRadioInfoPress);
 		    	                                    sendIBusCommandDelayed(IBusCommandsEnum.BMToRadioInfoRelease, 500);
 		    	                                }
@@ -407,7 +408,8 @@ public class DashboardMusicFragment extends BaseFragment{
 		    	                        });
 		    	                        Thread.sleep(5000);
 		    	                    }else{
-		    	                        Thread.sleep(500); // More aggressive since the IOIO could connect at any time
+		    	                    	// Aggressive timing since the IOIO could connect at any time
+		    	                        Thread.sleep(500);
 		    	                    }
 		    	                }catch(InterruptedException e){
 		    	                    // First world anarchy
@@ -479,10 +481,6 @@ public class DashboardMusicFragment extends BaseFragment{
         // Radio Type
         String radioType = mSettings.getString("radioType", "BM53");
         mRadioType = (radioType.equals("BM53")) ? RadioTypes.BM53 : RadioTypes.CD53;
-        
-        if(mCurrentRadioMode == null){
-        	mCurrentRadioMode = RadioModes.AUX;
-        }
         
         // Layouts
         mRadioLayout = (LinearLayout) v.findViewById(R.id.radioAudio);
