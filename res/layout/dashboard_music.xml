@@ -202,5 +202,10 @@
 	        android:checked="true"
 	        android:textOn="Tablet"
 	        android:textOff="Radio" />
+	    <Spinner
+            android:id="@+id/mediaSessionSelector"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:gravity="right" />
 	 </LinearLayout>
 </RelativeLayout>
