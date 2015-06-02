@@ -1,11 +1,16 @@
 package net.littlebigisland.droidibus.music;
  
 /**
+ * MusicControllerService class
+ * Handle communication between active Media Sessions and our Activity
+ * by implementing Android "L" MusicControllerService class
  * @author Ted <tass2001@gmail.com>
  * @package net.littlebigisland.droidibus
  *
  */
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import android.content.ComponentName;
 import android.content.Context;
@@ -14,6 +19,7 @@ import android.media.session.MediaSessionManager;
 import android.media.session.MediaController;
 import android.os.Binder;
 import android.os.Handler;
+import android.os.IBinder;
 import android.service.notification.NotificationListenerService;
 import android.util.Log;
 import android.view.KeyEvent;
@@ -23,17 +29,15 @@ public class MusicControllerService extends NotificationListenerService implemen
     
     private static String TAG = "DroidIBus";
     private static String CTAG = "MediaControllerService: ";
-    //private static final int ARTWORK_HEIGHT = 114;
-    //private static final int ARTWORK_WIDTH = 114;
     private Context mContext;
+    private IBinder mBinder = new MusicControllerBinder();
     
     private List<MediaController> mMediaControllers = null;
     private MediaController mActiveMediaController = null;
     private MediaController.TransportControls mActiveMediaTransport = null;
     // Callback provided by user 
-    //private List<MediaController.Callback> mClientCallbacks = new ArrayList<MediaController.Callback>();
+    private Map<Handler, MediaController.Callback> mClientCallbacks = new HashMap<Handler, MediaController.Callback>();
     
-
     /**
      * Return the MusicControllerService on bind
      * @return MusicControllerService instance
@@ -42,6 +46,22 @@ public class MusicControllerService extends NotificationListenerService implemen
         public MusicControllerService getService(){
             return MusicControllerService.this;
         }
+    }
+    
+    /**
+     * Returns the active media controller
+     * @return MediaController
+     */
+    public MediaController getActiveMediaController(){
+        return mActiveMediaController;
+    }
+    
+    /**
+     * Returns the TransportControls for the active media controller
+     * @return MediaController.TransportControls
+     */
+    public MediaController.TransportControls getActiveMediaTransport(){
+        return mActiveMediaTransport;
     }
 
     /**
@@ -58,8 +78,44 @@ public class MusicControllerService extends NotificationListenerService implemen
         return sessionNames;
     }
     
-    public MediaController.TransportControls getActiveMediaTransport(){
-        return mActiveMediaTransport;
+    /**
+     * Return the MusicControllerBinder to any
+     * activities that bind to this service
+     * @return mBinder - The classes Binder
+     */
+    @Override
+    public IBinder onBind(Intent intent) {
+        return mBinder;
+    }
+    
+    /**
+     * Handle session disconnection
+     */
+    public void onSessionDisconnected(){
+        Log.i(TAG, CTAG + "MediaSession disconnected");
+        mMediaControllers.clear();
+        refreshActiveMediaControllers();
+        // Start the default player if no media sessions are active
+        if(mMediaControllers.size() == 0){
+            sendKeyEvent(KeyEvent.KEYCODE_MEDIA_PLAY_PAUSE);
+        }
+    }
+    
+    /**
+     * Register callback with the active media session
+     * @param cb Clients callback class implementation
+     * @param handle The handle to the clients thread
+     */
+    public void registerCallback(MediaController.Callback cb, Handler handle){
+        mClientCallbacks.put(handle, cb);
+        if(mActiveMediaController != null){
+            mActiveMediaController.registerCallback(cb, handle);            
+        }else{
+            Log.e(
+                TAG,
+                CTAG + "Attempted to registerCallback for a null active session"
+            );
+        }
     }
     
     /**
@@ -76,19 +132,14 @@ public class MusicControllerService extends NotificationListenerService implemen
         if(newSession != null){
             mActiveMediaController = newSession;
             mActiveMediaTransport = newSession.getTransportControls();
+            for(Handler handle: mClientCallbacks.keySet()){
+                mActiveMediaController.registerCallback(
+                    mClientCallbacks.get(handle),
+                    handle
+                );
+            }
         }else{
             Log.e(TAG, CTAG + "Requested MediaSession not found!");
-        }
-    }
-    
-    public void registerCallback(MediaController.Callback cb, Handler handle){
-        if(mActiveMediaController != null){
-            mActiveMediaController.registerCallback(cb, handle);            
-        }else{
-            Log.e(
-                TAG,
-                CTAG + "Attempted to registerCallback for a null active session"
-            );
         }
     }
     
@@ -148,17 +199,21 @@ public class MusicControllerService extends NotificationListenerService implemen
                 )
             );
         }
+        // Default to the first session if we don't have one
+        if(mActiveMediaController == null && mMediaControllers.size() > 0){
+            setActiveMediaSession(mMediaControllers.get(0).getPackageName());
+        }
     }
     
     @Override
     public void onActiveSessionsChanged(List<MediaController> mediaControllers){
-        Log.d(TAG, "MediaControllerService: System MediaSessions changed");
+        Log.i(TAG, CTAG + "System MediaSessions changed");
         setActiveMediaControllers(mediaControllers);
     }
     
     @Override
     public void onCreate(){
-        Log.d(TAG, "MusicControllerService onCreate()");
+        Log.d(TAG, CTAG + "onCreate()");
         // Saving the context for further reuse
         mContext = getApplicationContext();
         // Get the session manager and register
