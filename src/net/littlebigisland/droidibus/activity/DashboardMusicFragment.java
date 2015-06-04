@@ -1,6 +1,11 @@
 package net.littlebigisland.droidibus.activity;
 
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Calendar;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Locale;
 
 import net.littlebigisland.droidibus.R;
 import net.littlebigisland.droidibus.ibus.IBusCommandsEnum;
@@ -45,7 +50,7 @@ import android.widget.SeekBar.OnSeekBarChangeListener;
 
 public class DashboardMusicFragment extends BaseFragment{
 
-    protected String CTAG = "DashboardMusicFragment";
+    protected String CTAG = "DashboardMusicFragment: ";
     protected Handler mHandler = new Handler();
     protected SharedPreferences mSettings = null;
     
@@ -65,8 +70,12 @@ public class DashboardMusicFragment extends BaseFragment{
     protected Switch mBtnMusicMode;
     protected Spinner mMediaSessionSelector;
     
+    
+    ArrayAdapter<String> mMediaControllerSelectorAdapter = null;
+    ArrayList<String> mMediaControllerSelectorList = new ArrayList<String>();
+    HashMap<String,String> mMediaControllerNames = new HashMap<String,String>();
+    
     protected MusicControllerService mPlayerService;
-    protected MediaController.TransportControls mPlayerControls = null;
     protected boolean mMediaPlayerConnected = false;
 
     protected boolean mIsPlaying = false;
@@ -131,13 +140,13 @@ public class DashboardMusicFragment extends BaseFragment{
                 MusicControllerService.MusicControllerBinder
             ) service;
             mPlayerService = serviceBinder.getService();
-            mPlayerControls = mPlayerService.getActiveMediaTransport();
             mPlayerService.registerCallback(mPlayerCallbacks, mHandler);
             
-            MediaController controls = mPlayerService.getActiveMediaController();
-            if(controls != null){
-                setMediaMetadata(controls.getMetadata());
-                setPlaybackState(controls.getPlaybackState());
+            MediaController playerRemote = mPlayerService.getMediaController();
+            if(playerRemote != null){
+                mMediaPlayerConnected = true;
+                setMediaMetadata(playerRemote.getMetadata());
+                setPlaybackState(playerRemote.getPlaybackState().getState());
             }
             mHandler.post(mUpdateAvailableControllers);
         }
@@ -149,15 +158,16 @@ public class DashboardMusicFragment extends BaseFragment{
         }
 
     };
+    
     private Runnable mUpdateAvailableControllers = new Runnable(){
         @Override
         public void run(){
             if(mMediaPlayerConnected){
                 setMediaControllerSelection(
-                    mPlayerService.getAvailableMediaSessions()
+                    mPlayerService.getMediaSessions()
                 );
-                mHandler.postDelayed(this, CONTROLLER_UPDATE_RATE);
             }
+            mHandler.postDelayed(this, CONTROLLER_UPDATE_RATE);
         }
     };
     
@@ -166,16 +176,14 @@ public class DashboardMusicFragment extends BaseFragment{
         public void run(){
             if(mMediaPlayerConnected){
                 mPlayerScrubBar.setProgress(
-                    (int)mPlayerService.getActiveMediaController()
+                    (int)mPlayerService.getMediaController()
                         .getPlaybackState().getPosition()
                 );
                 mHandler.postDelayed(this, SEEKBAR_UPDATE_RATE);
             }
         }
     };
-    
-    
-    
+
     /**
      *  This thread should make sure to send out and request
      *  any IBus messages that the BM usually would.
@@ -229,27 +237,44 @@ public class DashboardMusicFragment extends BaseFragment{
         
         @Override
         public void onAudioInfoChanged(MediaController.PlaybackInfo info){
+            Log.d(TAG, CTAG + "Callback onAudioInfoChanged()");
             mMediaPlayerConnected = true;
         }
         
         @Override
         public void onMetadataChanged(MediaMetadata metadata){
-            Log.d(TAG,  CTAG + "onMetadataChanged()");
+            Log.d(TAG, CTAG + "Callback onMetadataChanged()");
             setMediaMetadata(metadata);
         }
 
         @Override
         public void onPlaybackStateChanged(PlaybackState state){
-            Log.d(TAG,  CTAG + "onPlaybackStateChanged()");
-            setPlaybackState(state);
+            Log.d(TAG,  CTAG + "Callback onPlaybackStateChanged()");
+            mMediaPlayerConnected = true;
+            setPlaybackState(state.getState());
         }
 
         @Override
         public void onSessionDestroyed(){
-            Log.d(TAG,  CTAG + "onSessionDestroyed()");
+            Log.d(TAG,  CTAG + "Callback onSessionDestroyed()");
             mMediaPlayerConnected = false;
-            mPlayerService.onSessionDisconnected();
         }
+        
+        @Override
+        public void onExtrasChanged(Bundle extras){
+            Log.d(TAG, CTAG + "Callback onExtrasChanged() called");
+        }
+
+        @Override
+        public void onQueueTitleChanged(CharSequence title){
+            Log.d(TAG, CTAG + "Callback onQueueTitleChanged() called");
+        }
+
+        @Override
+        public void onSessionEvent(String event, Bundle extras){
+            Log.d(TAG, CTAG + "Callback onSessionEvent() called");
+        }
+
 
     };
     
@@ -348,14 +373,14 @@ public class DashboardMusicFragment extends BaseFragment{
                         @Override
                         public void run() {
                             mIsPlaying = true;
-                            mPlayerControls.play();
+                            mPlayerService.getRemote().play();
                         }
                     }, 1000);
                     mWasPlaying = false;
                 }
             }else{
                 if(mMediaPlayerConnected && mCurrentRadioMode == RadioModes.AUX && mIsPlaying){
-                    mPlayerControls.pause();
+                    mPlayerService.getRemote().pause();
                     mIsPlaying = false;
                     mWasPlaying = true;
                 }
@@ -365,14 +390,14 @@ public class DashboardMusicFragment extends BaseFragment{
         @Override
         public void onTrackFwd(){
             if(mMediaPlayerConnected){
-                mPlayerControls.skipToNext();
+                mPlayerService.getRemote().skipToNext();
             }
         }
         
         @Override
         public void onTrackPrev(){
             if(mMediaPlayerConnected){
-                mPlayerControls.skipToPrevious();
+                mPlayerService.getRemote().skipToPrevious();
             }
         }
         
@@ -381,10 +406,10 @@ public class DashboardMusicFragment extends BaseFragment{
             // Re-purpose this button to pause/play music
             if(mMediaPlayerConnected && mCurrentRadioMode == RadioModes.AUX){
                 if(mIsPlaying){
-                    mPlayerControls.pause();
+                    mPlayerService.getRemote().pause();
                     mIsPlaying = true;
                 }else{
-                    mPlayerControls.play();
+                    mPlayerService.getRemote().play();
                     mIsPlaying = false;
                 }
             }
@@ -425,14 +450,71 @@ public class DashboardMusicFragment extends BaseFragment{
 
     };
     
-    private void setMediaControllerSelection(String[] availControllers){
-        ArrayAdapter<String> mediaControllerStringAdapter = new ArrayAdapter<String>(
-            getActivity().getApplicationContext(),
-            R.id.mediaSessionSelector,
-            availControllers
-        );
-        mediaControllerStringAdapter.setDropDownViewResource(R.id.mediaSessionSelector);
-        mMediaSessionSelector.setAdapter(mediaControllerStringAdapter);
+    private String cleanClassName(String cname){
+        String canonName = cname;
+        canonName = canonName.replace("android", "");
+        canonName = canonName.replace("com.", "");
+        canonName = canonName.replace(".", " ");
+        String returnString = "";
+        String[] canonArray = canonName.split("(?!^)");
+        for (int i = 0; i < canonArray.length; i++){
+            String currChar = canonArray[i];
+            if(i == 0){
+                currChar = currChar.toUpperCase(Locale.ENGLISH);
+            }else{
+                if(canonArray[i - 1].equals(" ")){
+                    currChar = currChar.toUpperCase(Locale.ENGLISH);
+                }
+            }
+            returnString += currChar;
+        }
+        return returnString;
+    }
+    
+    /**
+     * Update our spinner's list of remotes based on input String array
+     * @param remoteList String array of the currently available remotes
+     */
+    private void setMediaControllerSelection(String[] remoteList){
+        if(mMediaControllerSelectorAdapter == null){
+            mMediaControllerSelectorAdapter = new ArrayAdapter<String>(
+                getActivity().getApplicationContext(),
+                android.R.layout.simple_spinner_item,
+                mMediaControllerSelectorList
+            );
+            mMediaControllerSelectorAdapter.setDropDownViewResource(
+                android.R.layout.simple_spinner_dropdown_item
+            );
+            mMediaSessionSelector.setAdapter(mMediaControllerSelectorAdapter);
+        }else{
+            List<String> availRemotes = Arrays.asList(remoteList);
+            // Add new items that don't already exist
+            for(String remote: availRemotes){
+                String cannonicalName = cleanClassName(remote);
+                mMediaControllerNames.put(cannonicalName, remote);
+                if(!mMediaControllerSelectorList.contains(cannonicalName)){
+                    mMediaControllerSelectorList.add(cannonicalName);
+                }
+            }
+            // Remove items that no longer exist
+            for(int i = 0; i < mMediaControllerSelectorList.size(); i++){
+                String remote = mMediaControllerSelectorList.get(i);
+                String className = mMediaControllerNames.get(remote);
+                if(!availRemotes.contains(className)){
+                    mMediaControllerSelectorList.remove(remote);
+                }
+            }
+            // Make sure the active player is selected
+            MediaController amc = mPlayerService.getMediaController();
+            if(amc != null){
+                mMediaSessionSelector.setSelection(
+                    mMediaControllerSelectorList.indexOf(
+                        cleanClassName(amc.getPackageName())
+                    )
+                );
+            }
+            mMediaControllerSelectorAdapter.notifyDataSetChanged();
+        }
     }
     
     private void setMediaMetadata(MediaMetadata md){
@@ -447,12 +529,14 @@ public class DashboardMusicFragment extends BaseFragment{
                     albumArt, ARTWORK_HEIGHT, ARTWORK_WIDTH, false
                 )
             );
+        }else{
+            mPlayerArtwork.setImageResource(0);
         }
         mPlayerScrubBar.setMax((int) mSongDuration);
     }
     
-    private void setPlaybackState(PlaybackState state){
-        switch(state.getState()){
+    private void setPlaybackState(int state){
+        switch(state){
             case PlaybackState.STATE_PLAYING:
                 mIsPlaying = true;
                 mPlayerControlBtn.setImageResource(
@@ -489,20 +573,20 @@ public class DashboardMusicFragment extends BaseFragment{
             }
         }).start();
     }
-
-    @Override
-    public void onCreate(Bundle savedInstanceState){
-        super.onCreate(savedInstanceState);
-        Log.d(TAG, "DashboardMusic: onCreate Called");
-    }
     
     @Override
     public void onActivityCreated (Bundle savedInstanceState){
         super.onActivityCreated(savedInstanceState);
         Log.d(TAG, "DashboardMusic: onActivityCreated Called");
-        // Bind required background services last since the callback
-        // functions depend on the view items being initialized
-        if(!mIBusConnected){
+        if(mIBusConnected){
+            Log.d(TAG, "DashboardMusic: IOIO bound in onResume");
+            if(!mIBusService.getLinkState()){
+                serviceStopper(IBusMessageService.class, mIBusConnection);
+                serviceStarter(IBusMessageService.class, mIBusConnection);
+                Log.d(TAG, "Dashboard: IOIO Not connected in onResume");
+            }
+        }else{
+            Log.d(TAG, "DashboardMusic: IOIO NOT bound in onResume");
             serviceStarter(IBusMessageService.class, mIBusConnection);
         }
         if(!mMediaPlayerConnected){
@@ -540,46 +624,66 @@ public class DashboardMusicFragment extends BaseFragment{
         mPlayerScrubBar = (SeekBar) v.findViewById(R.id.playerTrackBar);
         
         mMediaSessionSelector = (Spinner) v.findViewById(R.id.mediaSessionSelector);
-        setMediaControllerSelection(new String[]{"----"});
-              
+        // Scroll Title
+        mPlayerTitleText.setSelected(true);
+        // Default text
+        mMediaControllerSelectorAdapter = new ArrayAdapter<String>(
+            getActivity().getApplicationContext(),
+            android.R.layout.simple_spinner_item,
+            mMediaControllerSelectorList
+        );
+        mMediaControllerSelectorAdapter.setDropDownViewResource(
+            android.R.layout.simple_spinner_dropdown_item
+        );
+        mMediaSessionSelector.setAdapter(mMediaControllerSelectorAdapter);
+        
         mMediaSessionSelector.setOnItemSelectedListener(new OnItemSelectedListener(){
-
+            String mCurrentSessionName = null;
             @Override
             public void onItemSelected(AdapterView<?> parent, View view,
                     int position, long id) {
-                mMediaSessionSelector.setSelection(position);
-                mPlayerService.setActiveMediaSession(
+                String remoteName = mMediaControllerNames.get(
                     (String) mMediaSessionSelector.getSelectedItem()
                 );
-                // TODO Auto-generated method stub
-                
+                if(mCurrentSessionName == null){
+                    mCurrentSessionName = remoteName;
+                }
+                if(!remoteName.equals(mCurrentSessionName)){
+                    Log.d(TAG, CTAG + "Setting session to "+ remoteName);
+                    mPlayerService.getRemote().pause();
+                    setPlaybackState(PlaybackState.STATE_PAUSED);
+                    mMediaSessionSelector.setSelection(position);
+                    mPlayerService.setMediaSession(remoteName);
+                    mCurrentSessionName = remoteName;
+                    setMediaMetadata(mPlayerService.getMediaController().getMetadata());
+                }
             }
 
             @Override
-            public void onNothingSelected(AdapterView<?> parent) {
+            public void onNothingSelected(AdapterView<?> parent){
                 // Do nothing
             }
             
         });
         
-        OnClickListener playerClickListener = new OnClickListener() {
+        OnClickListener playerClickListener = new OnClickListener(){
             @Override
             public void onClick(View v) {
                 if(mMediaPlayerConnected){
                     switch(v.getId()) {
                         case R.id.playerPrevBtn:
-                            mPlayerControls.skipToPrevious();
+                            mPlayerService.getRemote().skipToPrevious();
                             break;
                         case R.id.playerNextBtn:
-                            mPlayerControls.skipToNext();
+                            mPlayerService.getRemote().skipToNext();
                             break;
                         case R.id.playerPlayPauseBtn:
                             if(mIsPlaying) {
                                 mIsPlaying = false;
-                                mPlayerControls.pause();
+                                mPlayerService.getRemote().pause();
                             } else {
                                 mIsPlaying = true;
-                                mPlayerControls.play();
+                                mPlayerService.getRemote().play();
                             }
                             break;
                     }
@@ -607,7 +711,7 @@ public class DashboardMusicFragment extends BaseFragment{
 
             @Override
             public void onStopTrackingTouch(SeekBar seekBar) {
-                mPlayerControls.seekTo(mSeekPosition);
+                mPlayerService.getRemote().seekTo(mSeekPosition);
                 mHandler.post(mUpdateSeekBar);
             }
         });
@@ -660,7 +764,7 @@ public class DashboardMusicFragment extends BaseFragment{
                     mTabletLayout.setVisibility(View.VISIBLE);
                 }else{
                     if(mIsPlaying){
-                        mPlayerControls.pause();
+                        mPlayerService.getRemote().pause();
                     }
                     // Send IBus Message
                     if((mCurrentRadioMode == RadioModes.AUX || mCurrentRadioMode == RadioModes.CD) && mRadioType == RadioTypes.BM53){
@@ -709,20 +813,15 @@ public class DashboardMusicFragment extends BaseFragment{
     }
     
     @Override
-    public void onResume() {
-        super.onResume();
-        Log.d(TAG, "DashboardMusic: onResume called");
+    public void onDestroyView() {
+        super.onDestroyView();
+        Log.d(TAG, CTAG + "onDestroyView() called");
         if(mIBusConnected){
-            Log.d(TAG, "Dashboard: IOIO bound in onResume");
-            if(!mIBusService.getLinkState()){
-                serviceStopper(IBusMessageService.class, mIBusConnection);
-                serviceStarter(IBusMessageService.class, mIBusConnection);
-                Log.d(TAG, "Dashboard: IOIO Not connected in onResume");
-            }
-        }else{
-            Log.d(TAG, "Dashboard: IOIO NOT bound in onResume");
-            serviceStarter(IBusMessageService.class, mIBusConnection);
+            serviceStopper(IBusMessageService.class, mIBusConnection);
+        }
+        if(mMediaPlayerConnected){
+            mPlayerService.unregisterCallback(mPlayerCallbacks);
+            serviceStopper(MusicControllerService.class, mPlayerConnection);
         }
     }
-
 }
