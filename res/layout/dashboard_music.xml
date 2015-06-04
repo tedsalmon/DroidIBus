@@ -48,6 +48,10 @@
 	                android:layout_width="fill_parent"
 	                android:layout_height="wrap_content"
 	                android:gravity="center_horizontal"
+	                android:ellipsize="marquee"
+	                android:marqueeRepeatLimit="marquee_forever"
+	                android:scrollHorizontally="true"
+	                android:singleLine="true"
 	                android:text="@string/defaultText" />
 	 
 	            <LinearLayout
@@ -193,19 +197,30 @@
 	    android:layout_below="@+id/radioControlLayout"
 	    android:layout_width="match_parent"
 	    android:layout_height="wrap_content"
-	    
 	    android:orientation="horizontal">
-	    <Switch
-	        android:id="@+id/btnMusicMode"
-	        android:layout_width="wrap_content"
-	        android:layout_height="wrap_content"
-	        android:checked="true"
-	        android:textOn="Tablet"
-	        android:textOff="Radio" />
-	    <Spinner
-            android:id="@+id/mediaSessionSelector"
+	    <LinearLayout
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:gravity="right" />
-	 </LinearLayout>
+            android:gravity="left">
+		    <Switch
+		        android:id="@+id/btnMusicMode"
+		        android:layout_width="wrap_content"
+		        android:layout_height="wrap_content"
+		        android:checked="true"
+		        android:textOn="Tablet"
+		        android:textOff="Radio" />
+		</LinearLayout>
+
+	    <LinearLayout
+	        android:layout_width="fill_parent"
+	        android:layout_height="wrap_content"
+	        android:gravity="right" >
+
+		    <Spinner
+	            android:id="@+id/mediaSessionSelector"
+	            android:layout_width="wrap_content"
+	            android:layout_height="wrap_content"
+	            android:text="@string/defaultText" />
+	    </LinearLayout>
+	</LinearLayout>
 </RelativeLayout>
