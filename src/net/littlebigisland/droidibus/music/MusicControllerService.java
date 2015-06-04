@@ -8,6 +8,7 @@ package net.littlebigisland.droidibus.music;
  * @package net.littlebigisland.droidibus
  *
  */
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -15,8 +16,10 @@ import java.util.Map;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
+import android.media.session.MediaSession.Token;
 import android.media.session.MediaSessionManager;
 import android.media.session.MediaController;
+import android.media.session.PlaybackState;
 import android.os.Binder;
 import android.os.Handler;
 import android.os.IBinder;
@@ -32,9 +35,12 @@ public class MusicControllerService extends NotificationListenerService implemen
     private Context mContext;
     private IBinder mBinder = new MusicControllerBinder();
     
-    private List<MediaController> mMediaControllers = null;
+    Map<String, MediaController> mMediaControllers = new HashMap<String, MediaController>();
     private MediaController mActiveMediaController = null;
     private MediaController.TransportControls mActiveMediaTransport = null;
+    
+    Map<String, String> mMediaControllerSessionMap = new HashMap<String, String>();
+    
     // Callback provided by user 
     private Map<Handler, MediaController.Callback> mClientCallbacks = new HashMap<Handler, MediaController.Callback>();
     
@@ -52,7 +58,7 @@ public class MusicControllerService extends NotificationListenerService implemen
      * Returns the active media controller
      * @return MediaController
      */
-    public MediaController getActiveMediaController(){
+    public MediaController getMediaController(){
         return mActiveMediaController;
     }
     
@@ -60,7 +66,7 @@ public class MusicControllerService extends NotificationListenerService implemen
      * Returns the TransportControls for the active media controller
      * @return MediaController.TransportControls
      */
-    public MediaController.TransportControls getActiveMediaTransport(){
+    public MediaController.TransportControls getMediaTransport(){
         return mActiveMediaTransport;
     }
 
@@ -68,14 +74,22 @@ public class MusicControllerService extends NotificationListenerService implemen
      * Returns a list of active sessions we have registered
      * @return List of available sessions
      */
-    public String[] getAvailableMediaSessions(){
+    public String[] getMediaSessions(){
         String[] sessionNames = new String[mMediaControllers.size()];
         int index = 0;
-        for (MediaController controller : mMediaControllers){
+        for (MediaController controller : mMediaControllers.values()){
             sessionNames[index] = controller.getPackageName();
             index++;
         }
         return sessionNames;
+    }
+    
+    /**
+     * Convenience method for getActiveMediaTransport()
+     * @return MediaController.TransportControls
+     */
+    public MediaController.TransportControls getRemote(){
+        return getMediaTransport();
     }
     
     /**
@@ -89,19 +103,6 @@ public class MusicControllerService extends NotificationListenerService implemen
     }
     
     /**
-     * Handle session disconnection
-     */
-    public void onSessionDisconnected(){
-        Log.i(TAG, CTAG + "MediaSession disconnected");
-        mMediaControllers.clear();
-        refreshActiveMediaControllers();
-        // Start the default player if no media sessions are active
-        if(mMediaControllers.size() == 0){
-            sendKeyEvent(KeyEvent.KEYCODE_MEDIA_PLAY_PAUSE);
-        }
-    }
-    
-    /**
      * Register callback with the active media session
      * @param cb Clients callback class implementation
      * @param handle The handle to the clients thread
@@ -111,10 +112,7 @@ public class MusicControllerService extends NotificationListenerService implemen
         if(mActiveMediaController != null){
             mActiveMediaController.registerCallback(cb, handle);            
         }else{
-            Log.e(
-                TAG,
-                CTAG + "Attempted to registerCallback for a null active session"
-            );
+            Log.e(TAG, CTAG + "Attempted to registerCallback on a null session");
         }
     }
     
@@ -122,24 +120,51 @@ public class MusicControllerService extends NotificationListenerService implemen
      * Switch the active media session to the given session name 
      * @param sessionName The string name of the session to switch to
      */
-    public void setActiveMediaSession(String sessionName){
+    public void setMediaSession(String sessionName){
         MediaController newSession = null;
-        for (MediaController controller : mMediaControllers){
-            if(sessionName == controller.getPackageName()){
-                newSession = controller;
+        String sessionToken = mMediaControllerSessionMap.get(sessionName);
+        Log.d(TAG, CTAG + "Session Token " + sessionToken);
+        if(sessionToken != null){
+            newSession = mMediaControllers.get(sessionToken);
+            String oldSessionToken = "";
+            if(mActiveMediaController != null){
+                oldSessionToken = mActiveMediaController.getSessionToken().toString();
             }
-        }
-        if(newSession != null){
-            mActiveMediaController = newSession;
-            mActiveMediaTransport = newSession.getTransportControls();
-            for(Handler handle: mClientCallbacks.keySet()){
-                mActiveMediaController.registerCallback(
-                    mClientCallbacks.get(handle),
-                    handle
+            if(newSession != null && oldSessionToken != sessionToken){
+                Log.d(TAG, CTAG + "Switching to session " + sessionName);
+                for(Handler handle: mClientCallbacks.keySet()){
+                    MediaController.Callback cb = mClientCallbacks.get(handle);
+                    if(mActiveMediaController != null){
+                        mActiveMediaController.unregisterCallback(cb);
+                    }
+                    newSession.registerCallback(cb, handle);
+                }
+                mActiveMediaController = newSession;
+                mActiveMediaTransport = newSession.getTransportControls();
+                Log.d(
+                    TAG,
+                    String.format(
+                        CTAG + "Session set to %s", mActiveMediaController.getPackageName()
+                    )
                 );
+            }else{
+                
             }
+
         }else{
             Log.e(TAG, CTAG + "Requested MediaSession not found!");
+        }
+    }
+    
+    /**
+     * Unregister the given callback from the active Media Controller
+     * @param cb Clients callback class implementation
+     */
+    public void unregisterCallback(MediaController.Callback cb){
+        Log.d(TAG, CTAG + "Unregistering Callback via unregisterCallback()");
+        mClientCallbacks.values().remove(cb);
+        if(mActiveMediaController != null){
+            mActiveMediaController.unregisterCallback(cb);
         }
     }
     
@@ -157,9 +182,9 @@ public class MusicControllerService extends NotificationListenerService implemen
      * Query the system for actively registered MediaSessions
      * and store them for future use
      */
-    private void refreshActiveMediaControllers(){
+    private void refreshMediaControllers(){
         MediaSessionManager mediaManager = getMediaSessionManager();
-        setActiveMediaControllers(mediaManager.getActiveSessions(
+        setMediaControllers(mediaManager.getActiveSessions(
             new ComponentName(mContext, MusicControllerService.class)
         ));
     }
@@ -186,29 +211,65 @@ public class MusicControllerService extends NotificationListenerService implemen
      * Store and report the MediaControllers found
      * @param mediaControllers List of MediaControllers to store
      */
-    private void setActiveMediaControllers(List<MediaController> mediaControllers){
+    private void setMediaControllers(List<MediaController> mediaControllers){
         Log.d(TAG, CTAG + "Sessions Changed");
-        mMediaControllers = mediaControllers;
-        for (MediaController controller : mediaControllers){
+        List<String> currentSessions = new ArrayList<String>();
+        for (MediaController remote: mediaControllers){
+            String sToken = remote.getSessionToken().toString();
+            String sName = remote.getPackageName();
+            currentSessions.add(sToken);
+            if(!mMediaControllers.containsKey(sToken)){
+                mMediaControllers.put(sToken, remote);
+                mMediaControllerSessionMap.put(sName, sToken);
+            }
             Log.i(
                 TAG,
                 String.format(
-                    CTAG + "Found MediaSession for package %s with state %s",
-                    controller.getPackageName(),
-                    controller.getPlaybackState().toString()
+                    CTAG + "Found MediaSession for package %s with state %s and token %s",
+                    remote.getPackageName(),
+                    remote.getPlaybackState(),
+                    sToken
                 )
             );
         }
-        // Default to the first session if we don't have one
-        if(mActiveMediaController == null && mMediaControllers.size() > 0){
-            setActiveMediaSession(mMediaControllers.get(0).getPackageName());
+        // Remove Controllers that aren't active
+        for(String sToken: mMediaControllers.keySet()){
+            if(!currentSessions.contains(sToken)){
+                mMediaControllers.remove(sToken);
+                mMediaControllerSessionMap.values().remove(sToken);
+            }
+        }
+        // Default to a session if only one exists
+        if(
+            (mActiveMediaController == null && ! mMediaControllers.isEmpty())
+            || 
+            mMediaControllers.size() == 1
+        ){
+            setMediaSession(
+                mMediaControllers.get(currentSessions.get(0)).getPackageName()
+            );
+        }
+        // Make sure if there's a session playing
+        //  that we set it to be the active session
+        for(MediaController remote: mMediaControllers.values()){
+            PlaybackState ps = remote.getPlaybackState();
+            if(ps != null){
+                if(ps.getState() == PlaybackState.STATE_PLAYING){
+                    Token currToken = remote.getSessionToken();
+                    if(currToken != mActiveMediaController.getSessionToken()){
+                        setMediaSession(
+                            mMediaControllers.get(currToken.toString()).getPackageName()
+                        );
+                    }
+                }
+            }
         }
     }
     
     @Override
     public void onActiveSessionsChanged(List<MediaController> mediaControllers){
         Log.i(TAG, CTAG + "System MediaSessions changed");
-        setActiveMediaControllers(mediaControllers);
+        setMediaControllers(mediaControllers);
     }
     
     @Override
@@ -223,11 +284,20 @@ public class MusicControllerService extends NotificationListenerService implemen
             new ComponentName(mContext, MusicControllerService.class)
         );
         // Get the current active media sessions
-        refreshActiveMediaControllers();
+        refreshMediaControllers();
         // Handle no active sessions
         if(mMediaControllers.size() == 0){
             sendKeyEvent(KeyEvent.KEYCODE_MEDIA_PLAY_PAUSE);
         }
     }
     
+    @Override
+    public void onDestroy(){
+        super.onDestroy();
+        Log.d(TAG, CTAG + "onDestroy()");
+        // Unregister ALL callbacks
+        for(MediaController.Callback cb: mClientCallbacks.values()){
+            unregisterCallback(cb);
+        }
+    }
 }
