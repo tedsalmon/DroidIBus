@@ -38,6 +38,7 @@
 	            android:scaleType="center" />
 	
 	        <LinearLayout
+	            android:id="@+id/playerMetaDataLayout"
 	            android:layout_width="560dp"
 	            android:layout_height="wrap_content"
 	            android:orientation="vertical" >

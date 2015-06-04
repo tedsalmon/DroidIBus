@@ -15,6 +15,7 @@ import net.littlebigisland.droidibus.ibus.IBusMessageService.IOIOBinder;
 import net.littlebigisland.droidibus.music.MusicControllerService;
 import android.annotation.SuppressLint;
 import android.content.ComponentName;
+import android.content.Intent;
 import android.content.ServiceConnection;
 import android.content.SharedPreferences;
 import android.graphics.Bitmap;
@@ -62,7 +63,7 @@ public class DashboardMusicFragment extends BaseFragment{
         mBroadcastField, mStereoField;
 
     // Views in the Activity
-    protected LinearLayout mRadioLayout, mTabletLayout;
+    protected LinearLayout mRadioLayout, mTabletLayout, mMetaDataLayout;
     protected ImageButton mPlayerPrevBtn, mPlayerControlBtn, mPlayerNextBtn;
     protected TextView mPlayerArtistText, mPlayerTitleText, mPlayerAlbumText;
     protected SeekBar mPlayerScrubBar;
@@ -609,6 +610,7 @@ public class DashboardMusicFragment extends BaseFragment{
         // Layouts
         mRadioLayout = (LinearLayout) v.findViewById(R.id.radioAudio);
         mTabletLayout = (LinearLayout) v.findViewById(R.id.tabletAudio);
+        mMetaDataLayout = (LinearLayout) v.findViewById(R.id.playerMetaDataLayout);
 
         // Music Player
         mPlayerPrevBtn = (ImageButton) v.findViewById(R.id.playerPrevBtn);
@@ -626,6 +628,23 @@ public class DashboardMusicFragment extends BaseFragment{
         mMediaSessionSelector = (Spinner) v.findViewById(R.id.mediaSessionSelector);
         // Scroll Title
         mPlayerTitleText.setSelected(true);
+        
+        // Make the meta data click-able into the active media player
+        mMetaDataLayout.setOnClickListener(new OnClickListener(){
+            @Override
+            public void onClick(View v) {
+                MediaController mc = mPlayerService.getMediaController();
+                if(mc != null){
+                    String packageName = mMediaControllerNames.get(
+                        cleanClassName(mc.getPackageName())
+                    );
+                    Intent intent = getActivity().getApplicationContext().getPackageManager()
+                        .getLaunchIntentForPackage(packageName);
+                    startActivity(intent);
+                }
+            } 
+        });
+        
         // Default text
         mMediaControllerSelectorAdapter = new ArrayAdapter<String>(
             getActivity().getApplicationContext(),
