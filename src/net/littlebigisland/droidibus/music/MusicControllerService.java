@@ -250,15 +250,15 @@ public class MusicControllerService extends NotificationListenerService implemen
             );
         }
         // Make sure if there's a session playing
-        //  that we set it to be the active session
+        // that we set it to be the active session
         for(MediaController remote: mMediaControllers.values()){
             PlaybackState ps = remote.getPlaybackState();
             if(ps != null){
                 if(ps.getState() == PlaybackState.STATE_PLAYING){
-                    Token currToken = remote.getSessionToken();
-                    if(currToken != mActiveMediaController.getSessionToken()){
+                    Token tk = remote.getSessionToken();
+                    if(tk != mActiveMediaController.getSessionToken()){
                         setMediaSession(
-                            mMediaControllers.get(currToken.toString()).getPackageName()
+                            mMediaControllers.get(tk.toString()).getPackageName()
                         );
                     }
                 }

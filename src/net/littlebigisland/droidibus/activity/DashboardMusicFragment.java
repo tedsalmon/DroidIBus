@@ -260,22 +260,6 @@ public class DashboardMusicFragment extends BaseFragment{
             Log.d(TAG,  CTAG + "Callback onSessionDestroyed()");
             mMediaPlayerConnected = false;
         }
-        
-        @Override
-        public void onExtrasChanged(Bundle extras){
-            Log.d(TAG, CTAG + "Callback onExtrasChanged() called");
-        }
-
-        @Override
-        public void onQueueTitleChanged(CharSequence title){
-            Log.d(TAG, CTAG + "Callback onQueueTitleChanged() called");
-        }
-
-        @Override
-        public void onSessionEvent(String event, Bundle extras){
-            Log.d(TAG, CTAG + "Callback onSessionEvent() called");
-        }
-
 
     };
     
@@ -645,7 +629,6 @@ public class DashboardMusicFragment extends BaseFragment{
             } 
         });
         
-        // Default text
         mMediaControllerSelectorAdapter = new ArrayAdapter<String>(
             getActivity().getApplicationContext(),
             android.R.layout.simple_spinner_item,
@@ -679,9 +662,7 @@ public class DashboardMusicFragment extends BaseFragment{
             }
 
             @Override
-            public void onNothingSelected(AdapterView<?> parent){
-                // Do nothing
-            }
+            public void onNothingSelected(AdapterView<?> parent){}
             
         });
         
@@ -715,11 +696,11 @@ public class DashboardMusicFragment extends BaseFragment{
         mPlayerControlBtn.setOnClickListener(playerClickListener);
         
         mPlayerScrubBar.setOnSeekBarChangeListener(new OnSeekBarChangeListener(){
-            private long mSeekPosition = 0; 
+            private float mSeekPosition = 0; 
             @Override
             public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser){
                 if(mMediaPlayerConnected && fromUser){
-                    mSeekPosition = mSongDuration * (progress / seekBar.getMax());
+                    mSeekPosition = mSongDuration * ((float)progress / (float)seekBar.getMax());
                 }
             }
 
@@ -730,7 +711,7 @@ public class DashboardMusicFragment extends BaseFragment{
 
             @Override
             public void onStopTrackingTouch(SeekBar seekBar) {
-                mPlayerService.getRemote().seekTo(mSeekPosition);
+                mPlayerService.getRemote().seekTo((long)mSeekPosition);
                 mHandler.post(mUpdateSeekBar);
             }
         });
