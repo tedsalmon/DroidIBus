@@ -269,14 +269,16 @@ public class SettingsFragment extends PreferenceFragment implements OnSharedPref
     @Override
     public void onResume() {
         super.onResume();
-        getPreferenceManager().getSharedPreferences().registerOnSharedPreferenceChangeListener(this);
+        getPreferenceManager().getSharedPreferences(
+        ).registerOnSharedPreferenceChangeListener(this);
         Log.d(TAG, "Settings: onResume Called");
     }
 
     @Override
     public void onPause() {
-        getPreferenceManager().getSharedPreferences().unregisterOnSharedPreferenceChangeListener(this);
         super.onPause();
+        getPreferenceManager().getSharedPreferences(
+        ).unregisterOnSharedPreferenceChangeListener(this);
         Log.d(TAG, "Settings: onPause Called");
     }
     
@@ -286,6 +288,8 @@ public class SettingsFragment extends PreferenceFragment implements OnSharedPref
         mIBusService.removeCallback(mIBusUpdateListener);
         Log.d(TAG, "Settings: onDestroy Called");
         if(mIBusConnected){
+            mIBusService.disable();
+            mIBusService.removeCallback(mIBusUpdateListener);
             serviceStopper(IBusMessageService.class, mIBusConnection);
         }
     }

@@ -43,12 +43,12 @@ public class BaseFragment extends Fragment{
         Context applicationContext = getActivity();
         Intent svcIntent = new Intent(applicationContext, cls);
         try {
-            Log.d(TAG, String.format("Starting %s Service", cls.toString()));
+            Log.d(TAG, String.format("Starting %s service", cls.toString()));
             applicationContext.bindService(svcIntent, svcConn, Context.BIND_AUTO_CREATE);
             applicationContext.startService(svcIntent);
         }
         catch(Exception ex) {
-            Log.d(TAG, String.format("Unable to start %s Service", cls.toString()));
+            Log.d(TAG, String.format("Unable to start %s service", cls.toString()));
         }
     }
 	
@@ -57,7 +57,7 @@ public class BaseFragment extends Fragment{
         Context applicationContext = getActivity();
         Intent svcIntent = new Intent(applicationContext, cls);
         try {
-            Log.d(TAG, String.format("Unbinding from  %s Service", cls.toString()));
+            Log.d(TAG, String.format("Unbinding from %s service", cls.toString()));
             applicationContext.unbindService(svcConn);
             applicationContext.stopService(svcIntent);
         }

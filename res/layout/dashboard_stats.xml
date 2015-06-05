@@ -269,11 +269,11 @@
 	        android:layout_width="fill_parent"
 	        android:layout_height="wrap_content"
 	        android:gravity="right">
-                <TextView
-                    android:id="@+id/ikeDisplayField"
-                    style="@style/majorStatItemValueText"
-                    android:layout_width="wrap_content"
-                    android:text="@string/defaultText" />
+            <TextView
+                android:id="@+id/ikeDisplayField"
+                style="@style/majorStatItemValueText"
+                android:layout_width="wrap_content"
+                android:text="@string/defaultText" />
 	        <TextView
 	            android:id="@+id/geoStreetField"
 	            style="@style/geoItemText"
