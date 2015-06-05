@@ -41,45 +41,53 @@
 	            android:layout_width="560dp"
 	            android:layout_height="wrap_content"
 	            android:orientation="vertical" >
-	 
-	            <TextView
-	                android:id="@+id/playerTitleField"
-	                android:textSize="25sp"
-	                android:layout_width="fill_parent"
-	                android:layout_height="wrap_content"
-	                android:gravity="center_horizontal"
-	                android:text="@string/defaultText" />
-	 
 	            <LinearLayout
-	                android:layout_width="fill_parent"
-	                android:layout_height="wrap_content"
-	                android:gravity="center_horizontal"
-	                android:orientation="horizontal" >
-	 
-	                <TextView
-	                    android:id="@+id/playerArtistField"
-	                    android:textSize="15sp"
-	                    android:layout_width="wrap_content"
-	                    android:layout_height="wrap_content"
-	                    android:text="@string/defaultText" />
-	                
-	                <TextView
-	                    android:id="@+id/playerAlbumArtistSeperator"
-	                    android:textSize="15sp"
-	                    android:layout_width="wrap_content"
-	                    android:layout_height="wrap_content"
-	                    android:layout_marginRight="10dp"
-	                    android:layout_marginLeft="10dp"
-	                    android:text="@string/playerAlbumArtistSeperator" />
-	 
-	                <TextView
-	                    android:id="@+id/playerAlbumField"
-	                    android:textSize="15sp"
-	                    android:layout_width="wrap_content"
-	                    android:layout_height="wrap_content"
-	                    android:text="@string/defaultText" />
-	            </LinearLayout>
-	
+                    android:id="@+id/playerMetaDataLayout"
+                    android:layout_width="fill_parent"
+                    android:layout_height="fill_parent"
+                    android:orientation="vertical">
+		            <TextView
+		                android:id="@+id/playerTitleField"
+		                android:textSize="25sp"
+		                android:layout_width="fill_parent"
+		                android:layout_height="wrap_content"
+		                android:gravity="center_horizontal"
+		                android:ellipsize="marquee"
+		                android:marqueeRepeatLimit="marquee_forever"
+		                android:scrollHorizontally="true"
+		                android:singleLine="true"
+		                android:text="@string/defaultText" />
+		 
+		            <LinearLayout
+		                android:layout_width="fill_parent"
+		                android:layout_height="wrap_content"
+		                android:gravity="center_horizontal"
+		                android:orientation="horizontal" >
+		 
+		                <TextView
+		                    android:id="@+id/playerArtistField"
+		                    android:textSize="15sp"
+		                    android:layout_width="wrap_content"
+		                    android:layout_height="wrap_content"
+		                    android:text="@string/defaultText" />
+		                
+		                <TextView
+		                    android:id="@+id/playerAlbumArtistSeperator"
+		                    android:textSize="15sp"
+		                    android:layout_width="wrap_content"
+		                    android:layout_height="wrap_content"
+		                    android:layout_marginRight="10dp"
+		                    android:layout_marginLeft="10dp"
+		                    android:text="@string/playerAlbumArtistSeperator" />
+		 
+		                <TextView
+		                    android:id="@+id/playerAlbumField"
+		                    android:textSize="15sp"
+		                    android:layout_width="wrap_content"
+		                    android:layout_height="wrap_content"
+		                    android:text="@string/defaultText" />
+		            </LinearLayout>
+		        </LinearLayout>
 	            <SeekBar
 	                android:id="@+id/playerTrackBar"
 	                android:layout_width="fill_parent"
@@ -193,14 +201,30 @@
 	    android:layout_below="@+id/radioControlLayout"
 	    android:layout_width="match_parent"
 	    android:layout_height="wrap_content"
-	    
 	    android:orientation="horizontal">
-	    <Switch
-	        android:id="@+id/btnMusicMode"
-	        android:layout_width="wrap_content"
+	    <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:gravity="left">
+		    <Switch
+		        android:id="@+id/btnMusicMode"
+		        android:layout_width="wrap_content"
+		        android:layout_height="wrap_content"
+		        android:checked="true"
+		        android:textOn="Tablet"
+		        android:textOff="Radio" />
+		</LinearLayout>
+
+	    <LinearLayout
+	        android:layout_width="fill_parent"
 	        android:layout_height="wrap_content"
-	        android:checked="true"
-	        android:textOn="Tablet"
-	        android:textOff="Radio" />
-	 </LinearLayout>
+	        android:gravity="right" >
+
+		    <Spinner
+	            android:id="@+id/mediaSessionSelector"
+	            android:layout_width="wrap_content"
+	            android:layout_height="wrap_content"
+	            android:text="@string/defaultText" />
+	    </LinearLayout>
+	</LinearLayout>
 </RelativeLayout>
