@@ -300,13 +300,7 @@ public class DashboardStatsFragment extends BaseFragment{
     }
 	
     // Android Methods Implemented Below
-	
-    @Override
-    public void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        Log.d(TAG, "DashboardStats: onCreate()");
-    }
-	
+    
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         final View v = inflater.inflate(R.layout.dashboard_stats, container, false);
@@ -434,12 +428,12 @@ public class DashboardStatsFragment extends BaseFragment{
     }
     
     @Override
-    public void onDestroy() {
+    public void onDestroyView() {
     	super.onDestroy();
     	Log.d(TAG, "DashboardStats: onDestroy called");
     	if(mIBusConnected){
-    	    mIBusService.removeCallback(mIBusUpdateListener);
     	    mIBusService.disable();
+    	    mIBusService.removeCallback(mIBusUpdateListener);
     	    serviceStopper(IBusMessageService.class, mIBusConnection);
     	}
     }

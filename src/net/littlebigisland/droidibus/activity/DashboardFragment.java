@@ -166,8 +166,8 @@ public class DashboardFragment extends BaseFragment{
     	Log.d(TAG, "Dashboard: onDestroy called");
     	releaseWakelock();
     	if(mIBusConnected){
-    	    mIBusService.removeCallback(mIBusUpdateListener);
             mIBusService.disable();
+            mIBusService.removeCallback(mIBusUpdateListener);
             serviceStopper(IBusMessageService.class, mIBusConnection);
     	}
     }
