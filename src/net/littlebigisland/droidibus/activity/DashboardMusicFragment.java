@@ -5,7 +5,6 @@ import java.util.Arrays;
 import java.util.Calendar;
 import java.util.HashMap;
 import java.util.List;
-import java.util.Locale;
 
 import net.littlebigisland.droidibus.R;
 import net.littlebigisland.droidibus.ibus.IBusCommandsEnum;
@@ -15,9 +14,10 @@ import net.littlebigisland.droidibus.ibus.IBusMessageService.IOIOBinder;
 import net.littlebigisland.droidibus.music.MusicControllerService;
 import android.annotation.SuppressLint;
 import android.content.ComponentName;
-import android.content.Intent;
 import android.content.ServiceConnection;
 import android.content.SharedPreferences;
+import android.content.pm.PackageManager;
+import android.content.pm.PackageManager.NameNotFoundException;
 import android.graphics.Bitmap;
 import android.media.MediaMetadata;
 import android.media.session.MediaController;
@@ -78,6 +78,8 @@ public class DashboardMusicFragment extends BaseFragment{
     
     protected MusicControllerService mPlayerService;
     protected boolean mMediaPlayerConnected = false;
+    
+    protected PackageManager mPackageManager = null;
 
     protected boolean mIsPlaying = false;
     protected boolean mWasPlaying = false; // Was the song playing before we shut
@@ -193,44 +195,29 @@ public class DashboardMusicFragment extends BaseFragment{
      *  -This is only required if the user has a BM53-
      */
     private Runnable mRadioUpdaterThread = new Runnable(){
-        public void run() {
-            final int radioStatusTimeout = 5000;
-            mLastRadioStatus = 0;
-            while(mIBusConnected){
-                try{
-                    if(mIBusService.getLinkState()){
-                        getActivity().runOnUiThread(new Runnable(){
-                            @Override
-                            public void run(){
-                                long currTime = Calendar.getInstance(
-                                ).getTimeInMillis();
-                                // BM Emulation
-                    
-                                // Ask the radio for it's status
-                                if((currTime - mLastRadioStatus) >= radioStatusTimeout){
-                                    sendIBusCommand(IBusCommandsEnum.BMToRadioGetStatus);
-                                    mLastRadioStatus = currTime;
-                                }
-                                
-                                long statusDiff = currTime - mLastRadioStatus;
-                                if(statusDiff > radioStatusTimeout && mCurrentRadioMode != RadioModes.AUX){
-                                    sendIBusCommand(IBusCommandsEnum.BMToRadioInfoPress);
-                                    sendIBusCommandDelayed(IBusCommandsEnum.BMToRadioInfoRelease, 500);
-                                }
-                            }
-                        });
-                        Thread.sleep(5000);
-                    }else{
-                        // Wait for the IOIO to connect
-                        Thread.sleep(500);
+        public void run(){
+            final int radioStatusTimeout = 2000;
+            if(mIBusService.getLinkState() && mIBusConnected){
+                getActivity().runOnUiThread(new Runnable(){
+                    @Override
+                    public void run(){
+                        long currTime = Calendar.getInstance().getTimeInMillis();
+                        // BM Emulation
+            
+                        // Ask the radio for it's status
+                        if((currTime - mLastRadioStatus) >= radioStatusTimeout){
+                            sendIBusCommand(IBusCommandsEnum.BMToRadioGetStatus);
+                        }
+                        
+                        long statusDiff = currTime - mLastRadioStatus;
+                        if(statusDiff > radioStatusTimeout && mCurrentRadioMode != RadioModes.AUX){
+                            sendIBusCommand(IBusCommandsEnum.BMToRadioInfoPress);
+                            sendIBusCommandDelayed(IBusCommandsEnum.BMToRadioInfoRelease, 500);
+                        }
                     }
-                }catch(InterruptedException e){
-                    Log.e(
-                        TAG, 
-                        CTAG + "Caught Radio Update thread InterruptedException"
-                    );
-                }
+                });
             }
+            mHandler.postDelayed(this, radioStatusTimeout);
         }
     };
     
@@ -435,25 +422,17 @@ public class DashboardMusicFragment extends BaseFragment{
 
     };
     
-    private String cleanClassName(String cname){
-        String canonName = cname;
-        canonName = canonName.replace("android", "");
-        canonName = canonName.replace("com.", "");
-        canonName = canonName.replace(".", " ");
-        String returnString = "";
-        String[] canonArray = canonName.split("(?!^)");
-        for (int i = 0; i < canonArray.length; i++){
-            String currChar = canonArray[i];
-            if(i == 0){
-                currChar = currChar.toUpperCase(Locale.ENGLISH);
-            }else{
-                if(canonArray[i - 1].equals(" ")){
-                    currChar = currChar.toUpperCase(Locale.ENGLISH);
-                }
-            }
-            returnString += currChar;
+    private String getAppFromPackageName(String cname){
+        String appName = "";
+        try {
+            appName = (String) mPackageManager.getApplicationLabel(
+                mPackageManager.getApplicationInfo(cname, 0)
+            );
+        } catch (NameNotFoundException e) {
+            Log.e(TAG, CTAG + "Package Name not found for package " + cname);
+            appName = cname;
         }
-        return returnString;
+        return appName;
     }
     
     /**
@@ -475,7 +454,7 @@ public class DashboardMusicFragment extends BaseFragment{
             List<String> availRemotes = Arrays.asList(remoteList);
             // Add new items that don't already exist
             for(String remote: availRemotes){
-                String cannonicalName = cleanClassName(remote);
+                String cannonicalName = getAppFromPackageName(remote);
                 mMediaControllerNames.put(cannonicalName, remote);
                 if(!mMediaControllerSelectorList.contains(cannonicalName)){
                     mMediaControllerSelectorList.add(cannonicalName);
@@ -494,7 +473,7 @@ public class DashboardMusicFragment extends BaseFragment{
             if(amc != null){
                 mMediaSessionSelector.setSelection(
                     mMediaControllerSelectorList.indexOf(
-                        cleanClassName(amc.getPackageName())
+                        getAppFromPackageName(amc.getPackageName())
                     )
                 );
             }
@@ -563,15 +542,8 @@ public class DashboardMusicFragment extends BaseFragment{
     public void onActivityCreated (Bundle savedInstanceState){
         super.onActivityCreated(savedInstanceState);
         Log.d(TAG, "DashboardMusic: onActivityCreated Called");
-        if(mIBusConnected){
-            Log.d(TAG, "DashboardMusic: IOIO bound in onResume");
-            if(!mIBusService.getLinkState()){
-                serviceStopper(IBusMessageService.class, mIBusConnection);
-                serviceStarter(IBusMessageService.class, mIBusConnection);
-                Log.d(TAG, "Dashboard: IOIO Not connected in onResume");
-            }
-        }else{
-            Log.d(TAG, "DashboardMusic: IOIO NOT bound in onResume");
+        mPackageManager = getActivity().getApplicationContext().getPackageManager();
+        if(!mIBusConnected){
             serviceStarter(IBusMessageService.class, mIBusConnection);
         }
         if(!mMediaPlayerConnected){
@@ -582,7 +554,7 @@ public class DashboardMusicFragment extends BaseFragment{
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState){
         final View v = inflater.inflate(R.layout.dashboard_music, container, false);
-        Log.d(TAG, "DashboardMusic: onCreateView Called");
+        Log.d(TAG, CTAG + "onCreateView()");
         
         // Load Activity Settings
         mSettings = PreferenceManager.getDefaultSharedPreferences(getActivity());
@@ -610,6 +582,25 @@ public class DashboardMusicFragment extends BaseFragment{
         mPlayerScrubBar = (SeekBar) v.findViewById(R.id.playerTrackBar);
         
         mMediaSessionSelector = (Spinner) v.findViewById(R.id.mediaSessionSelector);
+        
+        // Radio Fields
+        mStationText = (TextView) v.findViewById(R.id.stationText);
+        mRDSField = (TextView) v.findViewById(R.id.radioRDSIndicator);
+        mStereoField = (TextView) v.findViewById(R.id.radioStereoIndicator);
+        mProgramField = (TextView) v.findViewById(R.id.radioProgram);
+        mBroadcastField = (TextView) v.findViewById(R.id.radioBroadcast);
+        
+        // Buttons
+        ImageButton btnVolUp = (ImageButton) v.findViewById(R.id.btnVolUp);
+        ImageButton btnVolDown = (ImageButton) v.findViewById(R.id.btnVolDown);
+        Button btnRadioFM = (Button) v.findViewById(R.id.btnRadioFM);
+        Button btnRadioAM = (Button) v.findViewById(R.id.btnRadioAM);
+        mBtnMusicMode = (Switch) v.findViewById(R.id.btnMusicMode);
+        ImageButton btnPrev = (ImageButton) v.findViewById(R.id.btnPrev);
+        ImageButton btnNext = (ImageButton) v.findViewById(R.id.btnNext);
+        
+        // Assign actions to view members
+        
         // Scroll Title
         mPlayerTitleText.setSelected(true);
         
@@ -619,12 +610,11 @@ public class DashboardMusicFragment extends BaseFragment{
             public void onClick(View v) {
                 MediaController mc = mPlayerService.getMediaController();
                 if(mc != null){
-                    String packageName = mMediaControllerNames.get(
-                        cleanClassName(mc.getPackageName())
+                    startActivity(
+                        mPackageManager.getLaunchIntentForPackage(
+                            mc.getPackageName()
+                        )
                     );
-                    Intent intent = getActivity().getApplicationContext().getPackageManager()
-                        .getLaunchIntentForPackage(packageName);
-                    startActivity(intent);
                 }
             } 
         });
@@ -666,7 +656,7 @@ public class DashboardMusicFragment extends BaseFragment{
             
         });
         
-        OnClickListener playerClickListener = new OnClickListener(){
+        OnClickListener playbackButtonClickListener = new OnClickListener(){
             @Override
             public void onClick(View v) {
                 if(mMediaPlayerConnected){
@@ -691,9 +681,9 @@ public class DashboardMusicFragment extends BaseFragment{
             }
         };
 
-        mPlayerPrevBtn.setOnClickListener(playerClickListener);
-        mPlayerNextBtn.setOnClickListener(playerClickListener);
-        mPlayerControlBtn.setOnClickListener(playerClickListener);
+        mPlayerPrevBtn.setOnClickListener(playbackButtonClickListener);
+        mPlayerNextBtn.setOnClickListener(playbackButtonClickListener);
+        mPlayerControlBtn.setOnClickListener(playbackButtonClickListener);
         
         mPlayerScrubBar.setOnSeekBarChangeListener(new OnSeekBarChangeListener(){
             private float mSeekPosition = 0; 
@@ -716,24 +706,7 @@ public class DashboardMusicFragment extends BaseFragment{
             }
         });
         
-        // Get the buttons from the view
-        ImageButton btnVolUp = (ImageButton) v.findViewById(R.id.btnVolUp);
-        ImageButton btnVolDown = (ImageButton) v.findViewById(R.id.btnVolDown);
-        Button btnRadioFM = (Button) v.findViewById(R.id.btnRadioFM);
-        Button btnRadioAM = (Button) v.findViewById(R.id.btnRadioAM);
-        mBtnMusicMode = (Switch) v.findViewById(R.id.btnMusicMode);
-        ImageButton btnPrev = (ImageButton) v.findViewById(R.id.btnPrev);
-        ImageButton btnNext = (ImageButton) v.findViewById(R.id.btnNext);
-        
-        
-        // Setup the text fields for the view
-        
-        // Radio Fields
-        mStationText = (TextView) v.findViewById(R.id.stationText);
-        mRDSField = (TextView) v.findViewById(R.id.radioRDSIndicator);
-        mStereoField = (TextView) v.findViewById(R.id.radioStereoIndicator);
-        mProgramField = (TextView) v.findViewById(R.id.radioProgram);
-        mBroadcastField = (TextView) v.findViewById(R.id.radioBroadcast);
+
 
         // Register Button actions
         if(mRadioType == RadioTypes.BM53){

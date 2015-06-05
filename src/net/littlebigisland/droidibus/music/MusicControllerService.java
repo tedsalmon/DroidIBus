@@ -16,7 +16,6 @@ import java.util.Map;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
-import android.media.session.MediaSession.Token;
 import android.media.session.MediaSessionManager;
 import android.media.session.MediaController;
 import android.media.session.PlaybackState;
@@ -32,7 +31,7 @@ public class MusicControllerService extends NotificationListenerService implemen
     
     private static String TAG = "DroidIBus";
     private static String CTAG = "MediaControllerService: ";
-    private Context mContext;
+    private Context mContext = null;
     private IBinder mBinder = new MusicControllerBinder();
     
     Map<String, MediaController> mMediaControllers = new HashMap<String, MediaController>();
@@ -110,6 +109,7 @@ public class MusicControllerService extends NotificationListenerService implemen
     public void registerCallback(MediaController.Callback cb, Handler handle){
         mClientCallbacks.put(handle, cb);
         if(mActiveMediaController != null){
+            Log.d(TAG, CTAG + "Registering callback to active controller");
             mActiveMediaController.registerCallback(cb, handle);            
         }else{
             Log.e(TAG, CTAG + "Attempted to registerCallback on a null session");
@@ -123,13 +123,13 @@ public class MusicControllerService extends NotificationListenerService implemen
     public void setMediaSession(String sessionName){
         MediaController newSession = null;
         String sessionToken = mMediaControllerSessionMap.get(sessionName);
-        Log.d(TAG, CTAG + "Session Token " + sessionToken);
         if(sessionToken != null){
             newSession = mMediaControllers.get(sessionToken);
             String oldSessionToken = "";
             if(mActiveMediaController != null){
                 oldSessionToken = mActiveMediaController.getSessionToken().toString();
             }
+            // Only take action if the active session isn't the current one
             if(newSession != null && oldSessionToken != sessionToken){
                 Log.d(TAG, CTAG + "Switching to session " + sessionName);
                 for(Handler handle: mClientCallbacks.keySet()){
@@ -147,10 +147,7 @@ public class MusicControllerService extends NotificationListenerService implemen
                         CTAG + "Session set to %s", mActiveMediaController.getPackageName()
                     )
                 );
-            }else{
-                
             }
-
         }else{
             Log.e(TAG, CTAG + "Requested MediaSession not found!");
         }
@@ -183,8 +180,7 @@ public class MusicControllerService extends NotificationListenerService implemen
      * and store them for future use
      */
     private void refreshMediaControllers(){
-        MediaSessionManager mediaManager = getMediaSessionManager();
-        setMediaControllers(mediaManager.getActiveSessions(
+        setMediaControllers(getMediaSessionManager().getActiveSessions(
             new ComponentName(mContext, MusicControllerService.class)
         ));
     }
@@ -217,17 +213,25 @@ public class MusicControllerService extends NotificationListenerService implemen
         for (MediaController remote: mediaControllers){
             String sToken = remote.getSessionToken().toString();
             String sName = remote.getPackageName();
+            PlaybackState sPlayState = remote.getPlaybackState();
             currentSessions.add(sToken);
             if(!mMediaControllers.containsKey(sToken)){
                 mMediaControllers.put(sToken, remote);
                 mMediaControllerSessionMap.put(sName, sToken);
             }
+            // Make sure if there's a session playing
+            // that we set it to be the active session
+            if(sPlayState != null){
+                if(sPlayState.getState() == PlaybackState.STATE_PLAYING){
+                    setMediaSession(sName);
+                }
+            }
             Log.i(
                 TAG,
                 String.format(
                     CTAG + "Found MediaSession for package %s with state %s and token %s",
-                    remote.getPackageName(),
-                    remote.getPlaybackState(),
+                    sName,
+                    sPlayState,
                     sToken
                 )
             );
@@ -248,21 +252,6 @@ public class MusicControllerService extends NotificationListenerService implemen
             setMediaSession(
                 mMediaControllers.get(currentSessions.get(0)).getPackageName()
             );
-        }
-        // Make sure if there's a session playing
-        // that we set it to be the active session
-        for(MediaController remote: mMediaControllers.values()){
-            PlaybackState ps = remote.getPlaybackState();
-            if(ps != null){
-                if(ps.getState() == PlaybackState.STATE_PLAYING){
-                    Token tk = remote.getSessionToken();
-                    if(tk != mActiveMediaController.getSessionToken()){
-                        setMediaSession(
-                            mMediaControllers.get(tk.toString()).getPackageName()
-                        );
-                    }
-                }
-            }
         }
     }
     
