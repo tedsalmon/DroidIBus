@@ -5,11 +5,13 @@ package net.littlebigisland.droidibus.activity;
  * @author Ted <tass2001@gmail.com>
  * @package net.littlebigisland.droidibus.activity
  */
+
 import net.littlebigisland.droidibus.R;
 import net.littlebigisland.droidibus.ibus.IBusCallbackReceiver;
 import net.littlebigisland.droidibus.ibus.IBusCommandsEnum;
 import net.littlebigisland.droidibus.ibus.IBusMessageService;
 import net.littlebigisland.droidibus.ibus.IBusMessageService.IOIOBinder;
+import android.app.FragmentTransaction;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.ServiceConnection;
@@ -26,7 +28,7 @@ import android.view.ViewGroup;
 import android.view.Window;
 import android.view.WindowManager;
 
-public class DashboardFragment extends BaseFragment {
+public class DashboardFragment extends BaseFragment{
     
     protected Handler mHandler = new Handler();
     
@@ -112,7 +114,7 @@ public class DashboardFragment extends BaseFragment {
         }
         
         if(modeChange){
-        	// Set the given layout
+            // Set the given layout
             window.setAttributes(layoutP);
         }
     }
@@ -136,13 +138,11 @@ public class DashboardFragment extends BaseFragment {
         final View v = inflater.inflate(R.layout.dashboard, container, false);
         Log.d(TAG, "Dashboard: onCreateView Called");
         if(!mPopulatedFragments){
-	        getChildFragmentManager().beginTransaction().add(
-	        	R.id.music_fragment, new DashboardMusicFragment()
-	        ).commit();
-	        getChildFragmentManager().beginTransaction().add(
-	        	R.id.stats_fragment, new DashboardStatsFragment()
-	        ).commit();
-	        mPopulatedFragments = true;
+            FragmentTransaction tx = getChildFragmentManager().beginTransaction();
+	    tx.add(R.id.music_fragment, new DashboardMusicFragment());
+	    tx.add(R.id.stats_fragment, new DashboardStatsFragment());
+	    tx.commit();
+	    mPopulatedFragments = true;
         }
         // Keep a wake lock
         changeScreenState(true);
@@ -159,37 +159,14 @@ public class DashboardFragment extends BaseFragment {
             serviceStarter(IBusMessageService.class, mIBusConnection);
         }
     }
-	
-    @Override
-    public void onPause() {
-    	super.onPause();
-    	Log.d(TAG, "Dashboard: onPause called");
-    }
-    
-    @Override
-    public void onResume() {
-    	super.onResume();
-    	Log.d(TAG, "Dashboard: onResume called");
-    	if(mIBusConnected){
-            Log.d(TAG, "Dashboard: IOIO bound in onResume");
-            if(!mIBusService.getLinkState()){
-                serviceStopper(IBusMessageService.class, mIBusConnection);
-                serviceStarter(IBusMessageService.class, mIBusConnection);
-                Log.d(TAG, "Dashboard: IOIO Not connected in onResume");
-            }
-    	}else{
-            Log.d(TAG, "Dashboard: IOIO NOT bound in onResume");
-            serviceStarter(IBusMessageService.class, mIBusConnection);
-    	}
-    }
     
     @Override
     public void onDestroy() {
     	super.onDestroy();
     	Log.d(TAG, "Dashboard: onDestroy called");
-    	mIBusService.removeCallback(mIBusUpdateListener);
     	releaseWakelock();
     	if(mIBusConnected){
+    	    mIBusService.removeCallback(mIBusUpdateListener);
             mIBusService.disable();
             serviceStopper(IBusMessageService.class, mIBusConnection);
     	}

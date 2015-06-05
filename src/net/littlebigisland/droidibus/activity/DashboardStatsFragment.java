@@ -304,12 +304,13 @@ public class DashboardStatsFragment extends BaseFragment{
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        Log.d(TAG, "DashboardStats: onCreate()");
     }
 	
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         final View v = inflater.inflate(R.layout.dashboard_stats, container, false);
-        Log.d(TAG, "DashboardStats: onCreateView Called");
+        Log.d(TAG, "DashboardStats: onCreateView()");
         
         // Load Activity Settings
         mSettings = PreferenceManager.getDefaultSharedPreferences(getActivity());
@@ -428,17 +429,6 @@ public class DashboardStatsFragment extends BaseFragment{
     public void onResume(){
     	super.onResume();
     	Log.d(TAG, "DashboardStats: onResume called");
-    	if(mIBusConnected){
-            Log.d(TAG, "Dashboard: IOIO bound in onResume");
-            if(!mIBusService.getLinkState()){
-                serviceStopper(IBusMessageService.class, mIBusConnection);
-                serviceStarter(IBusMessageService.class, mIBusConnection);
-                Log.d(TAG, "IOIO Bound but not connected in onResume");
-            }
-    	}else{
-            Log.d(TAG, "IOIO NOT bound in onResume");
-            serviceStarter(IBusMessageService.class, mIBusConnection);
-    	}
         // Send BoardMonitor Get requests to populate blank view
         boardMonitorBootup();
     }
@@ -447,10 +437,10 @@ public class DashboardStatsFragment extends BaseFragment{
     public void onDestroy() {
     	super.onDestroy();
     	Log.d(TAG, "DashboardStats: onDestroy called");
-    	mIBusService.removeCallback(mIBusUpdateListener);
     	if(mIBusConnected){
-    		mIBusService.disable();
-    		serviceStopper(IBusMessageService.class, mIBusConnection);
+    	    mIBusService.removeCallback(mIBusUpdateListener);
+    	    mIBusService.disable();
+    	    serviceStopper(IBusMessageService.class, mIBusConnection);
     	}
     }
 }
