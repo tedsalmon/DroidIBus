@@ -352,13 +352,7 @@ public class DashboardMusicFragment extends BaseFragment{
                     new Handler(getActivity().getMainLooper()).postDelayed(new Runnable(){
                         @Override
                         public void run() {
-                            if(mPlayerService.getMediaController() == null){
-                                mPlayerService.sendKeyEvent(
-                                    KeyEvent.KEYCODE_MEDIA_PLAY_PAUSE
-                                );
-                            }else{
-                                mPlayerService.getRemote().play();
-                            }
+                            mPlayerService.getRemote().play();
                             mIsPlaying = true;
                         }
                     }, 1000);
@@ -390,8 +384,8 @@ public class DashboardMusicFragment extends BaseFragment{
         @Override
         public void onVoiceBtnPress(){
             // Re-purpose this button to pause/play music
-            if(mMediaPlayerConnected && mCurrentRadioMode == RadioModes.AUX){
-                if(mIsPlaying){
+            if(mCurrentRadioMode == RadioModes.AUX){
+                if(mIsPlaying && mMediaPlayerConnected){
                     mPlayerService.getRemote().pause();
                     mIsPlaying = false;
                 }else{
@@ -686,30 +680,32 @@ public class DashboardMusicFragment extends BaseFragment{
         OnClickListener playbackButtonClickListener = new OnClickListener(){
             @Override
             public void onClick(View v) {
-                if(mMediaPlayerConnected){
-                    switch(v.getId()) {
-                        case R.id.playerPrevBtn:
+                switch(v.getId()) {
+                    case R.id.playerPrevBtn:
+                        if(mMediaPlayerConnected){
                             mPlayerService.getRemote().skipToPrevious();
-                            break;
-                        case R.id.playerNextBtn:
+                        }
+                        break;
+                    case R.id.playerNextBtn:
+                        if(mMediaPlayerConnected){
                             mPlayerService.getRemote().skipToNext();
-                            break;
-                        case R.id.playerPlayPauseBtn:
-                            if(mIsPlaying) {
-                                mIsPlaying = false;
-                                mPlayerService.getRemote().pause();
-                            } else {
-                                if(mPlayerService.getMediaController() == null){
-                                    mPlayerService.sendKeyEvent(
-                                        KeyEvent.KEYCODE_MEDIA_PLAY_PAUSE
-                                    );
-                                }else{
-                                    mPlayerService.getRemote().play();
-                                }
-                                mIsPlaying = true;
+                        }
+                        break;
+                    case R.id.playerPlayPauseBtn:
+                        if(mIsPlaying && mMediaPlayerConnected) {
+                            mIsPlaying = false;
+                            mPlayerService.getRemote().pause();
+                        }else{
+                            if(mPlayerService.getMediaController() == null){
+                                mPlayerService.sendKeyEvent(
+                                    KeyEvent.KEYCODE_MEDIA_PLAY_PAUSE
+                                );
+                            }else{
+                                mPlayerService.getRemote().play();
                             }
-                            break;
-                    }
+                            mIsPlaying = true;
+                        }
+                        break;
                 }
             }
         };
