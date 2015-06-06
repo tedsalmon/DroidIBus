@@ -42,7 +42,7 @@ import android.os.IBinder;
 import android.util.Log;
 
 
-public class IBusMessageService extends IOIOService {
+public class IBusMessageService extends IOIOService{
     
     private String TAG = "DroidIBus";
     private final IBinder mBinder = new IOIOBinder();
@@ -297,27 +297,23 @@ public class IBusMessageService extends IOIOService {
     }
     
     public void unregisterCallback(IBusCallbackReceiver cb){
-        mClientsConnected--;
         if(IBusSysMap.size() > 0){
             for (IBusSystemCommand sys : IBusSysMap.values()){
                 sys.unregisterCallback(cb);
             }
         }
-        // No one's connected? Great kill the service
-        if(mClientsConnected == 0){
-            stopSelf();
-        }
     }
     
     @Override
     public IBinder onBind(Intent intent){
+        mClientsConnected++;
         return mBinder;
     }
     
     @Override
     public void onDestroy(){
         super.onDestroy();
-        Log.d(TAG, "IBusMessageService: Stopping via onDestroy");
+        Log.d(TAG, "IBusMessageService: onDestroy()");
     }
     
     @Override
@@ -326,7 +322,6 @@ public class IBusMessageService extends IOIOService {
         // and super.onStartCommand is not implemented
         super.onStart(intent, startId);
         Log.d(TAG, "IBusMessageService: onStartCommand()");
-        mClientsConnected++;
         for(DeviceAddressEnum d : DeviceAddressEnum.values()){
             mDeviceLookup.put(d.toByte(), d.name());
         }
@@ -367,6 +362,17 @@ public class IBusMessageService extends IOIOService {
             );
         }
         return START_STICKY;
+    }
+    
+    @Override
+    public boolean onUnbind(Intent intent){
+        super.onUnbind(intent);
+        Log.d(TAG, "IBusMessageService: onUnbind()");
+        mClientsConnected--;
+        if(mClientsConnected == 0){
+            stopSelf();
+        }
+        return false;
     }
 
 }
