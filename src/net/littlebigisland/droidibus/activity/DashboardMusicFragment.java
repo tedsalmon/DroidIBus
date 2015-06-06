@@ -33,6 +33,7 @@ import android.os.Handler;
 import android.os.IBinder;
 import android.preference.PreferenceManager;
 import android.util.Log;
+import android.view.KeyEvent;
 import android.view.LayoutInflater;
 import android.view.MotionEvent;
 import android.view.View;
@@ -349,8 +350,14 @@ public class DashboardMusicFragment extends BaseFragment{
                     new Handler(getActivity().getMainLooper()).postDelayed(new Runnable(){
                         @Override
                         public void run() {
+                            if(mPlayerService.getMediaController() == null){
+                                mPlayerService.sendKeyEvent(
+                                    KeyEvent.KEYCODE_MEDIA_PLAY_PAUSE
+                                );
+                            }else{
+                                mPlayerService.getRemote().play();
+                            }
                             mIsPlaying = true;
-                            mPlayerService.getRemote().play();
                         }
                     }, 1000);
                     mWasPlaying = false;
@@ -384,10 +391,16 @@ public class DashboardMusicFragment extends BaseFragment{
             if(mMediaPlayerConnected && mCurrentRadioMode == RadioModes.AUX){
                 if(mIsPlaying){
                     mPlayerService.getRemote().pause();
-                    mIsPlaying = true;
-                }else{
-                    mPlayerService.getRemote().play();
                     mIsPlaying = false;
+                }else{
+                    if(mPlayerService.getMediaController() == null){
+                        mPlayerService.sendKeyEvent(
+                            KeyEvent.KEYCODE_MEDIA_PLAY_PAUSE
+                        );
+                    }else{
+                        mPlayerService.getRemote().play();
+                    }
+                    mIsPlaying = true;
                 }
             }
         }
@@ -684,8 +697,14 @@ public class DashboardMusicFragment extends BaseFragment{
                                 mIsPlaying = false;
                                 mPlayerService.getRemote().pause();
                             } else {
+                                if(mPlayerService.getMediaController() == null){
+                                    mPlayerService.sendKeyEvent(
+                                        KeyEvent.KEYCODE_MEDIA_PLAY_PAUSE
+                                    );
+                                }else{
+                                    mPlayerService.getRemote().play();
+                                }
                                 mIsPlaying = true;
-                                mPlayerService.getRemote().play();
                             }
                             break;
                     }

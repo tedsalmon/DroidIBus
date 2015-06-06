@@ -117,6 +117,24 @@ public class MusicControllerService extends NotificationListenerService implemen
     }
     
     /**
+     * Send the ACTION_UP and ACTION_DOWN key events
+     * @param keyCode The key we are pressing
+     */
+    public void sendKeyEvent(int keyCode){
+        KeyEvent keyDown  = new KeyEvent(KeyEvent.ACTION_DOWN, keyCode);
+        KeyEvent keyUp  = new KeyEvent(KeyEvent.ACTION_UP, keyCode);
+        
+        Intent downIntent = new Intent(Intent.ACTION_MEDIA_BUTTON, null);
+        downIntent.putExtra(Intent.EXTRA_KEY_EVENT, keyDown);
+        
+        Intent upIntent = new Intent(Intent.ACTION_MEDIA_BUTTON, null);
+        upIntent.putExtra(Intent.EXTRA_KEY_EVENT, keyUp);
+        
+        mContext.sendOrderedBroadcast(downIntent, null);
+        mContext.sendOrderedBroadcast(upIntent, null);
+    }
+    
+    /**
      * Switch the active media session to the given session name 
      * @param sessionName The string name of the session to switch to
      */
@@ -183,24 +201,6 @@ public class MusicControllerService extends NotificationListenerService implemen
         setMediaControllers(getMediaSessionManager().getActiveSessions(
             new ComponentName(mContext, MusicControllerService.class)
         ));
-    }
-    
-    /**
-     * Send the ACTION_UP and ACTION_DOWN key events
-     * @param keyCode The key we are pressing
-     */
-    private void sendKeyEvent(int keyCode){
-        KeyEvent keyDown  = new KeyEvent(KeyEvent.ACTION_DOWN, keyCode);
-        KeyEvent keyUp  = new KeyEvent(KeyEvent.ACTION_UP, keyCode);
-        
-        Intent downIntent = new Intent(Intent.ACTION_MEDIA_BUTTON, null);
-        downIntent.putExtra(Intent.EXTRA_KEY_EVENT, keyDown);
-        
-        Intent upIntent = new Intent(Intent.ACTION_MEDIA_BUTTON, null);
-        upIntent.putExtra(Intent.EXTRA_KEY_EVENT, keyUp);
-        
-        mContext.sendOrderedBroadcast(downIntent, null);
-        mContext.sendOrderedBroadcast(upIntent, null);
     }
     
     /**
@@ -274,10 +274,6 @@ public class MusicControllerService extends NotificationListenerService implemen
         );
         // Get the current active media sessions
         refreshMediaControllers();
-        // Handle no active sessions
-        if(mMediaControllers.size() == 0){
-            sendKeyEvent(KeyEvent.KEYCODE_MEDIA_PLAY_PAUSE);
-        }
     }
     
     @Override
