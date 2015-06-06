@@ -144,7 +144,9 @@ public class DashboardMusicFragment extends BaseFragment{
             MediaController playerRemote = mPlayerService.getMediaController();
             if(playerRemote != null){
                 mMediaPlayerConnected = true;
+                Log.d(TAG, CTAG + "Calling getMetadata()");
                 setMediaMetadata(playerRemote.getMetadata());
+                Log.d(TAG, CTAG + "Calling getPlayBackState()");
                 setPlaybackState(playerRemote.getPlaybackState().getState());
             }
             mHandler.post(mUpdateAvailableControllers);
