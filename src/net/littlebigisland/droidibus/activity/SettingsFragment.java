@@ -29,9 +29,10 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Toast;
 
-public class SettingsFragment extends PreferenceFragment implements OnSharedPreferenceChangeListener{
+public class SettingsFragment extends PreferenceFragment{
     
     public String TAG = "DroidIBus";
+    public String CTAG = "SettingsFragment: ";
     private Handler mHandler = new Handler();
     protected IBusMessageService mIBusService;
     protected boolean mIBusConnected = false;
@@ -41,8 +42,7 @@ public class SettingsFragment extends PreferenceFragment implements OnSharedPref
     
     private SharedPreferences mSettings = null;
 
-
-    private IBusCallbackReceiver mIBusUpdateListener = new IBusCallbackReceiver(){
+    private IBusCallbackReceiver mIBusCallbacks = new IBusCallbackReceiver(){
         /**
          * Update the time picker object with the time from the IKE
          */
@@ -50,15 +50,18 @@ public class SettingsFragment extends PreferenceFragment implements OnSharedPref
         public void onUpdateTime(final String time){
             String[] mTimeParts = {};
             if(time.contains("AM") || time.contains("PM")){
-                // Convert AM/PM to 24-hour clock for use in settings
-                // Make the spaces zeros, get the time without AM/PM then split by the separator
+                // Convert AM/PM to 24 hour time to use in settings
+                // Make the spaces zeros, get the time without 
+		// the AM/PM then split by the separator
                 mTimeParts = time.replace(" ", "0").substring(0, 5).split(":");
-                // Covert to 24 hour clock by adding 12 hours if it's PM
+                // Convert to 24 hour clock by adding 12 hours if it's PM
                 if(time.contains("PM")){
-                    mTimeParts[0] = String.valueOf(Integer.parseInt(mTimeParts[0]) + 12);
+                    mTimeParts[0] = String.valueOf(
+			Integer.parseInt(mTimeParts[0]) + 12
+		    );
                 }
             }else{
-                // 24 hour clock so nothing to do but split
+                // 24 hour time so nothing to do but split
                 mTimeParts = time.split(":");
             }
     
@@ -98,198 +101,251 @@ public class SettingsFragment extends PreferenceFragment implements OnSharedPref
             mSettings.edit().putString("distanceUnit", aUnits[1]).apply();
             mSettings.edit().putString("temperatureUnit", aUnits[6]).apply();
             mSettings.edit().putString("timeUnit", aUnits[7]).apply();
-            mSettings.edit().putString("consumptionUnit", cUnits[6]+cUnits[7]).apply();
+            mSettings.edit().putString(
+		"consumptionUnit", cUnits[6]+cUnits[7]
+	    ).apply();
         }
     };
     
-    private ServiceConnection mIBusConnection = new ServiceConnection() {
+    private ServiceConnection mIBusConnection = new ServiceConnection(){
         
         @Override
-        public void onServiceConnected(ComponentName className, IBinder service) {
-            IOIOBinder binder = (IOIOBinder) service;
-            mIBusService = binder.getService();
-            if(mIBusService != null) {
-                mIBusConnected = true;
-                try {
-                    mIBusService.addCallback(mIBusUpdateListener, mHandler);
-                } catch (Exception e) {
-                    e.printStackTrace();
-                }
-                sendIBusCommand(IBusCommandsEnum.BMToIKEGetTime);
-                sendIBusCommand(IBusCommandsEnum.BMToIKEGetDate);
-            }
+        public void onServiceConnected(ComponentName name, IBinder svc){
+            mIBusService = ((IOIOBinder) svc).getService();
+	    Log.d(TAG, CTAG + "IBus service connected");
+            mIBusConnected = true;
+	    try{
+		mIBusService.registerCallback(mIBusCallbacks, mHandler);
+	    }catch (Exception e) {
+		showToast(
+		    "ERROR: Could not register callback with the IBus Service"
+		);
+	    }
+	    sendIBusCommand(IBusCommandsEnum.BMToIKEGetTime);
+	    sendIBusCommand(IBusCommandsEnum.BMToIKEGetDate);
         }
 
         @Override
-        public void onServiceDisconnected(ComponentName name) {
-            Log.e(TAG, "mIBusService is disconnected");
+        public void onServiceDisconnected(ComponentName name){
+            Log.d(TAG, CTAG + "IBus service disconnected");
             mIBusConnected = false;
         }
 
     };
+    
+    private Preference.OnPreferenceClickListener mPrefClickListener =
+	new Preference.OnPreferenceClickListener(){
+	    @Override
+	    public boolean onPreferenceClick(Preference preference){
+		Calendar tDate = Calendar.getInstance();
+		sendIBusCommand(
+		    IBusCommandsEnum.BMToIKESetDate,
+		    tDate.get(Calendar.DATE), 
+		    tDate.get(Calendar.MONTH) + 1,
+		    tDate.get(Calendar.YEAR) - 2000
+		);
+		sendIBusCommand(
+		    IBusCommandsEnum.BMToIKESetTime,
+		    tDate.get(Calendar.HOUR_OF_DAY), 
+		    tDate.get(Calendar.MINUTE)
+		);
+		showToast("Successfully synced date and time with car!");
+		return true;
+	    }
+	};
+    
+    private OnSharedPreferenceChangeListener mSharedPrefListener =
+	new OnSharedPreferenceChangeListener(){
+    
+	@Override
+	public void onSharedPreferenceChanged(
+	    SharedPreferences sPrefs, String key
+	){
+	    String prefVal = null;
+	    switch(key){
+		case "obcDate":
+		    String dateParts[] = sPrefs.getString(key, "").split(" ");
+		    int day = Integer.parseInt(dateParts[0]);
+		    int month = Integer.parseInt(dateParts[1]);
+		    int year = Integer.parseInt(dateParts[2]);
+		    prefVal = String.format("%s %s %s", day, month, year);
+		    sendIBusCommand(
+			IBusCommandsEnum.BMToIKESetDate, day, month, year
+		    );
+		    break;
+		case "obcTime":
+		    String[] time = sPrefs.getString(
+			key, ""
+		    ).split(":");
+		    int hour = Integer.parseInt(time[0]);
+		    int minute = Integer.parseInt(time[1]);
+		    sendIBusCommand(
+			IBusCommandsEnum.BMToIKESetTime, hour, minute
+		    );
+		    prefVal = sPrefs.getString(key, "");
+		    break;
+		case "settingRadioType":
+		    prefVal = sPrefs.getString(key, "");
+		    break;
+		case "nightColorsWithInterior":
+		case "navAvailable":
+		case "stealthOneAvailable":
+		    prefVal = (sPrefs.getBoolean(key, false)) ? "true" : "false";
+		    break;
+		case "timeUnit":
+		case "distanceUnit":
+		case "speedUnit":
+		case "temperatureUnit":
+		case "consumptionUnit":
+		    prefVal = sPrefs.getString(key, "");
+		    sendIBusCommand(
+			IBusCommandsEnum.BMToIKESetUnits,
+			Integer.parseInt(sPrefs.getString("speedUnit", "1")),
+			Integer.parseInt(sPrefs.getString("distanceUnit", "1")),
+			Integer.parseInt(sPrefs.getString("temperatureUnit", "1")),
+			Integer.parseInt(sPrefs.getString("timeUnit", "0")),
+			Integer.parseInt(sPrefs.getString("consumptionUnit", "01"))
+		    );
+		    break;
+	    }
+	    Log.d(
+		TAG,
+		String.format(
+		    "%sGot preference change for %s -> %s", CTAG, key, prefVal
+		)
+	    );
+	}
+	
+    };
 
     @SuppressWarnings("rawtypes")
-    public void serviceStarter(Class cls, ServiceConnection svcConn){
+    private void serviceStarter(Class cls, ServiceConnection svcConn){
         Context applicationContext = getActivity();
         Intent svcIntent = new Intent(applicationContext, cls);
-        try {
-            Log.d(TAG, String.format("Starting %s Service", cls.toString()));
-            applicationContext.bindService(svcIntent, svcConn, Context.BIND_AUTO_CREATE);
+        try{
+            Log.d(
+                TAG,
+                String.format("%sStarting %s service", CTAG, cls.toString())
+            );
+            applicationContext.bindService(
+                svcIntent, svcConn, Context.BIND_AUTO_CREATE
+            );
             applicationContext.startService(svcIntent);
         }
-        catch(Exception ex) {
-            Log.d(TAG, String.format("Unable to start %s Service", cls.toString()));
+        catch(Exception ex){
+            Log.d(
+                TAG,
+                String.format(
+                    "%sUnable to start %s service", CTAG, cls.toString()
+                )
+            );
         }
     }
     
     @SuppressWarnings("rawtypes")
-    public void serviceStopper(Class cls, ServiceConnection svcConn){
+    private void serviceStopper(Class cls, ServiceConnection svcConn){
         Context applicationContext = getActivity();
-        Intent svcIntent = new Intent(applicationContext, cls);
-        try {
-            Log.d(TAG, String.format("Unbinding from  %s Service", cls.toString()));
+        try{
+            Log.d(
+                TAG,
+                String.format(
+                    "%sUnbinding from %s service", CTAG, cls.toString()
+                )
+            );
             applicationContext.unbindService(svcConn);
-            applicationContext.stopService(svcIntent);
         }
-        catch(Exception ex) {
-            Log.e(TAG, String.format("Unable to unbind the %s - '%s'!", cls.toString(), ex.getMessage()));
+        catch(Exception ex){
+            Log.e(
+                TAG,
+                String.format(
+                    "%sUnable to unbind %s - Exception '%s'!",
+                    CTAG,
+                    cls.toString(),
+                    ex.getMessage()
+                )
+            );
         }
     }
 
-	public void sendIBusCommand(final IBusCommandsEnum cmd, final Object... args){
-		if(mIBusConnected && mIBusService.getLinkState()){
-		    mIBusService.sendCommand(new IBusCommand(cmd, args));
-		}
-	}
+    private void sendIBusCommand(
+        final IBusCommandsEnum cmd, final Object... args
+    ){
+        if(mIBusConnected && mIBusService.getLinkState()){
+            mIBusService.sendCommand(new IBusCommand(cmd, args));
+        }
+    }
     
-    public void showToast(String toastText){
+    private void showToast(String toastText){
         Context appContext = getActivity();
         Toast.makeText(appContext, toastText, Toast.LENGTH_LONG).show();
     }
     
     @Override
-    public void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        setRetainInstance(true);
-        addPreferencesFromResource(R.xml.settings_data);
-    }
-    
-    @Override
-    public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
-        setRetainInstance(true);
-        final View v = inflater.inflate(R.layout.settings, container, false);
-        mSettings = getPreferenceManager().getSharedPreferences();
-        return v;
-    }
-    
-    @Override
     public void onActivityCreated (Bundle savedInstanceState){
         super.onActivityCreated(savedInstanceState);
-        setRetainInstance(true);
-        Log.d(TAG, "Settings: onActivityCreated Called");
-        mOBCTime = (Preference) findPreference("obcTime");
-        mOBCDate = (Preference) findPreference("obcDate");
-        Preference syncCarDateTime = (Preference) findPreference("syncDateTime");
-        
-        syncCarDateTime.setOnPreferenceClickListener(new Preference.OnPreferenceClickListener(){
-            @Override
-            public boolean onPreferenceClick(Preference preference) {
-                Calendar tDate = Calendar.getInstance();
-                sendIBusCommand(
-                    IBusCommandsEnum.BMToIKESetDate,
-                    tDate.get(Calendar.DATE), 
-                    tDate.get(Calendar.MONTH) + 1,
-                    tDate.get(Calendar.YEAR) - 2000
-                );
-                sendIBusCommand(
-                    IBusCommandsEnum.BMToIKESetTime,
-                    tDate.get(Calendar.HOUR_OF_DAY), 
-                    tDate.get(Calendar.MINUTE)
-                );
-                showToast("Settings: Successfully synced date and time with car!");
-                return true;
-            }
-        });
+        Log.d(TAG, CTAG + "onActivityCreated()");
         // Bind required background services last since the callback
         // functions depend on the view items being initialized
         if(!mIBusConnected){
             serviceStarter(IBusMessageService.class, mIBusConnection);
         }
     }
-
+    
     @Override
-    public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, String key){
-        if(!mIBusConnected){
-            serviceStarter(IBusMessageService.class, mIBusConnection);
-        }
-        String prefVal = "";
-        switch(key){
-            case "obcDate":
-                String dateParts[] = sharedPreferences.getString(key, "").split(" ");
-                int day = Integer.parseInt(dateParts[0]);
-                int month = Integer.parseInt(dateParts[1]);
-                int year = Integer.parseInt(dateParts[2]);
-                prefVal = String.format("%s %s %s", day, month, year);
-                sendIBusCommand(IBusCommandsEnum.BMToIKESetDate, day, month, year);
-                break;
-            case "obcTime":
-                String[] time = sharedPreferences.getString(key, "").split(":");
-                int hour = Integer.parseInt(time[0]);
-                int minute = Integer.parseInt(time[1]);
-                sendIBusCommand(IBusCommandsEnum.BMToIKESetTime, hour, minute);
-                prefVal = sharedPreferences.getString(key, "");
-                break;
-            case "settingRadioType":
-                prefVal = sharedPreferences.getString(key, "");
-                break;
-            case "nightColorsWithInterior":
-            case "navAvailable":
-            case "stealthOneAvailable":
-                prefVal = (sharedPreferences.getBoolean(key, false)) ? "true" : "false";
-                break;
-            case "timeUnit":
-            case "distanceUnit":
-            case "speedUnit":
-            case "temperatureUnit":
-            case "consumptionUnit":
-                prefVal = sharedPreferences.getString(key, "");
-                sendIBusCommand(
-                    IBusCommandsEnum.BMToIKESetUnits,
-                    Integer.parseInt(sharedPreferences.getString("speedUnit", "1")),
-                    Integer.parseInt(sharedPreferences.getString("distanceUnit", "1")),
-                    Integer.parseInt(sharedPreferences.getString("temperatureUnit", "1")),
-                    Integer.parseInt(sharedPreferences.getString("timeUnit", "0")),
-                    Integer.parseInt(sharedPreferences.getString("consumptionUnit", "01"))
-                );
-                break;
-        }
-        Log.d(TAG, String.format("Settings: Got preference change for %s -> %s", key, prefVal));
+    public void onCreate(Bundle savedInstanceState){
+        super.onCreate(savedInstanceState);
+        setRetainInstance(true);
+        addPreferencesFromResource(R.xml.settings_data);
     }
     
     @Override
-    public void onResume() {
+    public View onCreateView(
+	LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState
+    ){
+        setRetainInstance(true);
+        final View v = inflater.inflate(R.layout.settings, container, false);
+        Log.d(TAG, CTAG + "onCreateView()");
+        mSettings = getPreferenceManager().getSharedPreferences();
+        mSettings.registerOnSharedPreferenceChangeListener(mSharedPrefListener);
+        mOBCTime = (Preference) findPreference("obcTime");
+        mOBCDate = (Preference) findPreference("obcDate");
+	
+        Preference syncCarDateTime = (Preference) findPreference(
+	    "syncDateTime"
+	);
+        
+        syncCarDateTime.setOnPreferenceClickListener(mPrefClickListener);
+        return v;
+    }
+    
+    @Override
+    public void onResume(){
         super.onResume();
-        getPreferenceManager().getSharedPreferences(
-        ).registerOnSharedPreferenceChangeListener(this);
-        Log.d(TAG, "Settings: onResume Called");
+	Log.d(TAG, CTAG + "onResume()");
+        mSettings.registerOnSharedPreferenceChangeListener(
+	    mSharedPrefListener
+	);
     }
 
     @Override
-    public void onPause() {
+    public void onPause(){
         super.onPause();
-        getPreferenceManager().getSharedPreferences(
-        ).unregisterOnSharedPreferenceChangeListener(this);
-        Log.d(TAG, "Settings: onPause Called");
+	Log.d(TAG, CTAG + "onPause()");
+        mSettings.unregisterOnSharedPreferenceChangeListener(
+	    mSharedPrefListener
+	);
     }
     
     @Override
     public void onDestroy(){
         super.onDestroy();
-        mIBusService.removeCallback(mIBusUpdateListener);
+	mSettings.unregisterOnSharedPreferenceChangeListener(
+	    mSharedPrefListener
+	);
+        mIBusService.unregisterCallback(mIBusCallbacks);
         Log.d(TAG, "Settings: onDestroy Called");
         if(mIBusConnected){
-            mIBusService.disable();
-            mIBusService.removeCallback(mIBusUpdateListener);
+            mIBusService.unregisterCallback(mIBusCallbacks);
             serviceStopper(IBusMessageService.class, mIBusConnection);
         }
     }

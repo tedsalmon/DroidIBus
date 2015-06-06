@@ -9,9 +9,7 @@ import net.littlebigisland.droidibus.R;
 import net.littlebigisland.droidibus.ibus.IBusCommandsEnum;
 import net.littlebigisland.droidibus.ibus.IBusCallbackReceiver;
 import net.littlebigisland.droidibus.ibus.IBusMessageService;
-import net.littlebigisland.droidibus.ibus.IBusMessageService.IOIOBinder;
 import android.content.ComponentName;
-import android.content.ServiceConnection;
 import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.os.Handler;
@@ -45,36 +43,23 @@ public class DashboardStatsFragment extends BaseFragment{
         mGeoAltitudeField, mIKEDisplayField, mDateField, mTimeField;
 
     // Service connection class for IBus
-    private ServiceConnection mIBusConnection = new ServiceConnection() {
-		
+    private IBusServiceConnection mIBusConnection = new IBusServiceConnection(){
+        
         @Override
-        public void onServiceConnected(ComponentName className, IBinder service) {
-            IOIOBinder binder = (IOIOBinder) service;
-            mIBusService = binder.getService();
-            if(mIBusService != null) {
-                mIBusConnected = true;
-                try {
-                    mIBusService.addCallback(mIBusUpdateListener, mHandler);
-                } catch (Exception e) {
-                    showToast("Unable to start; Cannot bind ourselves to the IBus Service");
-                }
-                // Emulate BoardMonitor Bootup on connect 
-                boardMonitorBootup(); 
-                Log.d(TAG, "mIBusService connected and BoardMonitor Bootup Performed");
-            }
+        public void onServiceConnected(ComponentName name, IBinder service){
+            super.onServiceConnected(name, service);
+            registerIBusCallback(mIBusCallbacks, mHandler);
+            // Emulate BoardMonitor boot up on connect
+            boardMonitorBootup();
+            Log.d(TAG, CTAG + "BoardMonitor Bootup Performed");
         }
-
-        @Override
-        public void onServiceDisconnected(ComponentName name) {
-            Log.d(TAG, "mIBusService disconnected");
-            mIBusConnected = false;
-        }
+        
     };
 	
     /**
      * IBus Callback Functions
      */
-    private IBusCallbackReceiver mIBusUpdateListener = new IBusCallbackReceiver() {
+    private IBusCallbackReceiver mIBusCallbacks = new IBusCallbackReceiver(){
         private int mCurrentTextColor = R.color.dayColor;
         
         /** Callback to handle any vehicle speed updates
@@ -82,10 +67,14 @@ public class DashboardStatsFragment extends BaseFragment{
          */
         @Override
         public void onUpdateSpeed(final int speed){
-            if(mSettings.getString("speedUnit", "1").equals("0")){ // KM/h
+            if(mSettings.getString("speedUnit", "1").equals("0")){
+		// KM/h
                 mSpeedField.setText(String.valueOf(speed));
-            }else{// MPH
-                mSpeedField.setText(String.valueOf((int) ((speed * 2) * 0.621371)));
+            }else{
+		// Change to MPH
+                mSpeedField.setText(
+                    String.valueOf((int) (speed * 2) * 0.621371)
+		);
             }
         }
 		
@@ -173,7 +162,7 @@ public class DashboardStatsFragment extends BaseFragment{
          * @param String Street Name
          */
         @Override
-        public void onUpdateStreetLocation(final String streetName) {
+        public void onUpdateStreetLocation(final String streetName){
             mGeoStreetField.setText(streetName);
         }
         
@@ -181,7 +170,7 @@ public class DashboardStatsFragment extends BaseFragment{
          * @param String City Name
          */
         @Override
-        public void onUpdateLocale(final String cityName) {
+        public void onUpdateLocale(final String cityName){
             mGeoLocaleField.setText(cityName);
         }
         
@@ -198,7 +187,15 @@ public class DashboardStatsFragment extends BaseFragment{
          */
         @Override
         public void onUpdateGPSAltitude(final int altitude){
-            mGeoAltitudeField.setText(String.format("%s'", (int) Math.round(altitude * 3.28084)));
+	    if(mSettings.getString("distanceUnit", "1").equals("0")){
+		// Meters
+		mGeoAltitudeField.setText(String.format("%sm", altitude));
+	    }else{
+		// Feet
+		mGeoAltitudeField.setText(
+		    String.format("%s'", (int) Math.round(altitude * 3.28084))
+		);
+	    }
         }
         
         /** Callback to handle updates from the LCM about interior lights
@@ -207,7 +204,10 @@ public class DashboardStatsFragment extends BaseFragment{
         @Override
         public void onLightStatus(int lightStatus){
             if(mSettings.getBoolean("nightColorsWithInterior", false)){
-                int color = (lightStatus == 1) ? R.color.nightColor : R.color.dayColor;
+		int color = R.color.dayColor;
+                if(lightStatus == 1){
+		    color = R.color.nightColor;
+		}
                 // Only change the color if it's different
                 if(color != mCurrentTextColor){
                     mCurrentTextColor = color;
@@ -231,7 +231,9 @@ public class DashboardStatsFragment extends BaseFragment{
             mSettings.edit().putString("distanceUnit", aUnits[1]).apply();
             mSettings.edit().putString("temperatureUnit", aUnits[6]).apply();
             mSettings.edit().putString("timeUnit", aUnits[7]).apply();
-            mSettings.edit().putString("consumptionUnit", cUnits[6]+cUnits[7]).apply();
+            mSettings.edit().putString(
+		"consumptionUnit", cUnits[6]+cUnits[7]
+	    ).apply();
             updateDisplayedUnits();
         }
 
@@ -302,12 +304,30 @@ public class DashboardStatsFragment extends BaseFragment{
     // Android Methods Implemented Below
     
     @Override
-    public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
-        final View v = inflater.inflate(R.layout.dashboard_stats, container, false);
-        Log.d(TAG, "DashboardStats: onCreateView()");
+    public void onActivityCreated (Bundle savedInstanceState){
+        super.onActivityCreated(savedInstanceState);
+	CTAG = "DashboardStatsFragment: ";
+        Log.d(TAG, CTAG + "onActivityCreated Called");
+        // Bind required background services last since the callback
+        // functions depend on the view items being initialized
+        if(!mIBusConnected){
+            serviceStarter(IBusMessageService.class, mIBusConnection);
+        }
+    }
+    
+    @Override
+    public View onCreateView(
+	LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState
+    ){
+        final View v = inflater.inflate(
+	    R.layout.dashboard_stats, container, false
+	);
+        Log.d(TAG, CTAG + "onCreateView()");
         
         // Load Activity Settings
-        mSettings = PreferenceManager.getDefaultSharedPreferences(getActivity());
+        mSettings = PreferenceManager.getDefaultSharedPreferences(
+	    getActivity()
+	);
         
         mSpeedUnit = (TextView) v.findViewById(R.id.speedFieldUnit);
         mAvgSpeedUnit = (TextView) v.findViewById(R.id.avgSpeedUnit);
@@ -320,8 +340,10 @@ public class DashboardStatsFragment extends BaseFragment{
         // Set the settings
         updateDisplayedUnits();
     	
-	    // Layouts
-    	mDashboardLayout = (RelativeLayout) v.findViewById(R.id.dashboardLayout);
+	// Layouts
+    	mDashboardLayout = (RelativeLayout) v.findViewById(
+	    R.id.dashboardLayout
+	);
 		
         // Setup the text fields for the view
         // OBC Fields
@@ -337,7 +359,9 @@ public class DashboardStatsFragment extends BaseFragment{
         mCoolantTempField = (TextView) v.findViewById(R.id.coolantTempField);
         
         // Geo Fields
-        mGeoCoordinatesField = (TextView) v.findViewById(R.id.geoCoordinatesField);
+        mGeoCoordinatesField = (TextView) v.findViewById(
+	    R.id.geoCoordinatesField
+	);
         mGeoStreetField = (TextView) v.findViewById(R.id.geoStreetField);
         mGeoLocaleField = (TextView) v.findViewById(R.id.geoLocaleField);
         mGeoAltitudeField = (TextView) v.findViewById(R.id.geoAltitudeField);
@@ -350,10 +374,11 @@ public class DashboardStatsFragment extends BaseFragment{
         mTimeField = (TextView) v.findViewById(R.id.timeField);
 
         // Set the long press of values for IKE resets
-        OnLongClickListener valueResetter = new OnLongClickListener() {
+        OnLongClickListener valueResetter = new OnLongClickListener(){
             @Override
-            public boolean onLongClick(View v) {
-                IBusCommandsEnum action = IBusCommandsEnum.valueOf(v.getTag().toString());
+            public boolean onLongClick(View v){
+		String tagStr = v.getTag().toString();
+                IBusCommandsEnum action = IBusCommandsEnum.valueOf(tagStr);
                 switch(action){
                     case BMToIKEResetFuel1:
                         showToast("Resetting Fuel 1 Value");
@@ -383,7 +408,8 @@ public class DashboardStatsFragment extends BaseFragment{
 		
         // Act on preferences
         if(!mSettings.getBoolean("navAvailable", false)){
-            int layoutMargin =  (int) (230 * getResources().getDisplayMetrics().density + 0.5f);
+	    float density = getResources().getDisplayMetrics().density;
+            int layoutMargin =  (int) (230 * density + 0.5f);
             View geoLayout = v.findViewById(R.id.geoLayout);
             View geoLocation = v.findViewById(R.id.geoLocation);
             geoLayout.setVisibility(View.GONE);
@@ -401,39 +427,28 @@ public class DashboardStatsFragment extends BaseFragment{
                 
         }
         
-	    if(!mSettings.getBoolean("stealthOneAvailable", false)){
-	        mIKEDisplayField.setVisibility(View.GONE);
-	    }
+	if(!mSettings.getBoolean("stealthOneAvailable", false)){
+	    mIKEDisplayField.setVisibility(View.GONE);
+	}
 	    
         return v;
-    }
-	
-    @Override
-    public void onActivityCreated (Bundle savedInstanceState){
-        super.onActivityCreated(savedInstanceState);
-        Log.d(TAG, "DashboardStats: onActivityCreated Called");
-        // Bind required background services last since the callback
-        // functions depend on the view items being initialized
-        if(!mIBusConnected){
-            serviceStarter(IBusMessageService.class, mIBusConnection);
-        }
     }
     
     @Override
     public void onResume(){
     	super.onResume();
-    	Log.d(TAG, "DashboardStats: onResume called");
+    	Log.d(TAG, CTAG + "onResume()");
         // Send BoardMonitor Get requests to populate blank view
-        boardMonitorBootup();
+	// TODO Testing if we still need this or nah
+        // boardMonitorBootup();
     }
     
     @Override
-    public void onDestroyView() {
+    public void onDestroyView(){
     	super.onDestroy();
-    	Log.d(TAG, "DashboardStats: onDestroy called");
+	Log.d(TAG, CTAG + "onDestroyView()");
     	if(mIBusConnected){
-    	    mIBusService.disable();
-    	    mIBusService.removeCallback(mIBusUpdateListener);
+    	    mIBusService.unregisterCallback(mIBusCallbacks);
     	    serviceStopper(IBusMessageService.class, mIBusConnection);
     	}
     }

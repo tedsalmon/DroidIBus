@@ -1,13 +1,23 @@
 package net.littlebigisland.droidibus.activity;
 
+/**
+ * Base Fragment - Implements universal functionality
+ * @author Ted <tass2001@gmail.com>
+ * @package net.littlebigisland.droidibus.activity
+ */
+
+import net.littlebigisland.droidibus.ibus.IBusCallbackReceiver;
 import net.littlebigisland.droidibus.ibus.IBusCommand;
 import net.littlebigisland.droidibus.ibus.IBusCommandsEnum;
 import net.littlebigisland.droidibus.ibus.IBusMessageService;
+import net.littlebigisland.droidibus.ibus.IBusMessageService.IOIOBinder;
 import android.app.Fragment;
+import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.content.ServiceConnection;
 import android.os.Handler;
+import android.os.IBinder;
 import android.util.Log;
 import android.view.View;
 import android.view.ViewGroup;
@@ -17,9 +27,28 @@ import android.widget.Toast;
 public class BaseFragment extends Fragment{
     
     public String TAG = "DroidIBus";
+    public String CTAG = "";
+
     // NEVER override these in a child class! The service won't connected
     public IBusMessageService mIBusService = null;
     public boolean mIBusConnected = false;
+    
+    public class IBusServiceConnection implements ServiceConnection{
+        
+        @Override
+        public void onServiceConnected(ComponentName name, IBinder service){
+            mIBusService = ((IOIOBinder) service).getService();
+            Log.d(TAG, CTAG + "IBus service connected");
+            mIBusConnected = true;
+        }
+
+        @Override
+        public void onServiceDisconnected(ComponentName name){
+            Log.d(TAG, CTAG + "IBus service disconnected");
+            mIBusConnected = false;
+        }
+
+    };
     
     /**
      * Change TextView colors recursively; Used to support night colors
@@ -37,13 +66,29 @@ public class BaseFragment extends Fragment{
             }
         }
     }
+    
+    /**
+     * Register a callback with the IBus Service
+     */
+    public void registerIBusCallback(IBusCallbackReceiver cb, Handler handle){
+        try{
+            mIBusService.registerCallback(cb, handle);
+        }catch (Exception e) {
+            showToast(
+                "ERROR: Could not register callback with the IBus Service"
+            );
+        }
+    }
 
     @SuppressWarnings("rawtypes")
     public void serviceStarter(Class cls, ServiceConnection svcConn){
         Context applicationContext = getActivity();
         Intent svcIntent = new Intent(applicationContext, cls);
         try{
-            Log.d(TAG, String.format("Starting %s service", cls.toString()));
+            Log.d(
+                TAG,
+                String.format("%sStarting %s service", CTAG, cls.toString())
+            );
             applicationContext.bindService(
                 svcIntent, svcConn, Context.BIND_AUTO_CREATE
             );
@@ -52,7 +97,9 @@ public class BaseFragment extends Fragment{
         catch(Exception ex){
             Log.d(
                 TAG,
-                String.format("Unable to start %s service", cls.toString())
+                String.format(
+                    "%sUnable to start %s service", CTAG, cls.toString()
+                )
             );
         }
     }
@@ -60,20 +107,21 @@ public class BaseFragment extends Fragment{
     @SuppressWarnings("rawtypes")
     public void serviceStopper(Class cls, ServiceConnection svcConn){
         Context applicationContext = getActivity();
-        Intent svcIntent = new Intent(applicationContext, cls);
         try{
             Log.d(
                 TAG,
-                String.format("Unbinding from %s service", cls.toString())
+                String.format(
+                    "%sUnbinding from %s service", CTAG, cls.toString()
+                )
             );
             applicationContext.unbindService(svcConn);
-            applicationContext.stopService(svcIntent);
         }
         catch(Exception ex){
             Log.e(
                 TAG,
                 String.format(
-                    "Unable to unbind %s - Exception '%s'!",
+                    "%sUnable to unbind %s - Exception '%s'!",
+                    CTAG,
                     cls.toString(),
                     ex.getMessage()
                 )
@@ -94,7 +142,6 @@ public class BaseFragment extends Fragment{
     ){
         new Handler(getActivity().getMainLooper()).postDelayed(new Runnable(){
             public void run(){
-                Log.d(TAG, "Sending command delayed");
                 sendIBusCommand(cmd, args);
             }
         }, delayMils);
