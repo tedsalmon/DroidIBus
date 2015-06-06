@@ -1,287 +1,296 @@
 <?xml version="1.0" encoding="utf-8"?>
-<RelativeLayout
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:orientation="vertical"
-	android:layout_height="wrap_content"
-	android:layout_width="wrap_content"
-    xmlns:android="http://schemas.android.com/apk/res/android">
-    <LinearLayout
-	    android:id="@+id/obcLayout"
-	    android:baselineAligned="false"
-	    android:layout_width="match_parent"
-	    android:layout_height="wrap_content"
-	    android:layout_marginTop="@dimen/activity_vertical_margin"
-	    android:orientation="horizontal" >
-
-	    <RelativeLayout
-	        android:layout_width="100dp"
-	        android:layout_marginLeft="5dp"
-	        android:layout_height="wrap_content" >
-	        
-	        <TextView
-	            android:id="@+id/vehicleStatLbl"
-	            style="?android:listSeparatorTextViewStyle"
-	            android:text="@string/vehicleStatLbl" />
-	        <TextView
-	            android:id="@+id/speedFieldLbl"
-	            style="@style/majorStatItemLabelText"
-	            android:layout_below="@+id/vehicleStatLbl"
-	            android:text="@string/speedFieldLbl" /> 
-	        <TextView 
-	            android:id="@+id/speedField"
-	            style="@style/majorStatItemValueText"
-	            android:layout_below="@+id/speedFieldLbl"
-	            android:text="@string/defaultText" />
-	        <TextView
-	            android:id="@+id/speedFieldUnit"
-	            style="@style/statItemUnit"
-	            android:layout_below="@+id/speedFieldLbl"
-	            android:layout_toRightOf="@+id/speedField"
-	            android:text="@string/defaultText" />
-	
-	        <TextView
-	            android:id="@+id/rpmFieldLbl"
-	            style="@style/majorStatItemLabelText"
-	            android:layout_below="@+id/speedField"
-	            android:text="@string/rpmFieldLbl" />
-	
-	        <TextView
-	            android:id="@+id/rpmField"
-	            style="@style/majorStatItemValueText"
-	            android:layout_below="@+id/rpmFieldLbl"
-	            android:text="@string/defaultText" />
-	
-	        <TextView
-	            android:id="@+id/rangeFieldLbl"
-	            style="@style/majorStatItemLabelText"
-	            android:layout_below="@+id/rpmField"
-	            android:text="@string/rangeFieldLbl" />
-	
-	        <TextView
-	            android:id="@+id/rangeField"
-	            style="@style/majorStatItemValueText"
-	            android:layout_below="@+id/rangeFieldLbl"
-	            android:text="@string/defaultText" />
-	        
-	        <TextView 
-	            android:id="@+id/rangeFieldUnit"
-	            style="@style/statItemUnit"
-	            android:layout_toRightOf="@+id/rangeField"
-	            android:layout_below="@+id/rangeFieldLbl"
-	            android:text="@string/defaultText" />
-	    </RelativeLayout>
-	
-	    <RelativeLayout
-	        android:id="@+id/consumptionLayout"
-	        android:layout_width="250dp"
-	        android:layout_height="wrap_content"
-	        android:layout_marginLeft="80dp" >
-	
-	        <TextView
-	            android:id="@+id/currentObcStatsLbl"
-	            style="?android:listSeparatorTextViewStyle"
-	            android:text="@string/currentObcStatsLbl" />
-	
-	        <RelativeLayout
-	            android:id="@+id/fuel1Layout"
-	            style="@style/statItemLayout"
-	            android:layout_below="@+id/currentObcStatsLbl" >
-	
-	            <TextView
-	                android:id="@+id/consumption1Lbl"
-	                style="@style/statItemLabelText"
-	                android:text="@string/consumptionLbl1" />
-	
-	            <TextView
-	                android:id="@+id/consumption1"
-	                style="@style/statItemValueText"
-	                android:layout_below="@+id/consumption1Lbl"
-	                android:text="@string/defaultText" />
-	            
-	            <TextView 
-	                android:id="@+id/consumption1Unit"
-	                style="@style/statItemUnit"
-	                android:layout_toRightOf="@+id/consumption1"
-	                android:layout_below="@+id/consumption1Lbl"
-	                android:text="@string/defaultText" />
-	        </RelativeLayout>
-	        
-	        <RelativeLayout
-	            android:id="@+id/fuel2Layout"
-	            style="@style/statItemLayout"
-	            android:layout_below="@+id/fuel1Layout" >
-	
-	            <TextView
-	                android:id="@+id/consumption2Lbl"
-	                style="@style/statItemLabelText"
-	                android:text="@string/consumptionLbl2" />
-	
-	            <TextView
-	                android:id="@+id/consumption2"
-	                style="@style/statItemValueText"
-	                android:layout_below="@+id/consumption2Lbl"
-	                android:text="@string/defaultText" />
-	            
-	            <TextView 
-	                android:id="@+id/consumption2Unit"
-	                style="@style/statItemUnit"
-	                android:layout_toRightOf="@+id/consumption2"
-	                android:layout_below="@+id/consumption2Lbl"
-	                android:text="@string/defaultText" />
-	        </RelativeLayout>
-	
-	        <RelativeLayout
-	            android:id="@+id/avgSpeedLayout"
-	            style="@style/statItemLayout"
-	            android:layout_below="@+id/fuel2Layout" >
-	
-	            <TextView
-	                android:id="@+id/avgSpeedLbl"
-	                style="@style/statItemLabelText"
-	                android:text="@string/avgSpeedLbl" />
-	
-	            <TextView
-	                android:id="@+id/avgSpeed"
-	                style="@style/statItemValueText"
-	                android:layout_below="@+id/avgSpeedLbl"
-	                android:text="@string/defaultText" />
-	            
-	            <TextView
-	                android:id="@+id/avgSpeedUnit"
-	                style="@style/statItemUnit"
-	                android:layout_toRightOf="@+id/avgSpeed"
-	                android:layout_below="@+id/avgSpeedLbl"
-	                android:text="@string/defaultText" />
-	        </RelativeLayout>
-	    </RelativeLayout>
-	    
-	    <RelativeLayout
-	        android:id="@+id/geoLayout"
-	        android:layout_width="225dp"
-	        android:layout_height="wrap_content"
-	        android:layout_marginLeft="80dp" >
-	        <TextView
-	            android:id="@+id/geo_stats_lbl"
-	            style="?android:listSeparatorTextViewStyle"
-	            android:text="@string/geo_stats_lbl" />
-	        
-	        <TextView
-	            android:id="@+id/geo_latlong_lbl"
-	            style="@style/majorStatItemLabelText"
-	            android:layout_below="@+id/geo_stats_lbl"
-	            android:text="@string/geo_latlong_lbl" />
-	
-	        <TextView
-	            android:id="@+id/geoCoordinatesField"
-	            style="@style/majorStatItemValueText"
-	            android:layout_below="@+id/geo_latlong_lbl"
-	            android:text="@string/defaultText" />
-	
-	        <TextView
-	            android:id="@+id/geo_altitude_lbl"
-	            style="@style/majorStatItemLabelText"
-	            android:layout_below="@+id/geoCoordinatesField"
-	            android:text="@string/geo_altitude_lbl" />
-	
-	        <TextView
-	            android:id="@+id/geoAltitudeField"
-	            style="@style/majorStatItemValueText"
-	            android:layout_below="@+id/geo_altitude_lbl"
-	            android:text="@string/defaultText" />
-	    </RelativeLayout>
-	    
-	    <RelativeLayout
-	        android:id="@+id/tempLayout"
-	        android:layout_width="100dp"
-	        android:layout_height="wrap_content"
-	        android:layout_marginLeft="80dp" >
-	        <TextView
-	            android:id="@+id/temperatureStatLbl"
-	            style="?android:listSeparatorTextViewStyle"
-	            android:text="@string/temperatureStatLbl" />
-	        
-	        <TextView
-	            android:id="@+id/outdoorTempFieldLbl"
-	            style="@style/majorStatItemLabelText"
-	            android:layout_below="@+id/temperatureStatLbl"
-	            android:text="@string/outdoorTempFieldLbl" />
-	
-	        <TextView
-	            android:id="@+id/outdoorTempField"
-	            style="@style/majorStatItemValueText"
-	            android:layout_below="@+id/outdoorTempFieldLbl"
-	            android:text="@string/defaultText" />
-	        
-	        <TextView 
-	            android:id="@+id/outdoorTempUnit"
-	            style="@style/statItemUnit"
-	            android:layout_toRightOf="@+id/outdoorTempField"
-	            android:layout_below="@+id/outdoorTempFieldLbl"
-	            android:text="@string/defaultText" />
-	
-	        <TextView
-	            android:id="@+id/coolantTempFieldLbl"
-	            style="@style/majorStatItemLabelText"
-	            android:layout_below="@+id/outdoorTempField"
-	            android:text="@string/coolantTempFieldLbl" />
-	
-	        <TextView
-	            android:id="@+id/coolantTempField"
-	            style="@style/majorStatItemValueText"
-	            android:layout_below="@+id/coolantTempFieldLbl"
-	            android:text="@string/defaultText" />
-	        
-	        <TextView 
-	            android:id="@+id/coolantTempUnit"
-	            style="@style/statItemUnit"
-	            android:layout_toRightOf="@+id/coolantTempField"
-	            android:layout_below="@+id/coolantTempFieldLbl"
-	            android:text="@string/defaultText" />
-	                   
-	    </RelativeLayout>
-	</LinearLayout>
-	<LinearLayout 
-	    android:id="@+id/miscDataLayout"
-	    android:layout_alignParentBottom="true"
-	    android:layout_below="@+id/obcLayout"
-	    android:layout_width="match_parent"
-	    android:layout_height="wrap_content"
-	    android:orientation="horizontal">
+    android:layout_height="wrap_content"
+    android:layout_width="wrap_content">
     
-	    <LinearLayout
-	        android:layout_width="wrap_content"
-	        android:layout_height="wrap_content"
-	        android:gravity="left">
+    <LinearLayout
+        android:id="@+id/obcLayout"
+        android:baselineAligned="false"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="@dimen/activity_vertical_margin"
+        android:orientation="horizontal">
 
-	        <TextView
-	            android:id="@+id/dateField"
-	            style="@style/majorStatItemValueText"
-	            android:layout_width="wrap_content"
-	            android:text="@string/defaultText" />
-	
-	        <TextView
-	            android:id="@+id/timeField"
-	            style="@style/majorStatItemValueText"
-	            android:layout_width="wrap_content"
-	            android:text="@string/defaultText" />
-        </LinearLayout>
-	    <LinearLayout
-	        android:id="@+id/geoLocation"
-	        android:layout_width="fill_parent"
-	        android:layout_height="wrap_content"
-	        android:gravity="right">
+        <RelativeLayout
+            android:layout_width="100dp"
+            android:layout_marginLeft="5dp"
+            android:layout_height="wrap_content" >
+            
+            <TextView
+                android:id="@+id/vehicleStatLbl"
+                style="?android:listSeparatorTextViewStyle"
+                android:text="@string/vehicleStatLbl" />
+            <TextView
+                android:id="@+id/speedFieldLbl"
+                style="@style/majorStatItemLabelText"
+                android:layout_below="@+id/vehicleStatLbl"
+                android:text="@string/speedFieldLbl" /> 
+            <TextView 
+                android:id="@+id/speedField"
+                style="@style/majorStatItemValueText"
+                android:layout_below="@+id/speedFieldLbl"
+                android:text="@string/defaultText" />
+            <TextView
+                android:id="@+id/speedFieldUnit"
+                style="@style/statItemUnit"
+                android:layout_below="@+id/speedFieldLbl"
+                android:layout_toRightOf="@+id/speedField"
+                android:text="@string/defaultText" />
+    
+            <TextView
+                android:id="@+id/rpmFieldLbl"
+                style="@style/majorStatItemLabelText"
+                android:layout_below="@+id/speedField"
+                android:text="@string/rpmFieldLbl" />
+    
+            <TextView
+                android:id="@+id/rpmField"
+                style="@style/majorStatItemValueText"
+                android:layout_below="@+id/rpmFieldLbl"
+                android:text="@string/defaultText" />
+    
+            <TextView
+                android:id="@+id/rangeFieldLbl"
+                style="@style/majorStatItemLabelText"
+                android:layout_below="@+id/rpmField"
+                android:text="@string/rangeFieldLbl" />
+    
+            <TextView
+                android:id="@+id/rangeField"
+                style="@style/majorStatItemValueText"
+                android:layout_below="@+id/rangeFieldLbl"
+                android:text="@string/defaultText" />
+            
+            <TextView 
+                android:id="@+id/rangeFieldUnit"
+                style="@style/statItemUnit"
+                android:layout_toRightOf="@+id/rangeField"
+                android:layout_below="@+id/rangeFieldLbl"
+                android:text="@string/defaultText" />
+        </RelativeLayout>
+
+        <RelativeLayout
+            android:id="@+id/consumptionLayout"
+            android:layout_width="250dp"
+            android:layout_height="wrap_content"
+            android:layout_marginLeft="80dp" >
+    
+            <TextView
+                android:id="@+id/currentObcStatsLbl"
+                style="?android:listSeparatorTextViewStyle"
+                android:text="@string/currentObcStatsLbl" />
+    
+            <RelativeLayout
+                android:id="@+id/fuel1Layout"
+                style="@style/statItemLayout"
+                android:layout_below="@+id/currentObcStatsLbl" >
+    
+                <TextView
+                    android:id="@+id/consumption1Lbl"
+                    style="@style/statItemLabelText"
+                    android:text="@string/consumptionLbl1" />
+    
+                <TextView
+                    android:id="@+id/consumption1"
+                    style="@style/statItemValueText"
+                    android:layout_below="@+id/consumption1Lbl"
+                    android:text="@string/defaultText" />
+                
+                <TextView 
+                    android:id="@+id/consumption1Unit"
+                    style="@style/statItemUnit"
+                    android:layout_toRightOf="@+id/consumption1"
+                    android:layout_below="@+id/consumption1Lbl"
+                    android:text="@string/defaultText" />
+
+            </RelativeLayout>
+            
+            <RelativeLayout
+                android:id="@+id/fuel2Layout"
+                style="@style/statItemLayout"
+                android:layout_below="@+id/fuel1Layout" >
+    
+                <TextView
+                    android:id="@+id/consumption2Lbl"
+                    style="@style/statItemLabelText"
+                    android:text="@string/consumptionLbl2" />
+    
+                <TextView
+                    android:id="@+id/consumption2"
+                    style="@style/statItemValueText"
+                    android:layout_below="@+id/consumption2Lbl"
+                    android:text="@string/defaultText" />
+                
+                <TextView 
+                    android:id="@+id/consumption2Unit"
+                    style="@style/statItemUnit"
+                    android:layout_toRightOf="@+id/consumption2"
+                    android:layout_below="@+id/consumption2Lbl"
+                    android:text="@string/defaultText" />
+
+            </RelativeLayout>
+    
+            <RelativeLayout
+                android:id="@+id/avgSpeedLayout"
+                style="@style/statItemLayout"
+                android:layout_below="@+id/fuel2Layout" >
+    
+                <TextView
+                    android:id="@+id/avgSpeedLbl"
+                    style="@style/statItemLabelText"
+                    android:text="@string/avgSpeedLbl" />
+    
+                <TextView
+                    android:id="@+id/avgSpeed"
+                    style="@style/statItemValueText"
+                    android:layout_below="@+id/avgSpeedLbl"
+                    android:text="@string/defaultText" />
+                
+                <TextView
+                    android:id="@+id/avgSpeedUnit"
+                    style="@style/statItemUnit"
+                    android:layout_toRightOf="@+id/avgSpeed"
+                    android:layout_below="@+id/avgSpeedLbl"
+                    android:text="@string/defaultText" />
+
+            </RelativeLayout>
+
+        </RelativeLayout>
+    
+        <RelativeLayout
+            android:id="@+id/geoLayout"
+            android:layout_width="225dp"
+            android:layout_height="wrap_content"
+            android:layout_marginLeft="80dp">
+    
+            <TextView
+                android:id="@+id/geo_stats_lbl"
+                style="?android:listSeparatorTextViewStyle"
+                android:text="@string/geo_stats_lbl" />
+            
+            <TextView
+                android:id="@+id/geo_latlong_lbl"
+                style="@style/majorStatItemLabelText"
+                android:layout_below="@+id/geo_stats_lbl"
+                android:text="@string/geo_latlong_lbl" />
+    
+            <TextView
+                android:id="@+id/geoCoordinatesField"
+                style="@style/majorStatItemValueText"
+                android:layout_below="@+id/geo_latlong_lbl"
+                android:text="@string/defaultText" />
+    
+            <TextView
+                android:id="@+id/geo_altitude_lbl"
+                style="@style/majorStatItemLabelText"
+                android:layout_below="@+id/geoCoordinatesField"
+                android:text="@string/geo_altitude_lbl" />
+    
+            <TextView
+                android:id="@+id/geoAltitudeField"
+                style="@style/majorStatItemValueText"
+                android:layout_below="@+id/geo_altitude_lbl"
+                android:text="@string/defaultText" />
+    
+        </RelativeLayout>
+    
+        <RelativeLayout
+            android:id="@+id/tempLayout"
+            android:layout_width="100dp"
+            android:layout_height="wrap_content"
+            android:layout_marginLeft="80dp">
+    
+            <TextView
+                android:id="@+id/temperatureStatLbl"
+                style="?android:listSeparatorTextViewStyle"
+                android:text="@string/temperatureStatLbl" />
+            
+            <TextView
+                android:id="@+id/outdoorTempFieldLbl"
+                style="@style/majorStatItemLabelText"
+                android:layout_below="@+id/temperatureStatLbl"
+                android:text="@string/outdoorTempFieldLbl" />
+    
+            <TextView
+                android:id="@+id/outdoorTempField"
+                style="@style/majorStatItemValueText"
+                android:layout_below="@+id/outdoorTempFieldLbl"
+                android:text="@string/defaultText" />
+            
+            <TextView 
+                android:id="@+id/outdoorTempUnit"
+                style="@style/statItemUnit"
+                android:layout_toRightOf="@+id/outdoorTempField"
+                android:layout_below="@+id/outdoorTempFieldLbl"
+                android:text="@string/defaultText" />
+    
+            <TextView
+                android:id="@+id/coolantTempFieldLbl"
+                style="@style/majorStatItemLabelText"
+                android:layout_below="@+id/outdoorTempField"
+                android:text="@string/coolantTempFieldLbl" />
+    
+            <TextView
+                android:id="@+id/coolantTempField"
+                style="@style/majorStatItemValueText"
+                android:layout_below="@+id/coolantTempFieldLbl"
+                android:text="@string/defaultText" />
+            
+            <TextView 
+                android:id="@+id/coolantTempUnit"
+                style="@style/statItemUnit"
+                android:layout_toRightOf="@+id/coolantTempField"
+                android:layout_below="@+id/coolantTempFieldLbl"
+                android:text="@string/defaultText" />
+                       
+        </RelativeLayout>
+    </LinearLayout>
+    <LinearLayout 
+        android:id="@+id/miscDataLayout"
+        android:layout_alignParentBottom="true"
+        android:layout_below="@+id/obcLayout"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal">
+        
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:gravity="left">
+    
+            <TextView
+                android:id="@+id/dateField"
+                style="@style/majorStatItemValueText"
+                android:layout_width="wrap_content"
+                android:text="@string/defaultText" />
+    
+            <TextView
+                android:id="@+id/timeField"
+                style="@style/majorStatItemValueText"
+                android:layout_width="wrap_content"
+                android:text="@string/defaultText" />
+
+            </LinearLayout>
+        <LinearLayout
+            android:id="@+id/geoLocation"
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content"
+            android:gravity="right">
             <TextView
                 android:id="@+id/ikeDisplayField"
                 style="@style/majorStatItemValueText"
                 android:layout_width="wrap_content"
                 android:text="@string/defaultText" />
-	        <TextView
-	            android:id="@+id/geoStreetField"
-	            style="@style/geoItemText"
-	            android:text="@string/defaultText" />
-	        <TextView
-	            android:id="@+id/geoLocaleField"
-	            style="@style/geoItemText"
-	            android:text="@string/defaultText" />
-	    </LinearLayout>
-	</LinearLayout>
+            <TextView
+                android:id="@+id/geoStreetField"
+                style="@style/geoItemText"
+                android:text="@string/defaultText" />
+            <TextView
+                android:id="@+id/geoLocaleField"
+                style="@style/geoItemText"
+                android:text="@string/defaultText" />
+
+        </LinearLayout>
+    </LinearLayout>
 </RelativeLayout>

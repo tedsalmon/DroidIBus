@@ -1,230 +1,230 @@
 <?xml version="1.0" encoding="utf-8"?>
-<RelativeLayout
-    xmlns:android="http://schemas.android.com/apk/res/android"
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:id="@+id/musicPlayerLayout"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:orientation="vertical" >
+    android:orientation="vertical">
+    
     <LinearLayout
-	    android:id="@+id/radioControlLayout"
-	    android:layout_width="match_parent"
-	    android:layout_height="wrap_content"
-	    android:orientation="horizontal" >
+        android:id="@+id/radioControlLayout"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal">
 
-	    <ImageButton
-	        android:id="@+id/btnVolUp"
-	        style="@style/mediaBtn"
-	        android:contentDescription="@string/mediaBtnDesc"
-	        android:src="@android:drawable/arrow_up_float" />
-	    
-	    <ImageButton
-	        android:id="@+id/btnVolDown"
-	        style="@style/mediaBtn"
-	        android:contentDescription="@string/mediaBtnDesc"
-	        android:src="@android:drawable/arrow_down_float" />
-	
-	    
-	    <LinearLayout
-	        android:id="@+id/tabletAudio"
-	        android:layout_width="wrap_content"
-	        android:layout_height="85dp"
-	        android:visibility="visible" >
-	        
-	        <ImageView
-	            android:id="@+id/albumArt"
-	            android:layout_width="75dp"
-	            android:layout_height="75dp"
-	            android:contentDescription="@string/mediaBtnDesc"
-	            android:scaleType="center" />
-	
-	        <LinearLayout
-	            android:layout_width="560dp"
-	            android:layout_height="wrap_content"
-	            android:orientation="vertical" >
-	            <LinearLayout
+        <ImageButton
+            android:id="@+id/btnVolUp"
+            style="@style/mediaBtn"
+            android:contentDescription="@string/mediaBtnDesc"
+            android:src="@android:drawable/arrow_up_float" />
+        
+        <ImageButton
+            android:id="@+id/btnVolDown"
+            style="@style/mediaBtn"
+            android:contentDescription="@string/mediaBtnDesc"
+            android:src="@android:drawable/arrow_down_float" />
+
+        <LinearLayout
+            android:id="@+id/tabletAudio"
+            android:layout_width="wrap_content"
+            android:layout_height="85dp"
+            android:visibility="visible" >
+            
+            <ImageView
+                android:id="@+id/albumArt"
+                android:layout_width="75dp"
+                android:layout_height="75dp"
+                android:contentDescription="@string/mediaBtnDesc"
+                android:scaleType="center" />
+    
+            <LinearLayout
+                android:layout_width="560dp"
+                android:layout_height="wrap_content"
+                android:orientation="vertical" >
+                <LinearLayout
                     android:id="@+id/playerMetaDataLayout"
                     android:layout_width="fill_parent"
                     android:layout_height="fill_parent"
                     android:orientation="vertical">
-		            <TextView
-		                android:id="@+id/playerTitleField"
-		                android:textSize="25sp"
-		                android:layout_width="fill_parent"
-		                android:layout_height="wrap_content"
-		                android:gravity="center_horizontal"
-		                android:ellipsize="marquee"
-		                android:marqueeRepeatLimit="marquee_forever"
-		                android:scrollHorizontally="true"
-		                android:singleLine="true"
-		                android:text="@string/defaultText" />
-		 
-		            <LinearLayout
-		                android:layout_width="fill_parent"
-		                android:layout_height="wrap_content"
-		                android:gravity="center_horizontal"
-		                android:orientation="horizontal" >
-		 
-		                <TextView
-		                    android:id="@+id/playerArtistField"
-		                    android:textSize="15sp"
-		                    android:layout_width="wrap_content"
-		                    android:layout_height="wrap_content"
-		                    android:text="@string/defaultText" />
-		                
-		                <TextView
-		                    android:id="@+id/playerAlbumArtistSeperator"
-		                    android:textSize="15sp"
-		                    android:layout_width="wrap_content"
-		                    android:layout_height="wrap_content"
-		                    android:layout_marginRight="10dp"
-		                    android:layout_marginLeft="10dp"
-		                    android:text="@string/playerAlbumArtistSeperator" />
-		 
-		                <TextView
-		                    android:id="@+id/playerAlbumField"
-		                    android:textSize="15sp"
-		                    android:layout_width="wrap_content"
-		                    android:layout_height="wrap_content"
-		                    android:text="@string/defaultText" />
-		            </LinearLayout>
-		        </LinearLayout>
-	            <SeekBar
-	                android:id="@+id/playerTrackBar"
-	                android:layout_width="fill_parent"
-	                android:layout_height="wrap_content" />
-	        </LinearLayout>
-	 
-	        <ImageButton
-	            android:id="@+id/playerPrevBtn"
-	            style="@style/mediaBtn"
-	            android:contentDescription="@string/mediaBtnDesc"
-	            android:src="@android:drawable/ic_media_previous" />
-	        
-	        <ImageButton
-	            android:id="@+id/playerPlayPauseBtn"
-	            style="@style/mediaBtn"
-	            android:contentDescription="@string/mediaBtnDesc"
-	            android:src="@android:drawable/ic_media_play" />
-	        
-	        <ImageButton
-	            android:id="@+id/playerNextBtn"
-	            style="@style/mediaBtn"
-	            android:contentDescription="@string/mediaBtnDesc"
-	            android:src="@android:drawable/ic_media_next" />
-	        
-	    </LinearLayout>
-	
-	    <LinearLayout
-	        android:id="@+id/radioAudio"
-	        android:layout_width="wrap_content"
-	        android:layout_height="85dp"
-	        android:visibility="gone" >
-	        
-	        <Button
-	            android:id="@+id/btnRadioFM"
-	            style="@style/mediaBtn"
-	            android:text="@string/btnRadioFMLbl" />
-	
-	        <Button 
-	            android:id="@+id/btnRadioAM"
-	            style="@style/mediaBtn"
-	            android:text="@string/btnRadioAMLbl" />
-	
-	        <LinearLayout
-	            android:layout_width="450dp"
-	            android:layout_height="fill_parent"
-	            android:orientation="vertical" >
-	            <TextView
-	                android:id="@+id/stationText"
-	                android:textSize="35sp"
-	                android:layout_width="fill_parent"
-	                android:layout_height="fill_parent"
-	                android:gravity="center_horizontal|center_vertical"
-	                android:text="@string/stationTextLbl" />
-	        </LinearLayout>
-	        <LinearLayout
-	            android:layout_width="100dp"
-	            android:layout_marginRight="30dp"
-	            android:layout_height="fill_parent"
-	            android:orientation="vertical" >
-	            <TextView
-	                android:id="@+id/radioBroadcast"
-	                android:textSize="15sp"
-	                android:layout_marginTop="2sp"
-	                android:layout_width="fill_parent"
-	                android:layout_height="wrap_content"
-	                android:gravity="center_horizontal|center_vertical"
-	                android:text="@string/blankLbl" />
-	           <TextView
-	                android:id="@+id/radioStereoIndicator"
-	                android:textSize="15sp"
-	                android:visibility="gone"
-	                android:layout_marginTop="2sp"
-	                android:layout_width="fill_parent"
-	                android:layout_height="wrap_content"
-	                android:gravity="center_horizontal|center_vertical"
-	                android:text="@string/stereoIndicatorLbl" />
-	          <TextView
-	                android:id="@+id/radioRDSIndicator"
-	                android:textSize="15sp"
-	                android:visibility="gone"
-	                android:layout_marginTop="2sp"
-	                android:layout_width="fill_parent"
-	                android:layout_height="wrap_content"
-	                android:gravity="center_horizontal|center_vertical"
-	                android:text="@string/rdsIndicatorLbl" />
-	         <TextView
-	                android:id="@+id/radioProgram"
-	                android:textSize="15sp"
-	                android:layout_marginTop="2sp"
-	                android:layout_width="fill_parent"
-	                android:layout_height="wrap_content"
-	                android:gravity="center_horizontal|center_vertical"
-	                android:text="@string/blankLbl" />                         
-	        </LinearLayout>
-	         <ImageButton
-	             android:id="@+id/btnPrev"
-	             style="@style/mediaBtn"
-	             android:contentDescription="@string/mediaBtnDesc"
-	             android:src="@android:drawable/ic_media_previous" />
-	         
-	         <ImageButton
-	            android:id="@+id/btnNext"
-	            style="@style/mediaBtn"
-	            android:contentDescription="@string/mediaBtnDesc"
-	            android:src="@android:drawable/ic_media_next" />
-	        
-	    </LinearLayout>
-	</LinearLayout>
-	<LinearLayout
-	    android:id="@+id/assortedControls"
-	    android:layout_below="@+id/radioControlLayout"
-	    android:layout_width="match_parent"
-	    android:layout_height="wrap_content"
-	    android:orientation="horizontal">
-	    <LinearLayout
+                
+                    <TextView
+                        android:id="@+id/playerTitleField"
+                        android:textSize="25sp"
+                        android:layout_width="fill_parent"
+                        android:layout_height="wrap_content"
+                        android:gravity="center_horizontal"
+                        android:ellipsize="marquee"
+                        android:marqueeRepeatLimit="marquee_forever"
+                        android:scrollHorizontally="true"
+                        android:singleLine="true"
+                        android:text="@string/defaultText" />
+    
+                    <LinearLayout
+                        android:layout_width="fill_parent"
+                        android:layout_height="wrap_content"
+                        android:gravity="center_horizontal"
+                        android:orientation="horizontal" >
+         
+                        <TextView
+                            android:id="@+id/playerArtistField"
+                            android:textSize="15sp"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="@string/defaultText" />
+                        
+                        <TextView
+                            android:id="@+id/playerAlbumArtistSeperator"
+                            android:textSize="15sp"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginRight="10dp"
+                            android:layout_marginLeft="10dp"
+                            android:text="@string/playerAlbumArtistSeperator" />
+         
+                        <TextView
+                            android:id="@+id/playerAlbumField"
+                            android:textSize="15sp"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="@string/defaultText" />
+                    </LinearLayout>
+                </LinearLayout>
+                <SeekBar
+                    android:id="@+id/playerTrackBar"
+                    android:layout_width="fill_parent"
+                    android:layout_height="wrap_content" />
+            </LinearLayout>
+ 
+            <ImageButton
+                android:id="@+id/playerPrevBtn"
+                style="@style/mediaBtn"
+                android:contentDescription="@string/mediaBtnDesc"
+                android:src="@android:drawable/ic_media_previous" />
+            
+            <ImageButton
+                android:id="@+id/playerPlayPauseBtn"
+                style="@style/mediaBtn"
+                android:contentDescription="@string/mediaBtnDesc"
+                android:src="@android:drawable/ic_media_play" />
+            
+            <ImageButton
+                android:id="@+id/playerNextBtn"
+                style="@style/mediaBtn"
+                android:contentDescription="@string/mediaBtnDesc"
+                android:src="@android:drawable/ic_media_next" />
+        
+        </LinearLayout>
+
+        <LinearLayout
+            android:id="@+id/radioAudio"
+            android:layout_width="wrap_content"
+            android:layout_height="85dp"
+            android:visibility="gone" >
+            
+            <Button
+                android:id="@+id/btnRadioFM"
+                style="@style/mediaBtn"
+                android:text="@string/btnRadioFMLbl" />
+    
+            <Button 
+                android:id="@+id/btnRadioAM"
+                style="@style/mediaBtn"
+                android:text="@string/btnRadioAMLbl" />
+    
+            <LinearLayout
+                android:layout_width="450dp"
+                android:layout_height="fill_parent"
+                android:orientation="vertical" >
+                <TextView
+                    android:id="@+id/stationText"
+                    android:textSize="35sp"
+                    android:layout_width="fill_parent"
+                    android:layout_height="fill_parent"
+                    android:gravity="center_horizontal|center_vertical"
+                    android:text="@string/stationTextLbl" />
+            </LinearLayout>
+            <LinearLayout
+                android:layout_width="100dp"
+                android:layout_marginRight="30dp"
+                android:layout_height="fill_parent"
+                android:orientation="vertical" >
+                <TextView
+                    android:id="@+id/radioBroadcast"
+                    android:textSize="15sp"
+                    android:layout_marginTop="2sp"
+                    android:layout_width="fill_parent"
+                    android:layout_height="wrap_content"
+                    android:gravity="center_horizontal|center_vertical"
+                    android:text="@string/blankLbl" />
+               <TextView
+                    android:id="@+id/radioStereoIndicator"
+                    android:textSize="15sp"
+                    android:visibility="gone"
+                    android:layout_marginTop="2sp"
+                    android:layout_width="fill_parent"
+                    android:layout_height="wrap_content"
+                    android:gravity="center_horizontal|center_vertical"
+                    android:text="@string/stereoIndicatorLbl" />
+              <TextView
+                    android:id="@+id/radioRDSIndicator"
+                    android:textSize="15sp"
+                    android:visibility="gone"
+                    android:layout_marginTop="2sp"
+                    android:layout_width="fill_parent"
+                    android:layout_height="wrap_content"
+                    android:gravity="center_horizontal|center_vertical"
+                    android:text="@string/rdsIndicatorLbl" />
+             <TextView
+                    android:id="@+id/radioProgram"
+                    android:textSize="15sp"
+                    android:layout_marginTop="2sp"
+                    android:layout_width="fill_parent"
+                    android:layout_height="wrap_content"
+                    android:gravity="center_horizontal|center_vertical"
+                    android:text="@string/blankLbl" />                         
+            </LinearLayout>
+             <ImageButton
+                 android:id="@+id/btnPrev"
+                 style="@style/mediaBtn"
+                 android:contentDescription="@string/mediaBtnDesc"
+                 android:src="@android:drawable/ic_media_previous" />
+             
+             <ImageButton
+                android:id="@+id/btnNext"
+                style="@style/mediaBtn"
+                android:contentDescription="@string/mediaBtnDesc"
+                android:src="@android:drawable/ic_media_next" />
+            
+        </LinearLayout>
+    </LinearLayout>
+    <LinearLayout
+        android:id="@+id/assortedControls"
+        android:layout_below="@+id/radioControlLayout"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal">
+        <LinearLayout
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:gravity="left">
-		    <Switch
-		        android:id="@+id/btnMusicMode"
-		        android:layout_width="wrap_content"
-		        android:layout_height="wrap_content"
-		        android:checked="true"
-		        android:textOn="Tablet"
-		        android:textOff="Radio" />
-		</LinearLayout>
-
-	    <LinearLayout
-	        android:layout_width="fill_parent"
-	        android:layout_height="wrap_content"
-	        android:gravity="right" >
-
-		    <Spinner
-	            android:id="@+id/mediaSessionSelector"
-	            android:layout_width="wrap_content"
-	            android:layout_height="wrap_content"
-	            android:text="@string/defaultText" />
-	    </LinearLayout>
-	</LinearLayout>
+            <Switch
+                android:id="@+id/btnMusicMode"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:checked="true"
+                android:textOn="Tablet"
+                android:textOff="Radio" />
+        </LinearLayout>
+    
+        <LinearLayout
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content"
+            android:gravity="right" >
+    
+            <Spinner
+                android:id="@+id/mediaSessionSelector"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/defaultText" />
+        </LinearLayout>
+    </LinearLayout>
 </RelativeLayout>

@@ -1,12 +1,6 @@
 <resources xmlns:android="http://schemas.android.com/apk/res/android">
-    <!--
-        Base application theme for API 14+. This theme completely replaces
-        AppBaseTheme from BOTH res/values/styles.xml and
-        res/values-v11/styles.xml on API 14+ devices.
-    -->
-    <style name="AppBaseTheme" parent="android:Theme.Holo">
-        <!-- API 14 theme customizations can go here. -->
-    </style>
+    <!-- Android application theme -->
+    <style name="AppBaseTheme" parent="android:Theme.Holo" />
     <style name="AppTheme" parent="AppBaseTheme">
         <item name="android:actionBarStyle">@style/ActionBar</item>
     </style>
@@ -75,6 +69,6 @@
         <item name="android:layout_width">wrap_content</item>
         <item name="android:layout_height">wrap_content</item>
         <item name="android:layout_centerVertical">true</item>
-	    <item name="android:paddingRight">2.5dp</item>
+    <item name="android:paddingRight">2.5dp</item>
     </style>
 </resources>

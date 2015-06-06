@@ -1,5 +1,12 @@
 package net.littlebigisland.droidibus.activity;
 
+/**
+ * Dashboard Music Fragment - Controls Music Player 
+ * and Media functionality to the IBus device
+ * @author Ted <tass2001@gmail.com>
+ * @package net.littlebigisland.droidibus.activity
+ */
+
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
@@ -10,7 +17,6 @@ import net.littlebigisland.droidibus.R;
 import net.littlebigisland.droidibus.ibus.IBusCommandsEnum;
 import net.littlebigisland.droidibus.ibus.IBusCallbackReceiver;
 import net.littlebigisland.droidibus.ibus.IBusMessageService;
-import net.littlebigisland.droidibus.ibus.IBusMessageService.IOIOBinder;
 import net.littlebigisland.droidibus.music.MusicControllerService;
 import android.annotation.SuppressLint;
 import android.content.ComponentName;
@@ -55,8 +61,12 @@ public class DashboardMusicFragment extends BaseFragment{
     protected Handler mHandler = new Handler();
     protected SharedPreferences mSettings = null;
     
-    protected int CONTROLLER_UPDATE_RATE = 1000;
-    protected int SEEKBAR_UPDATE_RATE = 100;
+    protected static final int CONTROLLER_UPDATE_RATE = 1000;
+    protected static final int RADIO_UPDATE_RATE = 3000;
+    protected static final int SEEKBAR_UPDATE_RATE = 100;
+    
+    private static final int ARTWORK_HEIGHT = 114;
+    private static final int ARTWORK_WIDTH = 114;
     
     // Fields in the activity
     protected TextView mStationText, mRDSField, mProgramField,
@@ -82,17 +92,16 @@ public class DashboardMusicFragment extends BaseFragment{
     protected PackageManager mPackageManager = null;
 
     protected boolean mIsPlaying = false;
-    protected boolean mWasPlaying = false; // Was the song playing before we shut
+    protected boolean mWasPlaying = false;
     protected long mSongDuration = 1;
 
-    protected RadioModes mCurrentRadioMode = null; // Current Radio Text
-    protected RadioTypes mRadioType = null; // Users radio type
-    protected long mLastRadioStatus = 0; // Epoch of last time we got a status message from the Radio
-    protected long mLastModeChange = 0; // Time that the radio mode last changed
-    protected long mLastRadioStatusRequest = 0; // Time we last requested the Radio's status
+    protected RadioModes mCurrentRadioMode = null;
+    protected RadioTypes mRadioType = null;
+    protected long mLastRadioStatus = 0;
+    protected long mLastModeChange = 0;
+    protected long mLastRadioStatusRequest = 0;
     protected boolean mCDPlayerPlaying = false;
-    private static final int ARTWORK_HEIGHT = 114;
-    private static final int ARTWORK_WIDTH = 114;
+
     
     private enum RadioModes{
         AUX,
@@ -105,39 +114,26 @@ public class DashboardMusicFragment extends BaseFragment{
         CD53
     }
 
-    
-    private ServiceConnection mIBusConnection = new ServiceConnection(){
+    // Service connection class for IBus
+    private IBusServiceConnection mIBusConnection = new IBusServiceConnection(){
         
         @Override
-        public void onServiceConnected(ComponentName className, IBinder service){
-            mIBusService = ((IOIOBinder) service).getService();
-            if(mIBusService != null){
-                mIBusConnected = true;
-                try {
-                    mIBusService.addCallback(mIBusUpdateListener, mHandler);
-                } catch (Exception e) {
-                    showToast("Error: Cannot bind to the IBus Service");
-                }
-                Log.d(TAG, "DashboardMusic: IBus Service Bound");
-                if(mRadioType == RadioTypes.BM53){
-                    new Thread(mRadioUpdaterThread).start();
-                }
+        public void onServiceConnected(ComponentName name, IBinder service){
+            super.onServiceConnected(name, service);
+            registerIBusCallback(mIBusCallbacks, mHandler);
+            if(mRadioType == RadioTypes.BM53){
+                Log.d(TAG, CTAG + "IBus Service Connected");
+                mHandler.post(mRadioUpdaterThread);
             }
         }
-
-        @Override
-        public void onServiceDisconnected(ComponentName name){
-            Log.e(TAG, "mIBusService is disconnected");
-            mIBusConnected = false;
-        }
-
+        
     };
     
     private ServiceConnection mPlayerConnection = new ServiceConnection(){
         
         @Override
         public void onServiceConnected(ComponentName className, IBinder service){
-            Log.d(TAG, "MusicControllerService Connected");
+            Log.d(TAG, CTAG + "MusicControllerService Connected");
             // Getting the binder and activating RemoteController instantly
             MusicControllerService.MusicControllerBinder serviceBinder = (
                 MusicControllerService.MusicControllerBinder
@@ -156,7 +152,7 @@ public class DashboardMusicFragment extends BaseFragment{
 
         @Override
         public void onServiceDisconnected(ComponentName name){
-            Log.d(TAG, "MusicControllerService Disconnected");
+            Log.d(TAG, CTAG + "MusicControllerService Disconnected");
             mMediaPlayerConnected = false;
         }
 
@@ -201,18 +197,27 @@ public class DashboardMusicFragment extends BaseFragment{
                 getActivity().runOnUiThread(new Runnable(){
                     @Override
                     public void run(){
-                        long currTime = Calendar.getInstance().getTimeInMillis();
-                        // BM Emulation
-            
+                        long now = Calendar.getInstance().getTimeInMillis();
+
                         // Ask the radio for it's status
-                        if((currTime - mLastRadioStatus) >= radioStatusTimeout){
-                            sendIBusCommand(IBusCommandsEnum.BMToRadioGetStatus);
+			long timeSinceStat = now - mLastRadioStatusRequest;
+                        if(timeSinceStat >= radioStatusTimeout){
+                            sendIBusCommand(
+				IBusCommandsEnum.BMToRadioGetStatus
+			    );
                         }
                         
-                        long statusDiff = currTime - mLastRadioStatus;
-                        if(statusDiff > radioStatusTimeout && mCurrentRadioMode != RadioModes.AUX){
-                            sendIBusCommand(IBusCommandsEnum.BMToRadioInfoPress);
-                            sendIBusCommandDelayed(IBusCommandsEnum.BMToRadioInfoRelease, 500);
+                        long statusDiff = now - mLastRadioStatus;
+                        if(statusDiff > radioStatusTimeout &&
+			   mCurrentRadioMode != RadioModes.AUX
+			){
+                            sendIBusCommand(
+				IBusCommandsEnum.BMToRadioInfoPress
+			    );
+                            sendIBusCommandDelayed(
+				IBusCommandsEnum.BMToRadioInfoRelease,
+				500
+			    );
                         }
                     }
                 });
@@ -250,7 +255,7 @@ public class DashboardMusicFragment extends BaseFragment{
 
     };
     
-    private IBusCallbackReceiver mIBusUpdateListener = new IBusCallbackReceiver(){
+    private IBusCallbackReceiver mIBusCallbacks = new IBusCallbackReceiver(){
     	
     	private int mCurrentTextColor = R.color.dayColor;
 		
@@ -389,6 +394,7 @@ public class DashboardMusicFragment extends BaseFragment{
         
         @Override
         public void onUpdateRadioStatus(int status){
+	    mLastRadioStatusRequest = Calendar.getInstance().getTimeInMillis();
             // Radio is off, turn it on
             if(status == 0){
                 sendIBusCommand(IBusCommandsEnum.BMToRadioPwrPress);
@@ -541,8 +547,10 @@ public class DashboardMusicFragment extends BaseFragment{
     @Override
     public void onActivityCreated (Bundle savedInstanceState){
         super.onActivityCreated(savedInstanceState);
-        Log.d(TAG, "DashboardMusic: onActivityCreated Called");
-        mPackageManager = getActivity().getApplicationContext().getPackageManager();
+	CTAG = "DashboardMusicFragment: ";
+        Log.d(TAG, CTAG + "onActivityCreated Called");
+        mPackageManager = getActivity().getApplicationContext(
+	).getPackageManager();
         if(!mIBusConnected){
             serviceStarter(IBusMessageService.class, mIBusConnection);
         }
@@ -552,8 +560,12 @@ public class DashboardMusicFragment extends BaseFragment{
     }
     
     @Override
-    public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState){
-        final View v = inflater.inflate(R.layout.dashboard_music, container, false);
+    public View onCreateView(
+	LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState
+    ){
+        final View v = inflater.inflate(
+	    R.layout.dashboard_music, container, false
+	);
         Log.d(TAG, CTAG + "onCreateView()");
         
         // Load Activity Settings
@@ -790,6 +802,7 @@ public class DashboardMusicFragment extends BaseFragment{
         super.onDestroyView();
         Log.d(TAG, CTAG + "onDestroyView() called");
         if(mIBusConnected){
+            mIBusService.unregisterCallback(mIBusCallbacks);
             serviceStopper(IBusMessageService.class, mIBusConnection);
         }
         if(mMediaPlayerConnected){
