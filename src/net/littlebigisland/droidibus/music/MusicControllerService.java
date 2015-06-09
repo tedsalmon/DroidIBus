@@ -12,6 +12,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import android.content.ComponentName;
 import android.content.Context;
@@ -37,7 +38,7 @@ public class MusicControllerService extends NotificationListenerService implemen
     Map<String, MediaController> mMediaControllers = new HashMap<String, MediaController>();
     private MediaController mActiveMediaController = null;
     private MediaController.TransportControls mActiveMediaTransport = null;
-    
+
     Map<String, String> mMediaControllerSessionMap = new HashMap<String, String>();
     
     // Callback provided by user 
@@ -84,14 +85,6 @@ public class MusicControllerService extends NotificationListenerService implemen
     }
     
     /**
-     * Convenience method for getActiveMediaTransport()
-     * @return MediaController.TransportControls
-     */
-    public MediaController.TransportControls getRemote(){
-        return getMediaTransport();
-    }
-    
-    /**
      * Return the MusicControllerBinder to any
      * activities that bind to this service
      * @return mBinder - The classes Binder
@@ -117,24 +110,6 @@ public class MusicControllerService extends NotificationListenerService implemen
     }
     
     /**
-     * Send the ACTION_UP and ACTION_DOWN key events
-     * @param keyCode The key we are pressing
-     */
-    public void sendKeyEvent(int keyCode){
-        KeyEvent keyDown  = new KeyEvent(KeyEvent.ACTION_DOWN, keyCode);
-        KeyEvent keyUp  = new KeyEvent(KeyEvent.ACTION_UP, keyCode);
-        
-        Intent downIntent = new Intent(Intent.ACTION_MEDIA_BUTTON, null);
-        downIntent.putExtra(Intent.EXTRA_KEY_EVENT, keyDown);
-        
-        Intent upIntent = new Intent(Intent.ACTION_MEDIA_BUTTON, null);
-        upIntent.putExtra(Intent.EXTRA_KEY_EVENT, keyUp);
-        
-        mContext.sendOrderedBroadcast(downIntent, null);
-        mContext.sendOrderedBroadcast(upIntent, null);
-    }
-    
-    /**
      * Switch the active media session to the given session name 
      * @param sessionName The string name of the session to switch to
      */
@@ -148,22 +123,24 @@ public class MusicControllerService extends NotificationListenerService implemen
                 oldSessionToken = mActiveMediaController.getSessionToken().toString();
             }
             // Only take action if the active session isn't the current one
-            if(newSession != null && oldSessionToken != sessionToken){
+            if(newSession != null && !oldSessionToken.equals(sessionToken)){
                 Log.d(TAG, CTAG + "Switching to session " + sessionName);
                 for(Handler handle: mClientCallbacks.keySet()){
                     MediaController.Callback cb = mClientCallbacks.get(handle);
                     if(mActiveMediaController != null){
+                        // Pause the music, if it isn't already
+                        mActiveMediaTransport.pause();
+                        // Unregister the old callback
                         mActiveMediaController.unregisterCallback(cb);
                     }
+                    // Register the new callback
                     newSession.registerCallback(cb, handle);
                 }
                 mActiveMediaController = newSession;
                 mActiveMediaTransport = newSession.getTransportControls();
+                String packageName = mActiveMediaController.getPackageName();
                 Log.d(
-                    TAG,
-                    String.format(
-                        CTAG + "Session set to %s", mActiveMediaController.getPackageName()
-                    )
+                    TAG, String.format(CTAG + "Session set to %s", packageName)
                 );
             }
         }else{
@@ -194,6 +171,32 @@ public class MusicControllerService extends NotificationListenerService implemen
     }
     
     /**
+     * Pause the active media player or 
+     * send the Pause KeyEvent to the system
+     * if there are no active media players
+     */
+    public void pause(){
+        if(mActiveMediaTransport == null){
+            sendKeyEvent(KeyEvent.KEYCODE_MEDIA_PAUSE);
+        }else{
+            mActiveMediaTransport.pause();
+        }
+    }
+    
+    /**
+     * Play the active media player or send 
+     * the Play KeyEvent to the system if
+     * there are no active media players
+     */
+    public void play(){
+        if(mActiveMediaTransport == null){
+            sendKeyEvent(KeyEvent.KEYCODE_MEDIA_PLAY);
+        }else{
+            mActiveMediaTransport.play();
+        }
+    }
+    
+    /**
      * Query the system for actively registered MediaSessions
      * and store them for future use
      */
@@ -201,6 +204,42 @@ public class MusicControllerService extends NotificationListenerService implemen
         setMediaControllers(getMediaSessionManager().getActiveSessions(
             new ComponentName(mContext, MusicControllerService.class)
         ));
+    }
+    
+    /**
+     * Seek the active media player or send 
+     * the KeyEvent Play to the system then
+     * call the same method again
+     */
+    public void seekTo(long millis){
+        if(mActiveMediaTransport == null){
+            sendKeyEvent(KeyEvent.KEYCODE_MEDIA_PLAY);
+            seekTo(millis);
+        }else{
+            mActiveMediaTransport.seekTo(millis);
+        }
+    }
+    
+    /**
+     * Send the ACTION_UP and ACTION_DOWN key events
+     * @param keyCode The key we are pressing
+     */
+    public void sendKeyEvent(int keyCode){
+        Log.d(
+            TAG,
+            CTAG + "Sending KeyEvent -> " + KeyEvent.keyCodeToString(keyCode)
+        );
+        KeyEvent keyDown  = new KeyEvent(KeyEvent.ACTION_DOWN, keyCode);
+        KeyEvent keyUp  = new KeyEvent(KeyEvent.ACTION_UP, keyCode);
+        
+        Intent downIntent = new Intent(Intent.ACTION_MEDIA_BUTTON, null);
+        downIntent.putExtra(Intent.EXTRA_KEY_EVENT, keyDown);
+        
+        Intent upIntent = new Intent(Intent.ACTION_MEDIA_BUTTON, null);
+        upIntent.putExtra(Intent.EXTRA_KEY_EVENT, keyUp);
+        
+        mContext.sendOrderedBroadcast(downIntent, null);
+        mContext.sendOrderedBroadcast(upIntent, null);
     }
     
     /**
@@ -229,29 +268,61 @@ public class MusicControllerService extends NotificationListenerService implemen
             Log.i(
                 TAG,
                 String.format(
-                    CTAG + "Found MediaSession for package %s with state %s and token %s",
+                    CTAG + "Found MediaSession for package %s" +
+                    " with state %s and token %s",
                     sName,
                     sPlayState,
                     sToken
                 )
             );
         }
+        
         // Remove Controllers that aren't active
-        for(String sToken: mMediaControllers.keySet()){
+        Set<String> activeTokens = mMediaControllers.keySet();
+        for(String sToken: activeTokens){
             if(!currentSessions.contains(sToken)){
                 mMediaControllers.remove(sToken);
                 mMediaControllerSessionMap.values().remove(sToken);
             }
         }
-        // Default to a session if only one exists
-        if(
-            (mActiveMediaController == null && ! mMediaControllers.isEmpty())
-            || 
-            mMediaControllers.size() == 1
-        ){
-            setMediaSession(
-                mMediaControllers.get(currentSessions.get(0)).getPackageName()
-            );
+        if(mMediaControllers.isEmpty()){
+            // No media controllers - Nullify our active session
+            Log.d(TAG, CTAG + "No sessions available - Nullify objects");
+            mActiveMediaController = null;
+            mActiveMediaTransport = null;
+        }else{
+            // Default to a session if only one exists
+            if(mActiveMediaController == null || mMediaControllers.size() == 1){
+                setMediaSession(
+                    mMediaControllers.get(currentSessions.get(0)).getPackageName()
+                );
+            }
+        }
+    }
+    
+    /**
+     * Skip the active media player to the next song or 
+     * send the Skip next KeyEvent to the system if
+     * there are no active media players
+     */
+    public void skipToNext(){
+        if(mActiveMediaTransport == null){
+            sendKeyEvent(KeyEvent.KEYCODE_MEDIA_NEXT);
+        }else{
+            mActiveMediaTransport.skipToNext();
+        }
+    }
+    
+    /**
+     * Skip the active media player to the last song or 
+     * send the Skip next KeyEvent to the system if
+     * there are no active media players
+     */
+    public void skipToPrevious(){
+        if(mActiveMediaTransport == null){
+            sendKeyEvent(KeyEvent.KEYCODE_MEDIA_PREVIOUS);
+        }else{
+            mActiveMediaTransport.skipToPrevious();
         }
     }
     

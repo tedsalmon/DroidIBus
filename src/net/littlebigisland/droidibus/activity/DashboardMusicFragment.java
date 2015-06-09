@@ -33,7 +33,6 @@ import android.os.Handler;
 import android.os.IBinder;
 import android.preference.PreferenceManager;
 import android.util.Log;
-import android.view.KeyEvent;
 import android.view.LayoutInflater;
 import android.view.MotionEvent;
 import android.view.View;
@@ -64,7 +63,7 @@ public class DashboardMusicFragment extends BaseFragment{
     
     protected static final int CONTROLLER_UPDATE_RATE = 1000;
     protected static final int RADIO_UPDATE_RATE = 3000;
-    protected static final int SEEKBAR_UPDATE_RATE = 100;
+    protected static final int SEEKBAR_UPDATE_RATE = 250;
     
     private static final int ARTWORK_HEIGHT = 114;
     private static final int ARTWORK_WIDTH = 114;
@@ -82,6 +81,7 @@ public class DashboardMusicFragment extends BaseFragment{
     protected Switch mBtnMusicMode;
     protected Spinner mMediaSessionSelector;
     
+    protected PackageManager mPackageManager = null;
     
     ArrayAdapter<String> mMediaControllerSelectorAdapter = null;
     ArrayList<String> mMediaControllerSelectorList = new ArrayList<String>();
@@ -89,8 +89,6 @@ public class DashboardMusicFragment extends BaseFragment{
     
     protected MusicControllerService mPlayerService;
     protected boolean mMediaPlayerConnected = false;
-    
-    protected PackageManager mPackageManager = null;
 
     protected boolean mIsPlaying = false;
     protected boolean mWasPlaying = false;
@@ -140,11 +138,11 @@ public class DashboardMusicFragment extends BaseFragment{
                 MusicControllerService.MusicControllerBinder
             ) service;
             mPlayerService = serviceBinder.getService();
+            mMediaPlayerConnected = true;
             mPlayerService.registerCallback(mPlayerCallbacks, mHandler);
             
             MediaController playerRemote = mPlayerService.getMediaController();
             if(playerRemote != null){
-                mMediaPlayerConnected = true;
                 Log.d(TAG, CTAG + "Calling getMetadata()");
                 setMediaMetadata(playerRemote.getMetadata());
                 Log.d(TAG, CTAG + "Calling getPlayBackState()");
@@ -176,11 +174,13 @@ public class DashboardMusicFragment extends BaseFragment{
     private Runnable mUpdateSeekBar = new Runnable(){
         @Override
         public void run(){
-            if(mMediaPlayerConnected){
-                mPlayerScrubBar.setProgress(
-                    (int)mPlayerService.getMediaController()
-                        .getPlaybackState().getPosition()
-                );
+            MediaController mc = mPlayerService.getMediaController();
+            if(mc != null){
+                if(mc.getPlaybackState() != null){
+                    mPlayerScrubBar.setProgress(
+                        (int) mc.getPlaybackState().getPosition()
+                    );
+                }
                 mHandler.postDelayed(this, SEEKBAR_UPDATE_RATE);
             }
         }
@@ -232,12 +232,6 @@ public class DashboardMusicFragment extends BaseFragment{
     private MediaController.Callback mPlayerCallbacks = new MediaController.Callback(){
         
         @Override
-        public void onAudioInfoChanged(MediaController.PlaybackInfo info){
-            Log.d(TAG, CTAG + "Callback onAudioInfoChanged()");
-            mMediaPlayerConnected = true;
-        }
-        
-        @Override
         public void onMetadataChanged(MediaMetadata metadata){
             Log.d(TAG, CTAG + "Callback onMetadataChanged()");
             setMediaMetadata(metadata);
@@ -246,14 +240,13 @@ public class DashboardMusicFragment extends BaseFragment{
         @Override
         public void onPlaybackStateChanged(PlaybackState state){
             Log.d(TAG,  CTAG + "Callback onPlaybackStateChanged()");
-            mMediaPlayerConnected = true;
             setPlaybackState(state.getState());
         }
 
         @Override
         public void onSessionDestroyed(){
             Log.d(TAG,  CTAG + "Callback onSessionDestroyed()");
-            mMediaPlayerConnected = false;
+            clearMusicPlayerView();
         }
 
     };
@@ -352,7 +345,7 @@ public class DashboardMusicFragment extends BaseFragment{
                     new Handler(getActivity().getMainLooper()).postDelayed(new Runnable(){
                         @Override
                         public void run() {
-                            mPlayerService.getRemote().play();
+                            mPlayerService.play();
                             mIsPlaying = true;
                         }
                     }, 1000);
@@ -360,7 +353,7 @@ public class DashboardMusicFragment extends BaseFragment{
                 }
             }else{
                 if(mMediaPlayerConnected && mCurrentRadioMode == RadioModes.AUX && mIsPlaying){
-                    mPlayerService.getRemote().pause();
+                    mPlayerService.pause();
                     mIsPlaying = false;
                     mWasPlaying = true;
                 }
@@ -370,14 +363,14 @@ public class DashboardMusicFragment extends BaseFragment{
         @Override
         public void onTrackFwd(){
             if(mMediaPlayerConnected){
-                mPlayerService.getRemote().skipToNext();
+                mPlayerService.skipToNext();
             }
         }
         
         @Override
         public void onTrackPrev(){
             if(mMediaPlayerConnected){
-                mPlayerService.getRemote().skipToPrevious();
+                mPlayerService.skipToPrevious();
             }
         }
         
@@ -385,17 +378,11 @@ public class DashboardMusicFragment extends BaseFragment{
         public void onVoiceBtnPress(){
             // Re-purpose this button to pause/play music
             if(mCurrentRadioMode == RadioModes.AUX){
-                if(mIsPlaying && mMediaPlayerConnected){
-                    mPlayerService.getRemote().pause();
+                if(mIsPlaying){
+                    mPlayerService.pause();
                     mIsPlaying = false;
                 }else{
-                    if(mPlayerService.getMediaController() == null){
-                        mPlayerService.sendKeyEvent(
-                            KeyEvent.KEYCODE_MEDIA_PLAY_PAUSE
-                        );
-                    }else{
-                        mPlayerService.getRemote().play();
-                    }
+                    mPlayerService.play();
                     mIsPlaying = true;
                 }
             }
@@ -436,6 +423,17 @@ public class DashboardMusicFragment extends BaseFragment{
         }
 
     };
+    
+    /**
+     * Reset the elements of the music player view
+     * to their default values
+     */
+    private void clearMusicPlayerView(){
+        mPlayerTitleText.setText(R.string.defaultText);
+        mPlayerAlbumText.setText(R.string.defaultText);
+        mPlayerArtistText.setText(R.string.defaultText);
+        mPlayerArtwork.setImageResource(0);
+    }
     
     private String getAppFromPackageName(String cname){
         String appName = "";
@@ -497,21 +495,37 @@ public class DashboardMusicFragment extends BaseFragment{
     }
     
     private void setMediaMetadata(MediaMetadata md){
-        mSongDuration = md.getLong(MediaMetadata.METADATA_KEY_DURATION);
-        mPlayerTitleText.setText(md.getString(MediaMetadata.METADATA_KEY_TITLE));
-        mPlayerAlbumText.setText(md.getString(MediaMetadata.METADATA_KEY_ALBUM));
-        mPlayerArtistText.setText(md.getString(MediaMetadata.METADATA_KEY_ARTIST));
-        Bitmap albumArt = md.getBitmap(MediaMetadata.METADATA_KEY_ALBUM_ART);
-        if(albumArt != null){
-            mPlayerArtwork.setImageBitmap(
-                Bitmap.createScaledBitmap(
-                    albumArt, ARTWORK_HEIGHT, ARTWORK_WIDTH, false
-                )
+        if(md != null){
+            mSongDuration = md.getLong(
+                MediaMetadata.METADATA_KEY_DURATION
             );
+            mPlayerTitleText.setText(
+                md.getString(MediaMetadata.METADATA_KEY_TITLE)
+            );
+            mPlayerAlbumText.setText(
+                md.getString(MediaMetadata.METADATA_KEY_ALBUM)
+            );
+            mPlayerArtistText.setText(
+                md.getString(MediaMetadata.METADATA_KEY_ARTIST)
+            );
+            Bitmap albumArt = md.getBitmap(
+                MediaMetadata.METADATA_KEY_ALBUM_ART
+            );
+            if(albumArt != null){
+                mPlayerArtwork.setImageBitmap(
+                    Bitmap.createScaledBitmap(
+                        albumArt, ARTWORK_HEIGHT, ARTWORK_WIDTH, false
+                    )
+                );
+            }else{
+                mPlayerArtwork.setImageResource(0);
+            }
+            mPlayerScrubBar.setMax((int) mSongDuration);
         }else{
-            mPlayerArtwork.setImageResource(0);
+            Log.e(
+                TAG, CTAG + "MediaMetadata is null on the session owners side"
+            );
         }
-        mPlayerScrubBar.setMax((int) mSongDuration);
     }
     
     private void setPlaybackState(int state){
@@ -626,9 +640,10 @@ public class DashboardMusicFragment extends BaseFragment{
         mPlayerTitleText.setSelected(true);
         
         // Make the meta data click-able into the active media player
-        mMetaDataLayout.setOnClickListener(new OnClickListener(){
+        mMetaDataLayout.setOnTouchListener(new OnTouchListener(){
+
             @Override
-            public void onClick(View v) {
+            public boolean onTouch(View v, MotionEvent event) {
                 MediaController mc = mPlayerService.getMediaController();
                 if(mc != null){
                     startActivity(
@@ -637,7 +652,10 @@ public class DashboardMusicFragment extends BaseFragment{
                         )
                     );
                 }
-            } 
+                v.performClick();
+                return false;
+            }
+            
         });
         
         mMediaControllerSelectorAdapter = new ArrayAdapter<String>(
@@ -651,24 +669,24 @@ public class DashboardMusicFragment extends BaseFragment{
         mMediaSessionSelector.setAdapter(mMediaControllerSelectorAdapter);
         
         mMediaSessionSelector.setOnItemSelectedListener(new OnItemSelectedListener(){
-            String mCurrentSessionName = null;
+            
             @Override
             public void onItemSelected(AdapterView<?> parent, View view,
                     int position, long id) {
+                clearMusicPlayerView();
                 String remoteName = mMediaControllerNames.get(
                     (String) mMediaSessionSelector.getSelectedItem()
                 );
-                if(mCurrentSessionName == null){
-                    mCurrentSessionName = remoteName;
-                }
-                if(!remoteName.equals(mCurrentSessionName)){
-                    Log.d(TAG, CTAG + "Setting session to "+ remoteName);
-                    mPlayerService.getRemote().pause();
-                    setPlaybackState(PlaybackState.STATE_PAUSED);
-                    mMediaSessionSelector.setSelection(position);
-                    mPlayerService.setMediaSession(remoteName);
-                    mCurrentSessionName = remoteName;
-                    setMediaMetadata(mPlayerService.getMediaController().getMetadata());
+                Log.d(TAG, CTAG + "Setting session to " + remoteName);
+                mMediaSessionSelector.setSelection(position);
+                mPlayerService.setMediaSession(remoteName);
+                MediaController mc = mPlayerService.getMediaController();
+                if(mc != null){
+                    setMediaMetadata(mc.getMetadata());
+                    PlaybackState pb = mc.getPlaybackState();
+                    if(pb != null){
+                        setPlaybackState(pb.getState());
+                    }
                 }
             }
 
@@ -679,32 +697,24 @@ public class DashboardMusicFragment extends BaseFragment{
         
         OnClickListener playbackButtonClickListener = new OnClickListener(){
             @Override
-            public void onClick(View v) {
+            public void onClick(View v){
                 switch(v.getId()) {
                     case R.id.playerPrevBtn:
-                        if(mMediaPlayerConnected){
-                            mPlayerService.getRemote().skipToPrevious();
-                        }
+                        mPlayerService.skipToPrevious();
                         break;
                     case R.id.playerNextBtn:
-                        if(mMediaPlayerConnected){
-                            mPlayerService.getRemote().skipToNext();
-                        }
+                        mPlayerService.skipToNext();
                         break;
                     case R.id.playerPlayPauseBtn:
-                        if(mIsPlaying && mMediaPlayerConnected) {
-                            mIsPlaying = false;
-                            mPlayerService.getRemote().pause();
-                        }else{
-                            if(mPlayerService.getMediaController() == null){
-                                mPlayerService.sendKeyEvent(
-                                    KeyEvent.KEYCODE_MEDIA_PLAY_PAUSE
-                                );
-                            }else{
-                                mPlayerService.getRemote().play();
-                            }
-                            mIsPlaying = true;
-                        }
+                        if(mIsPlaying){
+                             mPlayerService.pause();
+                             mIsPlaying = false;
+                             setPlaybackState(PlaybackState.STATE_PAUSED);
+                         }else{
+                             mIsPlaying = true;
+                             mPlayerService.play();
+                             setPlaybackState(PlaybackState.STATE_PLAYING);
+                         }
                         break;
                 }
             }
@@ -730,12 +740,10 @@ public class DashboardMusicFragment extends BaseFragment{
 
             @Override
             public void onStopTrackingTouch(SeekBar seekBar) {
-                mPlayerService.getRemote().seekTo((long)mSeekPosition);
+                mPlayerService.seekTo((long)mSeekPosition);
                 mHandler.post(mUpdateSeekBar);
             }
         });
-        
-
 
         // Register Button actions
         if(mRadioType == RadioTypes.BM53){
@@ -766,7 +774,7 @@ public class DashboardMusicFragment extends BaseFragment{
                     mTabletLayout.setVisibility(View.VISIBLE);
                 }else{
                     if(mIsPlaying){
-                        mPlayerService.getRemote().pause();
+                        mPlayerService.pause();
                     }
                     // Send IBus Message
                     if((mCurrentRadioMode == RadioModes.AUX || mCurrentRadioMode == RadioModes.CD) && mRadioType == RadioTypes.BM53){
@@ -815,9 +823,20 @@ public class DashboardMusicFragment extends BaseFragment{
     }
     
     @Override
-    public void onDestroyView() {
-        super.onDestroyView();
-        Log.d(TAG, CTAG + "onDestroyView() called");
+    public void onResume(){
+        super.onResume();
+        Log.d(TAG, CTAG + "onResume()");
+        if(mMediaPlayerConnected){
+            if(mPlayerService.getMediaController() == null){
+                clearMusicPlayerView();
+            }
+        }
+    }
+    
+    @Override
+    public void onDestroy(){
+        super.onDestroy();
+        Log.d(TAG, CTAG + "onDestroy() called");
         if(mIBusConnected){
             mIBusService.unregisterCallback(mIBusCallbacks);
             serviceStopper(IBusMessageService.class, mIBusConnection);
