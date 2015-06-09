@@ -14,9 +14,9 @@ import java.util.HashMap;
 import java.util.List;
 
 import net.littlebigisland.droidibus.R;
-import net.littlebigisland.droidibus.ibus.IBusCommandsEnum;
-import net.littlebigisland.droidibus.ibus.IBusCallbackReceiver;
+import net.littlebigisland.droidibus.ibus.IBusCommand;
 import net.littlebigisland.droidibus.ibus.IBusMessageService;
+import net.littlebigisland.droidibus.ibus.IBusSystem;
 import net.littlebigisland.droidibus.music.MusicControllerService;
 import android.annotation.SuppressLint;
 import android.content.ComponentName;
@@ -206,7 +206,7 @@ public class DashboardMusicFragment extends BaseFragment{
 			long timeSinceStat = now - mLastRadioStatusRequest;
                         if(timeSinceStat >= radioStatusTimeout){
                             sendIBusCommand(
-				IBusCommandsEnum.BMToRadioGetStatus
+				IBusCommand.Commands.BMToRadioGetStatus
 			    );
                         }
                         
@@ -215,10 +215,10 @@ public class DashboardMusicFragment extends BaseFragment{
 			   mCurrentRadioMode != RadioModes.AUX
 			){
                             sendIBusCommand(
-				IBusCommandsEnum.BMToRadioInfoPress
+				IBusCommand.Commands.BMToRadioInfoPress
 			    );
                             sendIBusCommandDelayed(
-				IBusCommandsEnum.BMToRadioInfoRelease,
+				IBusCommand.Commands.BMToRadioInfoRelease,
 				500
 			    );
                         }
@@ -251,7 +251,7 @@ public class DashboardMusicFragment extends BaseFragment{
 
     };
     
-    private IBusCallbackReceiver mIBusCallbacks = new IBusCallbackReceiver(){
+    private IBusSystem.Callbacks mIBusCallbacks = new IBusSystem.Callbacks(){
     	
     	private int mCurrentTextColor = R.color.dayColor;
 		
@@ -393,8 +393,8 @@ public class DashboardMusicFragment extends BaseFragment{
 	    mLastRadioStatusRequest = Calendar.getInstance().getTimeInMillis();
             // Radio is off, turn it on
             if(status == 0){
-                sendIBusCommand(IBusCommandsEnum.BMToRadioPwrPress);
-                sendIBusCommandDelayed(IBusCommandsEnum.BMToRadioPwrRelease, 500);
+                sendIBusCommand(IBusCommand.Commands.BMToRadioPwrPress);
+                sendIBusCommandDelayed(IBusCommand.Commands.BMToRadioPwrRelease, 500);
             }
         }
         
@@ -402,11 +402,11 @@ public class DashboardMusicFragment extends BaseFragment{
         public void onRadioCDStatusRequest(){
             // Tell the Radio we have a CD on track 1
             byte trackAndCD = (byte) 0x01;
-            sendIBusCommand(IBusCommandsEnum.BMToRadioCDStatus, 0, trackAndCD, trackAndCD);
+            sendIBusCommand(IBusCommand.Commands.BMToRadioCDStatus, 0, trackAndCD, trackAndCD);
             if(!mCDPlayerPlaying){
-                sendIBusCommand(IBusCommandsEnum.BMToRadioCDStatus, 0, trackAndCD, trackAndCD);
+                sendIBusCommand(IBusCommand.Commands.BMToRadioCDStatus, 0, trackAndCD, trackAndCD);
             }else{
-                sendIBusCommand(IBusCommandsEnum.BMToRadioCDStatus, 1, trackAndCD, trackAndCD);
+                sendIBusCommand(IBusCommand.Commands.BMToRadioCDStatus, 1, trackAndCD, trackAndCD);
             }
         }
         
@@ -554,8 +554,8 @@ public class DashboardMusicFragment extends BaseFragment{
                         Log.d(TAG, String.format("Current mode = %s, desired mode = %s", mCurrentRadioMode.toString(), mode.toString() ));
                         if( (mode == RadioModes.AUX && !(mCurrentRadioMode== RadioModes.AUX)) ||  
                             (mode == RadioModes.Radio && (mCurrentRadioMode != RadioModes.Radio)) ){
-                            sendIBusCommand(IBusCommandsEnum.BMToRadioModePress);
-                            sendIBusCommandDelayed(IBusCommandsEnum.BMToRadioModeRelease, 300);
+                            sendIBusCommand(IBusCommand.Commands.BMToRadioModePress);
+                            sendIBusCommandDelayed(IBusCommand.Commands.BMToRadioModeRelease, 300);
                             Thread.sleep(1000);
                             changeRadioMode(mode);
                         }
@@ -747,13 +747,13 @@ public class DashboardMusicFragment extends BaseFragment{
 
         // Register Button actions
         if(mRadioType == RadioTypes.BM53){
-            btnVolUp.setTag(IBusCommandsEnum.BMToRadioVolumeUp.name());
-            btnVolDown.setTag(IBusCommandsEnum.BMToRadioVolumeDown.name());
+            btnVolUp.setTag(IBusCommand.Commands.BMToRadioVolumeUp.name());
+            btnVolDown.setTag(IBusCommand.Commands.BMToRadioVolumeDown.name());
             btnPrev.setTag("BMToRadioTuneRev");
             btnNext.setTag("BMToRadioTuneFwd");
         }else{
-            btnVolUp.setTag(IBusCommandsEnum.SWToRadioVolumeUp.name());
-            btnVolDown.setTag(IBusCommandsEnum.SWToRadioVolumeDown.name());
+            btnVolUp.setTag(IBusCommand.Commands.SWToRadioVolumeUp.name());
+            btnVolDown.setTag(IBusCommand.Commands.SWToRadioVolumeDown.name());
             btnPrev.setTag("SWToRadioTuneRev");
             btnNext.setTag("SWToRadioTuneFwd");
         }
@@ -791,7 +791,7 @@ public class DashboardMusicFragment extends BaseFragment{
         OnClickListener clickSingleAction = new OnClickListener() {
             @Override
             public void onClick(View v) {
-                sendIBusCommand(IBusCommandsEnum.valueOf(v.getTag().toString()));
+                sendIBusCommand(IBusCommand.Commands.valueOf(v.getTag().toString()));
             }
         };
         
@@ -800,7 +800,7 @@ public class DashboardMusicFragment extends BaseFragment{
             @Override
             public boolean onTouch(View v, MotionEvent event) {
                 String action = (event.getAction() == MotionEvent.ACTION_DOWN) ? "Press" : "Release";
-                sendIBusCommand(IBusCommandsEnum.valueOf(v.getTag().toString() + action));
+                sendIBusCommand(IBusCommand.Commands.valueOf(v.getTag().toString() + action));
                 return false;
             }
         };

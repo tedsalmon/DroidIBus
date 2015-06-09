@@ -2,15 +2,14 @@ package net.littlebigisland.droidibus.ibus.systems;
 
 import java.util.ArrayList;
 
-import net.littlebigisland.droidibus.ibus.DeviceAddressEnum;
-import net.littlebigisland.droidibus.ibus.IBusSystemCommand;
+import net.littlebigisland.droidibus.ibus.IBusSystem;
 
-public class GlobalBroadcastSystemCommand extends IBusSystemCommand{
+public class GlobalBroadcastSystem extends IBusSystem{
     
     /**
      * Messages from the IKE to the GlobalBroadcast
      */
-    class IKESystem extends IBusSystemCommand{
+    class IKESystem extends IBusSystem{
         
         public void mapReceived(ArrayList<Byte> msg){
             switch(msg.get(3)){
@@ -43,7 +42,7 @@ public class GlobalBroadcastSystemCommand extends IBusSystemCommand{
     /**
      * Messages from the LCM to the GlobalBroadcast
      */
-    class LightControlModuleSystem extends IBusSystemCommand{
+    class LightControlModuleSystem extends IBusSystem{
 
         public void mapReceived(ArrayList<Byte> msg) {
             currentMessage = msg;
@@ -56,8 +55,12 @@ public class GlobalBroadcastSystemCommand extends IBusSystemCommand{
         
     }
     
-    public GlobalBroadcastSystemCommand(){
-        IBusDestinationSystems.put(DeviceAddressEnum.InstrumentClusterElectronics.toByte(), new IKESystem());
-        IBusDestinationSystems.put(DeviceAddressEnum.LightControlModule.toByte(), new LightControlModuleSystem());
+    public GlobalBroadcastSystem(){
+        IBusDestinationSystems.put(
+            Devices.InstrumentClusterElectronics.toByte(), new IKESystem()
+        );
+        IBusDestinationSystems.put(
+            Devices.LightControlModule.toByte(), new LightControlModuleSystem()
+        );
     }
 }

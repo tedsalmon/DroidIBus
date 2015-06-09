@@ -3,24 +3,23 @@ package net.littlebigisland.droidibus.ibus.systems;
 import java.util.ArrayList;
 
 import android.annotation.SuppressLint;
-import net.littlebigisland.droidibus.ibus.DeviceAddressEnum;
-import net.littlebigisland.droidibus.ibus.IBusSystemCommand;
+import net.littlebigisland.droidibus.ibus.IBusSystem;
 
 /**
  * Implements functions of the BoardMonitor. For the most part 
  * we won't be doing any message parsing here since the BoardMonitor
  * is more of an input interface than anything. 
  */
-public class BoardMonitorSystemCommand extends IBusSystemCommand {
+public class BoardMonitorSystem extends IBusSystem{
 
     // Main Systems
-    private byte boardMonitor = DeviceAddressEnum.BoardMonitor.toByte();
-    private byte gfxDriver = DeviceAddressEnum.GFXNavigationDriver.toByte();
-    private byte IKESystem = DeviceAddressEnum.InstrumentClusterElectronics.toByte();
-    private byte radioSystem = DeviceAddressEnum.Radio.toByte();
-    private byte globalSystem = DeviceAddressEnum.GlobalBroadcast.toByte();
-    private byte lightControlSystem = DeviceAddressEnum.LightControlModule.toByte();
-    private byte generalModuleSystem = DeviceAddressEnum.BodyModule.toByte();
+    private byte boardMonitor = Devices.BoardMonitor.toByte();
+    private byte gfxDriver = Devices.GFXNavigationDriver.toByte();
+    private byte IKESystem = Devices.InstrumentClusterElectronics.toByte();
+    private byte radioSystem = Devices.Radio.toByte();
+    private byte globalSystem = Devices.GlobalBroadcast.toByte();
+    private byte lightControlSystem = Devices.LightControlModule.toByte();
+    private byte generalModuleSystem = Devices.BodyModule.toByte();
     
     // OBC Functions
     private byte OBCRequest = 0x41;
@@ -32,7 +31,7 @@ public class BoardMonitorSystemCommand extends IBusSystemCommand {
     /**
      * Handle messages destined for the BM from the Radio
      */
-    class RadioSystem extends IBusSystemCommand{
+    class RadioSystem extends IBusSystem{
         
         public void mapReceived(ArrayList<Byte> msg){
             currentMessage = msg;
@@ -427,7 +426,7 @@ public class BoardMonitorSystemCommand extends IBusSystemCommand {
         };
     }
     
-    public BoardMonitorSystemCommand(){
+    public BoardMonitorSystem(){
         IBusDestinationSystems.put(radioSystem, new RadioSystem());
     }
     

@@ -4,15 +4,14 @@ import java.util.HashMap;
 
 import android.annotation.SuppressLint;
 
-import net.littlebigisland.droidibus.ibus.DeviceAddressEnum;
-import net.littlebigisland.droidibus.ibus.IBusSystemCommand;
+import net.littlebigisland.droidibus.ibus.IBusSystem;
 
-public class IKESystemCommand extends IBusSystemCommand{
+public class IKESystem extends IBusSystem{
 
     /**
      * Messages from the Telephone to the IKE
      */
-    class TelephoneSystem extends IBusSystemCommand{
+    class TelephoneSystem extends IBusSystem{
         
         @SuppressLint("UseSparseArrays")
         private HashMap<Byte, byte[]> byteMapping = new HashMap<Byte, byte[]>();
@@ -70,10 +69,9 @@ public class IKESystemCommand extends IBusSystemCommand{
     }
 
     
-    public IKESystemCommand(){
+    public IKESystem(){
         IBusDestinationSystems.put(
-            DeviceAddressEnum.Telephone.toByte(),
-            new TelephoneSystem()
+            Devices.Telephone.toByte(), new TelephoneSystem()
         );
     }
     

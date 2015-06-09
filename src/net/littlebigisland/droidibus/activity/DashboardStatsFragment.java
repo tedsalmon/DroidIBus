@@ -6,9 +6,9 @@ package net.littlebigisland.droidibus.activity;
  * @package net.littlebigisland.droidibus.activity
  */
 import net.littlebigisland.droidibus.R;
-import net.littlebigisland.droidibus.ibus.IBusCommandsEnum;
-import net.littlebigisland.droidibus.ibus.IBusCallbackReceiver;
+import net.littlebigisland.droidibus.ibus.IBusCommand;
 import net.littlebigisland.droidibus.ibus.IBusMessageService;
+import net.littlebigisland.droidibus.ibus.IBusSystem;
 import android.content.ComponentName;
 import android.content.SharedPreferences;
 import android.os.Bundle;
@@ -59,7 +59,7 @@ public class DashboardStatsFragment extends BaseFragment{
     /**
      * IBus Callback Functions
      */
-    private IBusCallbackReceiver mIBusCallbacks = new IBusCallbackReceiver(){
+    private IBusSystem.Callbacks mIBusCallbacks = new IBusSystem.Callbacks(){
         private int mCurrentTextColor = R.color.dayColor;
         
         /** Callback to handle any vehicle speed updates
@@ -244,19 +244,19 @@ public class DashboardStatsFragment extends BaseFragment{
      * Emulate the messages the BoardMonitor sends when it boots up
      */
     private void boardMonitorBootup(){
-        sendIBusCommand(IBusCommandsEnum.BMToGlobalBroadcastAliveMessage);
-        sendIBusCommand(IBusCommandsEnum.BMToIKEGetIgnitionStatus);
-        sendIBusCommand(IBusCommandsEnum.BMToLCMGetDimmerStatus);
-        sendIBusCommand(IBusCommandsEnum.BMToGMGetDoorStatus);
+        sendIBusCommand(IBusCommand.Commands.BMToGlobalBroadcastAliveMessage);
+        sendIBusCommand(IBusCommand.Commands.BMToIKEGetIgnitionStatus);
+        sendIBusCommand(IBusCommand.Commands.BMToLCMGetDimmerStatus);
+        sendIBusCommand(IBusCommand.Commands.BMToGMGetDoorStatus);
         // Send a "get" request to populate the values on screen
         // Do it here because this is when the service methods come into scope
-        sendIBusCommand(IBusCommandsEnum.BMToIKEGetTime);
-        sendIBusCommand(IBusCommandsEnum.BMToIKEGetDate);
-        sendIBusCommand(IBusCommandsEnum.BMToIKEGetFuel1);
-        sendIBusCommand(IBusCommandsEnum.BMToIKEGetFuel2);
-        sendIBusCommand(IBusCommandsEnum.BMToIKEGetOutdoorTemp);
-        sendIBusCommand(IBusCommandsEnum.BMToIKEGetRange);
-        sendIBusCommand(IBusCommandsEnum.BMToIKEGetAvgSpeed);
+        sendIBusCommand(IBusCommand.Commands.BMToIKEGetTime);
+        sendIBusCommand(IBusCommand.Commands.BMToIKEGetDate);
+        sendIBusCommand(IBusCommand.Commands.BMToIKEGetFuel1);
+        sendIBusCommand(IBusCommand.Commands.BMToIKEGetFuel2);
+        sendIBusCommand(IBusCommand.Commands.BMToIKEGetOutdoorTemp);
+        sendIBusCommand(IBusCommand.Commands.BMToIKEGetRange);
+        sendIBusCommand(IBusCommand.Commands.BMToIKEGetAvgSpeed);
     }
 	
     public void updateDisplayedUnits(){		
@@ -378,7 +378,9 @@ public class DashboardStatsFragment extends BaseFragment{
             @Override
             public boolean onLongClick(View v){
 		String tagStr = v.getTag().toString();
-                IBusCommandsEnum action = IBusCommandsEnum.valueOf(tagStr);
+		IBusCommand.Commands action = IBusCommand.Commands.valueOf(
+		    tagStr
+		);
                 switch(action){
                     case BMToIKEResetFuel1:
                         showToast("Resetting Fuel 1 Value");
@@ -397,9 +399,9 @@ public class DashboardStatsFragment extends BaseFragment{
             }
         };
         
-        mFuel1Field.setTag(IBusCommandsEnum.BMToIKEResetFuel1.name());
-        mFuel2Field.setTag(IBusCommandsEnum.BMToIKEResetFuel1.name());
-        mAvgSpeedField.setTag(IBusCommandsEnum.BMToIKEResetAvgSpeed.name());
+        mFuel1Field.setTag(IBusCommand.Commands.BMToIKEResetFuel1.name());
+        mFuel2Field.setTag(IBusCommand.Commands.BMToIKEResetFuel1.name());
+        mAvgSpeedField.setTag(IBusCommand.Commands.BMToIKEResetAvgSpeed.name());
 
         mFuel1Field.setOnLongClickListener(valueResetter);
         mFuel2Field.setOnLongClickListener(valueResetter);

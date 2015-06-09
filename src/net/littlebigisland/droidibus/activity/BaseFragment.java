@@ -6,9 +6,9 @@ package net.littlebigisland.droidibus.activity;
  * @package net.littlebigisland.droidibus.activity
  */
 
-import net.littlebigisland.droidibus.ibus.IBusCallbackReceiver;
+//import net.littlebigisland.droidibus.ibus.IBusCallbackReceiver;
 import net.littlebigisland.droidibus.ibus.IBusCommand;
-import net.littlebigisland.droidibus.ibus.IBusCommandsEnum;
+import net.littlebigisland.droidibus.ibus.IBusSystem;
 import net.littlebigisland.droidibus.ibus.IBusMessageService;
 import net.littlebigisland.droidibus.ibus.IBusMessageService.IOIOBinder;
 import android.app.Fragment;
@@ -70,7 +70,7 @@ public class BaseFragment extends Fragment{
     /**
      * Register a callback with the IBus Service
      */
-    public void registerIBusCallback(IBusCallbackReceiver cb, Handler handle){
+    public void registerIBusCallback(IBusSystem.Callbacks cb, Handler handle){
         try{
             mIBusService.registerCallback(cb, handle);
         }catch (Exception e) {
@@ -130,7 +130,7 @@ public class BaseFragment extends Fragment{
     }
 
     public void sendIBusCommand(
-        final IBusCommandsEnum cmd, final Object... args
+        final IBusCommand.Commands cmd, final Object... args
     ){
         if(mIBusConnected && mIBusService.getLinkState()){
             mIBusService.sendCommand(new IBusCommand(cmd, args));
@@ -138,7 +138,8 @@ public class BaseFragment extends Fragment{
     }
     
     public void sendIBusCommandDelayed(
-        final IBusCommandsEnum cmd, final long delayMils, final Object... args
+        final IBusCommand.Commands cmd, 
+        final long delayMils, final Object... args
     ){
         new Handler(getActivity().getMainLooper()).postDelayed(new Runnable(){
             public void run(){
