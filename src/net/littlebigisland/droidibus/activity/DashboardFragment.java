@@ -112,6 +112,7 @@ public class DashboardFragment extends BaseFragment{
     private void releaseWakelock(){
         if(mScreenWakeLock != null){
             if(mScreenWakeLock.isHeld()){
+                Log.d(TAG, CTAG + "Releasing system wakelock");
                 mScreenWakeLock.release();
             }
         }
@@ -146,6 +147,21 @@ public class DashboardFragment extends BaseFragment{
         if(!mIBusConnected){
             serviceStarter(IBusMessageService.class, mIBusConnection);
         }
+    }
+    
+    @Override
+    public void onPause(){
+        super.onPause();
+        Log.d(TAG, CTAG + "onPause()");
+        releaseWakelock();
+    }
+    
+    @Override
+    public void onResume(){
+        super.onResume();
+        Log.d(TAG, CTAG + "onResume()");
+        // Keep a wake lock
+        changeScreenState(true);
     }
     
     @Override

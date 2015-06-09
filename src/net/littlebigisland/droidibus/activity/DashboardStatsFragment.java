@@ -438,15 +438,13 @@ public class DashboardStatsFragment extends BaseFragment{
     public void onResume(){
     	super.onResume();
     	Log.d(TAG, CTAG + "onResume()");
-        // Send BoardMonitor Get requests to populate blank view
-	// TODO Testing if we still need this or nah
-        // boardMonitorBootup();
+        boardMonitorBootup();
     }
     
     @Override
-    public void onDestroyView(){
+    public void onDestroy(){
     	super.onDestroy();
-	Log.d(TAG, CTAG + "onDestroyView()");
+	Log.d(TAG, CTAG + "onDestroy()");
     	if(mIBusConnected){
     	    mIBusService.unregisterCallback(mIBusCallbacks);
     	    serviceStopper(IBusMessageService.class, mIBusConnection);
