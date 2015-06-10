@@ -1,4 +1,5 @@
 package net.littlebigisland.droidibus.ibus.systems;
+
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
@@ -8,15 +9,14 @@ import java.util.Map;
 
 import android.annotation.SuppressLint;
 
-import net.littlebigisland.droidibus.ibus.DeviceAddressEnum;
-import net.littlebigisland.droidibus.ibus.IBusSystemCommand;
+import net.littlebigisland.droidibus.ibus.IBusSystem;
 
-public class TelephoneSystemCommand extends IBusSystemCommand{
+public class TelephoneSystem extends IBusSystem{
 
     /**
      * Messages from the Navigation System to the Telephone
      */
-    class NavigationSystem extends IBusSystemCommand{
+    class NavigationSystem extends IBusSystem{
         
         private byte locationData = (byte) 0xA4;
         private byte gpsData = (byte) 0xA2;
@@ -117,7 +117,7 @@ public class TelephoneSystemCommand extends IBusSystemCommand{
     /**
      * Message from the MFL to the Telephone
      */
-    class SteeringWheelSystem extends IBusSystemCommand{
+    class SteeringWheelSystem extends IBusSystem{
 
         public void mapReceived(ArrayList<Byte> msg) {
             currentMessage = msg;
@@ -129,9 +129,14 @@ public class TelephoneSystemCommand extends IBusSystemCommand{
         
     }
     
-    public TelephoneSystemCommand(){
-        IBusDestinationSystems.put(DeviceAddressEnum.MultiFunctionSteeringWheel.toByte(), new SteeringWheelSystem());
-        IBusDestinationSystems.put(DeviceAddressEnum.NavigationEurope.toByte(), new NavigationSystem());
+    public TelephoneSystem(){
+        IBusDestinationSystems.put(
+            Devices.MultiFunctionSteeringWheel.toByte(),
+            new SteeringWheelSystem()
+        );
+        IBusDestinationSystems.put(
+            Devices.NavigationEurope.toByte(), new NavigationSystem()
+        );
     }
     
 }

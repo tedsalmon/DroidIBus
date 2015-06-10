@@ -2,15 +2,14 @@ package net.littlebigisland.droidibus.ibus.systems;
 
 import java.util.ArrayList;
 
-import net.littlebigisland.droidibus.ibus.DeviceAddressEnum;
-import net.littlebigisland.droidibus.ibus.IBusSystemCommand;
+import net.littlebigisland.droidibus.ibus.IBusSystem;
 
-public class RadioSystemCommand extends IBusSystemCommand{
+public class RadioSystem extends IBusSystem{
     
     /** 
      * Messages from the MFL to the Radio
      */
-    class SteeringWheelSystem extends IBusSystemCommand{
+    class SteeringWheelSystem extends IBusSystem{
         
         public void mapReceived(ArrayList<Byte> msg) {
             currentMessage = msg;
@@ -28,9 +27,9 @@ public class RadioSystemCommand extends IBusSystemCommand{
         
     }
     
-    public RadioSystemCommand(){
+    public RadioSystem(){
         IBusDestinationSystems.put(
-            DeviceAddressEnum.MultiFunctionSteeringWheel.toByte(),
+            Devices.MultiFunctionSteeringWheel.toByte(),
             new SteeringWheelSystem()
         );
     }

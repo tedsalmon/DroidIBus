@@ -18,14 +18,14 @@ import java.util.Calendar;
 import java.util.HashMap;
 import java.util.Map;
 
-import net.littlebigisland.droidibus.ibus.systems.BoardMonitorSystemCommand;
-import net.littlebigisland.droidibus.ibus.systems.BroadcastSystemCommand;
-import net.littlebigisland.droidibus.ibus.systems.GlobalBroadcastSystemCommand;
-import net.littlebigisland.droidibus.ibus.systems.GFXNavigationSystemCommand;
-import net.littlebigisland.droidibus.ibus.systems.IKESystemCommand;
-import net.littlebigisland.droidibus.ibus.systems.RadioSystemCommand;
-import net.littlebigisland.droidibus.ibus.systems.SteeringWheelSystemCommand;
-import net.littlebigisland.droidibus.ibus.systems.TelephoneSystemCommand;
+import net.littlebigisland.droidibus.ibus.systems.BoardMonitorSystem;
+import net.littlebigisland.droidibus.ibus.systems.BroadcastSystem;
+import net.littlebigisland.droidibus.ibus.systems.GlobalBroadcastSystem;
+import net.littlebigisland.droidibus.ibus.systems.GFXNavigationSystem;
+import net.littlebigisland.droidibus.ibus.systems.IKESystem;
+import net.littlebigisland.droidibus.ibus.systems.RadioSystem;
+import net.littlebigisland.droidibus.ibus.systems.SteeringWheelSystem;
+import net.littlebigisland.droidibus.ibus.systems.TelephoneSystem;
 
 import ioio.lib.api.DigitalOutput;
 import ioio.lib.api.IOIO;
@@ -48,7 +48,7 @@ public class IBusMessageService extends IOIOService{
     private final IBinder mBinder = new IOIOBinder();
     private ArrayList<IBusCommand> mCommandQueue = new ArrayList<IBusCommand>();
     @SuppressLint("UseSparseArrays")
-    private Map<Byte, IBusSystemCommand> IBusSysMap = new HashMap<Byte, IBusSystemCommand>();
+    private Map<Byte, IBusSystem> IBusSysMap = new HashMap<Byte, IBusSystem>();
     @SuppressLint("UseSparseArrays")
     private Map<Byte, String> mDeviceLookup = new HashMap<Byte, String>();
     private boolean mIsIOIOConnected = false;
@@ -203,9 +203,9 @@ public class IBusMessageService extends IOIOService{
                             // Pop out the command from the Array
                             IBusCommand command = mCommandQueue.get(0);
                             // Get the command type enum
-                            IBusCommandsEnum cmdType = command.commandType;
+                            IBusCommand.Commands cmdType = command.commandType;
                             // Get the instance of the class which implements the method we're looking for
-                            IBusSystemCommand clsInstance = IBusSysMap.get(cmdType.getSystem().toByte());
+                            IBusSystem clsInstance = IBusSysMap.get(cmdType.getSystem().toByte());
                             // Get the command Varargs to pass. Very possible that this is null and that's okay
                             Object cmdArgs = command.commandArgs;
                             byte[] outboundMsg = new byte[] {};
@@ -280,9 +280,9 @@ public class IBusMessageService extends IOIOService{
         return mIsIOIOConnected;
     }
     
-    public void registerCallback(IBusCallbackReceiver cb, Handler handler){
+    public void registerCallback(IBusSystem.Callbacks cb, Handler handler){
         if(IBusSysMap.size() > 0){
-            for (IBusSystemCommand sys : IBusSysMap.values()){
+            for (IBusSystem sys : IBusSysMap.values()){
                 sys.registerCallback(cb, handler);
             }
         }
@@ -296,9 +296,9 @@ public class IBusMessageService extends IOIOService{
         mCommandQueue.add(cmd);
     }
     
-    public void unregisterCallback(IBusCallbackReceiver cb){
+    public void unregisterCallback(IBusSystem.Callbacks cb){
         if(IBusSysMap.size() > 0){
-            for (IBusSystemCommand sys : IBusSysMap.values()){
+            for (IBusSystem sys : IBusSysMap.values()){
                 sys.unregisterCallback(cb);
             }
         }
@@ -322,43 +322,43 @@ public class IBusMessageService extends IOIOService{
         // and super.onStartCommand is not implemented
         super.onStart(intent, startId);
         Log.d(TAG, "IBusMessageService: onStartCommand()");
-        for(DeviceAddressEnum d : DeviceAddressEnum.values()){
+        for(IBusSystem.Devices d : IBusSystem.Devices.values()){
             mDeviceLookup.put(d.toByte(), d.name());
         }
         // Initiate values for IBus System handlers
         if(IBusSysMap.size() == 0){
             Log.d(TAG, "IBusMessageService: Filling IBusSysMap");
             IBusSysMap.put(
-                DeviceAddressEnum.BoardMonitor.toByte(),
-                new BoardMonitorSystemCommand()
+                IBusSystem.Devices.BoardMonitor.toByte(),
+                new BoardMonitorSystem()
             );
             IBusSysMap.put(
-                DeviceAddressEnum.Broadcast.toByte(),
-                new BroadcastSystemCommand()
+                IBusSystem.Devices.Broadcast.toByte(),
+                new BroadcastSystem()
             );
             IBusSysMap.put(
-                DeviceAddressEnum.GFXNavigationDriver.toByte(),
-                new GFXNavigationSystemCommand()
+                IBusSystem.Devices.GFXNavigationDriver.toByte(),
+                new GFXNavigationSystem()
             );
             IBusSysMap.put(
-                DeviceAddressEnum.GlobalBroadcast.toByte(),
-                new GlobalBroadcastSystemCommand()
+                IBusSystem.Devices.GlobalBroadcast.toByte(),
+                new GlobalBroadcastSystem()
             );
             IBusSysMap.put(
-                DeviceAddressEnum.InstrumentClusterElectronics.toByte(),
-                new IKESystemCommand()
+                IBusSystem.Devices.InstrumentClusterElectronics.toByte(),
+                new IKESystem()
             );
             IBusSysMap.put(
-                DeviceAddressEnum.Radio.toByte(),
-                new RadioSystemCommand()
+                IBusSystem.Devices.Radio.toByte(),
+                new RadioSystem()
             );
             IBusSysMap.put(
-                DeviceAddressEnum.MultiFunctionSteeringWheel.toByte(),
-                new SteeringWheelSystemCommand()
+                IBusSystem.Devices.MultiFunctionSteeringWheel.toByte(),
+                new SteeringWheelSystem()
             );
             IBusSysMap.put(
-                DeviceAddressEnum.Telephone.toByte(),
-                new TelephoneSystemCommand()
+                IBusSystem.Devices.Telephone.toByte(),
+                new TelephoneSystem()
             );
         }
         return START_STICKY;

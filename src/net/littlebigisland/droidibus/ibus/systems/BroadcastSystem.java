@@ -2,15 +2,14 @@ package net.littlebigisland.droidibus.ibus.systems;
 
 import java.util.ArrayList;
 
-import net.littlebigisland.droidibus.ibus.DeviceAddressEnum;
-import net.littlebigisland.droidibus.ibus.IBusSystemCommand;
+import net.littlebigisland.droidibus.ibus.IBusSystem;
 
-public class BroadcastSystemCommand extends IBusSystemCommand{
+public class BroadcastSystem extends IBusSystem{
     
     /**
      * Messages from IKE to the Broadcast
      */
-    class IKESystem extends IBusSystemCommand{
+    class IKESystem extends IBusSystem{
         
         private final byte mOBCData = 0x24;
         /**
@@ -103,9 +102,10 @@ public class BroadcastSystemCommand extends IBusSystemCommand{
         
     }
     
-    public BroadcastSystemCommand(){
+    public BroadcastSystem(){
         IBusDestinationSystems.put(
-            DeviceAddressEnum.InstrumentClusterElectronics.toByte(), new IKESystem()
+            Devices.InstrumentClusterElectronics.toByte(),
+            new IKESystem()
         );
     }
 

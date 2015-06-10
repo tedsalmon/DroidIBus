@@ -16,8 +16,8 @@ import android.util.Log;
  * in order to parse sent/received messages.
  * 
  * Subsequent subclasses implement message handlers for destination systems
- * using this same class. I.e. Source system IKE Extends IBusSystemCommand
- * it's child class, say GlobalBroadcastSystem also implements IBusSystemCommand.
+ * using this same class. I.e. Source system IKE Extends IBusSystem
+ * it's child class, say GlobalBroadcastSystem also implements IBusSystem.
  * This represents an IBus Message's "Source" and "Destination" system architecture.
  * 
  * Please note that it makes the most sense to do received message processing inside the
@@ -26,24 +26,103 @@ import android.util.Log;
  * should be initiated from the BM Class, not the IKE class nor a child
  * implementation of the IKE class inside the BM class.
  */
-public abstract class IBusSystemCommand {
+public class IBusSystem{
     
     private String TAG = "DroidIBus";
     
     // Hold a map of what instances have requested callbacks
     private Map<String, CallbackHolder> mRegisteredCallbacks = new HashMap<String, CallbackHolder>();
+    
+    // ArrayList holding the message currently being processed.
+    public ArrayList<Byte> currentMessage = null;
+    
+    // Map used to map implementation of Destination systems from each Source System 
+    @SuppressLint("UseSparseArrays")
+    public Map<Byte, IBusSystem> IBusDestinationSystems = new HashMap<Byte, IBusSystem>();
+    
+    /**
+     * Abstract class for all defined callbacks
+     * TODO Mobe this to the message service instead?
+     */
+    public static abstract class Callbacks{
+    
+        // Radio System
+        public void onUpdateRadioStation(final String text) {}
+        
+        public void onUpdateRadioBrodcasts(final String broadcastType) {}
+        
+        public void onUpdateRadioStereoIndicator(final String stereoIndicator) {}
+        
+        public void onUpdateRadioRDSIndicator(final String rdsIndicator) {}
+        
+        public void onUpdateRadioProgramIndicator(final String currentProgram) {}
+        
+        public void onUpdateRadioStatus(final int status) {}
+        
+        public void onRadioCDStatusRequest() {}
+        
+        // IKE System
+        public void onUpdateRange(final String range) {}
+    
+        public void onUpdateOutdoorTemp(final String temp) {}
+    
+        public void onUpdateFuel1(final String mpg) {}
+    
+        public void onUpdateFuel2(final String mpg) {}
+    
+        public void onUpdateAvgSpeed(final String speed) {}
+        
+        public void onUpdateTime(final String time) {}
+        
+        public void onUpdateDate(final String date) {}
+        
+        public void onUpdateSpeed(final int speed) {}
+    
+        public void onUpdateRPM(final int rpm) {}
+        
+        public void onUpdateCoolantTemp(final int temp) {}
+        
+        public void onUpdateIgnitionSate(final int state) {}
+        
+        public void onUpdateUnits(final String units) {}
+        
+        // Navigation System
+        public void onUpdateStreetLocation(final String streetName) {}
+        
+        public void onUpdateGPSAltitude(final int altitude) {}
+        
+        public void onUpdateGPSCoordinates(final String gpsCoordinates) {}
+        
+        public void onUpdateGPSTime(final String time) {}
+        
+        public void onUpdateLocale(final String cityName) {}
+        
+        // Steering Wheel System
+        public void onTrackFwd() {}
+        
+        public void onTrackPrev() {}
+        
+        public void onVoiceBtnPress() {}
+        
+        // Telephone System
+        public void onUpdateIKEDisplay(final String text) {}
+        
+        // Light Control System
+        public void onLightStatus(final int lightStatus) {}
+    }
+    
     // Simple class to hold our Receiver and Handler for each activity registered for callbacks
     private class CallbackHolder{
         
-        private IBusCallbackReceiver mIBusReceiver = null;
+        private Callbacks mIBusReceiver = null;
         private Handler mActivityHandler = null;
         
-        public CallbackHolder(IBusCallbackReceiver mIBusRecvr, Handler activityHandler){
+        public CallbackHolder(Callbacks mIBusRecvr, Handler activityHandler){
             mIBusReceiver = mIBusRecvr;
             mActivityHandler = activityHandler;
         }
         
-        public IBusCallbackReceiver getReceiver(){
+        public Callbacks getReceiver(){
             return mIBusReceiver;
         }
         
@@ -52,12 +131,66 @@ public abstract class IBusSystemCommand {
         }
     }
     
-    // ArrayList holding the message currently being processed.
-    public ArrayList<Byte> currentMessage = null;
-    
-    // Map used to map implementation of Destination systems from each Source System 
-    @SuppressLint("UseSparseArrays")
-    public Map<Byte, IBusSystemCommand> IBusDestinationSystems = new HashMap<Byte, IBusSystemCommand>();
+    /**
+     * The address off all the systems linked via IBus
+     */
+    public enum Devices{
+        // System constants
+        BodyModule((byte) 0x00),
+        SunroofControl((byte) 0x08),
+        CDChanger((byte) 0x18),
+        RadioControlledClock((byte) 0x28),
+        CheckControlModule((byte) 0x30),
+        GFXNavigationDriver((byte) 0x3B),
+        Diagnostic((byte) 0x3F),
+        RemoteControlCentralLocking((byte) 0x40),
+        GFXDriverRearScreen((byte) 0x43),
+        Immobiliser((byte) 0x44),
+        CentralInformationDisplay((byte) 0x46),
+        MultiFunctionSteeringWheel((byte) 0x50),
+        MirrorMemory((byte) 0x51),
+        IntegratedHeatingAndAirConditioning((byte) 0x5B),
+        ParkDistanceControl((byte) 0x60),
+        Radio((byte) 0x68),
+        DigitalSignalProcessingAudioAmplifier((byte) 0x6A),
+        SeatMemory((byte) 0x72),
+        SiriusRadio((byte) 0x73),
+        CDChangerDINsize((byte) 0x76),
+        NavigationEurope((byte) 0x7F),
+        InstrumentClusterElectronics((byte) 0x80),
+        MirrorMemorySecond((byte) 0x9B),
+        MirrorMemoryThird((byte) 0x9C),
+        RearMultiInfoDisplay((byte) 0xA0),
+        AirBagModule((byte) 0xA4),
+        SpeedRecognitionSystem((byte) 0xB0),
+        NavigationJapan((byte) 0xBB),
+        GlobalBroadcast((byte) 0xBF),
+        MultiInfoDisplay((byte) 0xC0),
+        Telephone((byte) 0xC8),
+        Assist((byte) 0xCA),
+        LightControlModule((byte) 0xD0),
+        SeatMemorySecond((byte) 0xDA),
+        IntegratedRadioInformationSystem((byte) 0xE0),
+        FrontDisplay((byte) 0xE7),
+        RainLightSensor((byte) 0xE8),
+        Television((byte) 0xED),
+        BoardMonitor((byte) 0xF0),
+        CSU((byte) 0xF5),
+        Broadcast((byte) 0xFF),
+        Unset((byte) 0x100),
+        Unknown((byte) 0x101);
+        
+        private final byte value;
+        
+        Devices(byte value) {
+            this.value = value;
+        }
+
+        public byte toByte(){
+            return value;
+        }
+        
+    }
     
     /** 
      * Converts a Byte Coded Decimal to it's String representation
@@ -123,7 +256,7 @@ public abstract class IBusSystemCommand {
      * @throws NoSuchMethodException 
      */
     public void mapReceived(ArrayList<Byte> msg){
-        IBusSystemCommand targetSystem = IBusDestinationSystems.get((byte) msg.get(0));
+        IBusSystem targetSystem = IBusDestinationSystems.get((byte) msg.get(0));
         if(targetSystem != null){
             targetSystem.mapReceived(msg);
         }
@@ -137,14 +270,14 @@ public abstract class IBusSystemCommand {
      * @param cb     Your implementation of the IBusMessageReceiver
      * 
      */
-    public void registerCallback(IBusCallbackReceiver cb, Handler handler){
+    public void registerCallback(Callbacks cb, Handler handler){
         mRegisteredCallbacks.put(cb.toString(), new CallbackHolder(cb, handler));
         for (Object key : IBusDestinationSystems.keySet()){
             IBusDestinationSystems.get(key).registerCallback(cb, handler);
         }
     }
     
-    public void unregisterCallback(IBusCallbackReceiver cb){
+    public void unregisterCallback(Callbacks cb){
         mRegisteredCallbacks.remove(cb.toString());
     }
     
@@ -158,7 +291,7 @@ public abstract class IBusSystemCommand {
         for (String key : mRegisteredCallbacks.keySet()){
             final CallbackHolder tempCallback = mRegisteredCallbacks.get(key);
             final Handler mHandler = tempCallback.getHandler();
-            final IBusCallbackReceiver mCallbackReceiver = tempCallback.getReceiver();
+            final Callbacks mCallbackReceiver = tempCallback.getReceiver();
             mHandler.post(new Runnable(){
                 @Override
                 public void run() {
@@ -185,7 +318,7 @@ public abstract class IBusSystemCommand {
         for (String key : mRegisteredCallbacks.keySet()){
             final CallbackHolder tempCallback = mRegisteredCallbacks.get(key);
             final Handler mHandler = tempCallback.getHandler();
-            final IBusCallbackReceiver mCallbackReceiver = tempCallback.getReceiver();
+            final Callbacks mCallbackReceiver = tempCallback.getReceiver();
             mHandler.post(new Runnable(){
                 @Override
                 public void run() {
@@ -212,7 +345,7 @@ public abstract class IBusSystemCommand {
         for (String key : mRegisteredCallbacks.keySet()){
             final CallbackHolder tempCallback = mRegisteredCallbacks.get(key);
             final Handler mHandler = tempCallback.getHandler();
-            final IBusCallbackReceiver mCallbackReceiver = tempCallback.getReceiver();
+            final Callbacks mCallbackReceiver = tempCallback.getReceiver();
             mHandler.post(new Runnable(){
                 @Override
                 public void run() {

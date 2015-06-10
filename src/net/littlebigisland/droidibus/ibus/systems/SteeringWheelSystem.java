@@ -1,12 +1,11 @@
 package net.littlebigisland.droidibus.ibus.systems;
 
-import net.littlebigisland.droidibus.ibus.DeviceAddressEnum;
-import net.littlebigisland.droidibus.ibus.IBusSystemCommand;
+import net.littlebigisland.droidibus.ibus.IBusSystem;
 
-public class SteeringWheelSystemCommand extends IBusSystemCommand{
+public class SteeringWheelSystem extends IBusSystem{
     
-    final private byte mRadioAddress = DeviceAddressEnum.Radio.toByte();
-    final private byte mSteeringWheelAddress = DeviceAddressEnum.MultiFunctionSteeringWheel.toByte();
+    final private byte mRadioAddress = Devices.Radio.toByte();
+    final private byte mSteeringWheelAddress = Devices.MultiFunctionSteeringWheel.toByte();
     
     
     public byte[] sendVolumeUp(){

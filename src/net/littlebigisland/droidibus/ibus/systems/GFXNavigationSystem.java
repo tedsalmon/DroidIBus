@@ -1,15 +1,14 @@
 package net.littlebigisland.droidibus.ibus.systems;
 import java.util.ArrayList;
 
-import net.littlebigisland.droidibus.ibus.DeviceAddressEnum;
-import net.littlebigisland.droidibus.ibus.IBusSystemCommand;
+import net.littlebigisland.droidibus.ibus.IBusSystem;
 
-public class GFXNavigationSystemCommand extends IBusSystemCommand{
+public class GFXNavigationSystem extends IBusSystem{
     
     /**
      *  Messages from Radio in the trunk to the BoardMonitor
      */
-    class RadioSystem extends IBusSystemCommand{
+    class RadioSystem extends IBusSystem{
         
         private final byte stationText = 0x23;
         private final byte metaData = (byte)0xA5;
@@ -76,9 +75,9 @@ public class GFXNavigationSystemCommand extends IBusSystemCommand{
 
     }
     
-    public GFXNavigationSystemCommand(){
+    public GFXNavigationSystem(){
         IBusDestinationSystems.put(
-            DeviceAddressEnum.Radio.toByte(), new RadioSystem()
+            Devices.Radio.toByte(), new RadioSystem()
         );
     }
 

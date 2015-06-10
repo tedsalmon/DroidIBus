@@ -8,10 +8,9 @@ import java.util.Calendar;
 
 import net.littlebigisland.droidibus.R;
 import net.littlebigisland.droidibus.ibus.IBusCommand;
-import net.littlebigisland.droidibus.ibus.IBusCommandsEnum;
-import net.littlebigisland.droidibus.ibus.IBusCallbackReceiver;
 import net.littlebigisland.droidibus.ibus.IBusMessageService;
 import net.littlebigisland.droidibus.ibus.IBusMessageService.IOIOBinder;
+import net.littlebigisland.droidibus.ibus.IBusSystem;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
@@ -41,8 +40,8 @@ public class SettingsFragment extends PreferenceFragment{
     private Preference mOBCDate = null;
     
     private SharedPreferences mSettings = null;
-
-    private IBusCallbackReceiver mIBusCallbacks = new IBusCallbackReceiver(){
+    
+    private IBusSystem.Callbacks mIBusCallbacks = new IBusSystem.Callbacks(){
         /**
          * Update the time picker object with the time from the IKE
          */
@@ -121,8 +120,8 @@ public class SettingsFragment extends PreferenceFragment{
 		    "ERROR: Could not register callback with the IBus Service"
 		);
 	    }
-	    sendIBusCommand(IBusCommandsEnum.BMToIKEGetTime);
-	    sendIBusCommand(IBusCommandsEnum.BMToIKEGetDate);
+	    sendIBusCommand(IBusCommand.Commands.BMToIKEGetTime);
+	    sendIBusCommand(IBusCommand.Commands.BMToIKEGetDate);
         }
 
         @Override
@@ -139,13 +138,13 @@ public class SettingsFragment extends PreferenceFragment{
 	    public boolean onPreferenceClick(Preference preference){
 		Calendar tDate = Calendar.getInstance();
 		sendIBusCommand(
-		    IBusCommandsEnum.BMToIKESetDate,
+		    IBusCommand.Commands.BMToIKESetDate,
 		    tDate.get(Calendar.DATE), 
 		    tDate.get(Calendar.MONTH) + 1,
 		    tDate.get(Calendar.YEAR) - 2000
 		);
 		sendIBusCommand(
-		    IBusCommandsEnum.BMToIKESetTime,
+		    IBusCommand.Commands.BMToIKESetTime,
 		    tDate.get(Calendar.HOUR_OF_DAY), 
 		    tDate.get(Calendar.MINUTE)
 		);
@@ -170,7 +169,7 @@ public class SettingsFragment extends PreferenceFragment{
 		    int year = Integer.parseInt(dateParts[2]);
 		    prefVal = String.format("%s %s %s", day, month, year);
 		    sendIBusCommand(
-			IBusCommandsEnum.BMToIKESetDate, day, month, year
+		        IBusCommand.Commands.BMToIKESetDate, day, month, year
 		    );
 		    break;
 		case "obcTime":
@@ -180,7 +179,7 @@ public class SettingsFragment extends PreferenceFragment{
 		    int hour = Integer.parseInt(time[0]);
 		    int minute = Integer.parseInt(time[1]);
 		    sendIBusCommand(
-			IBusCommandsEnum.BMToIKESetTime, hour, minute
+		        IBusCommand.Commands.BMToIKESetTime, hour, minute
 		    );
 		    prefVal = sPrefs.getString(key, "");
 		    break;
@@ -199,7 +198,7 @@ public class SettingsFragment extends PreferenceFragment{
 		case "consumptionUnit":
 		    prefVal = sPrefs.getString(key, "");
 		    sendIBusCommand(
-			IBusCommandsEnum.BMToIKESetUnits,
+		        IBusCommand.Commands.BMToIKESetUnits,
 			Integer.parseInt(sPrefs.getString("speedUnit", "1")),
 			Integer.parseInt(sPrefs.getString("distanceUnit", "1")),
 			Integer.parseInt(sPrefs.getString("temperatureUnit", "1")),
@@ -268,7 +267,7 @@ public class SettingsFragment extends PreferenceFragment{
     }
 
     private void sendIBusCommand(
-        final IBusCommandsEnum cmd, final Object... args
+        final IBusCommand.Commands cmd, final Object... args
     ){
         if(mIBusConnected && mIBusService.getLinkState()){
             mIBusService.sendCommand(new IBusCommand(cmd, args));

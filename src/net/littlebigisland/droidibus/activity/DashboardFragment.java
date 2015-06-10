@@ -7,9 +7,9 @@ package net.littlebigisland.droidibus.activity;
  */
 
 import net.littlebigisland.droidibus.R;
-import net.littlebigisland.droidibus.ibus.IBusCallbackReceiver;
-import net.littlebigisland.droidibus.ibus.IBusCommandsEnum;
+import net.littlebigisland.droidibus.ibus.IBusCommand;
 import net.littlebigisland.droidibus.ibus.IBusMessageService;
+import net.littlebigisland.droidibus.ibus.IBusSystem;
 import android.app.FragmentTransaction;
 import android.content.ComponentName;
 import android.content.Context;
@@ -38,7 +38,7 @@ public class DashboardFragment extends BaseFragment{
     
     protected boolean mPopulatedFragments = false;
     
-    private IBusCallbackReceiver mIBusCallbacks = new IBusCallbackReceiver(){
+    private IBusSystem.Callbacks mIBusCallbacks = new IBusSystem.Callbacks(){
 
         /** Callback to handle Ignition State Updates
          * @param int State of Ignition (0, 1, 2)
@@ -60,9 +60,9 @@ public class DashboardFragment extends BaseFragment{
             registerIBusCallback(mIBusCallbacks, mHandler);
             // Emulate BoardMonitor Bootup on connect
             Log.d(TAG, CTAG + "BoardMonitor Bootup Performed");
-            sendIBusCommand(IBusCommandsEnum.BMToIKEGetIgnitionStatus);
-            sendIBusCommand(IBusCommandsEnum.BMToLCMGetDimmerStatus);
-            sendIBusCommand(IBusCommandsEnum.BMToGMGetDoorStatus);
+            sendIBusCommand(IBusCommand.Commands.BMToIKEGetIgnitionStatus);
+            sendIBusCommand(IBusCommand.Commands.BMToLCMGetDimmerStatus);
+            sendIBusCommand(IBusCommand.Commands.BMToGMGetDoorStatus);
         }
         
     };
