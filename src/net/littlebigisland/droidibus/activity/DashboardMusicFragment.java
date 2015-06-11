@@ -391,7 +391,7 @@ public class DashboardMusicFragment extends BaseFragment{
         @Override
         public void onVoiceBtnPress(){
             // Re-purpose this button to pause/play music
-            if(mMFLPlaybackMode == MFLPlaybackModes.PRESS && mRadioMode == RadioModes.AUX){
+            if(mMFLPlaybackMode == MFLPlaybackModes.PRESS){
                 togglePlayback();
             }
         }
@@ -399,7 +399,7 @@ public class DashboardMusicFragment extends BaseFragment{
         @Override
         public void onVoiceBtnHold(){
             // Re-purpose this button to pause/play music
-            if(mMFLPlaybackMode == MFLPlaybackModes.HOLD && mRadioMode == RadioModes.AUX){
+            if(mMFLPlaybackMode == MFLPlaybackModes.HOLD){
                 togglePlayback();
             }
         }
@@ -584,16 +584,18 @@ public class DashboardMusicFragment extends BaseFragment{
     }
     
     private void togglePlayback(){
-        if(mIsPlaying){
-            Log.d(TAG, CTAG + "mIsPlaying");
-            mPlayerService.pause();
-            mIsPlaying = false;
-            setPlaybackState(PlaybackState.STATE_PAUSED);
-        }else{
-            Log.d(TAG, CTAG + "!mIsPlaying");
-            mIsPlaying = true;
-            mPlayerService.play();
-            setPlaybackState(PlaybackState.STATE_PLAYING);
+        if(mRadioMode == RadioModes.AUX){
+            if(mIsPlaying){
+                Log.d(TAG, CTAG + "mIsPlaying");
+                mPlayerService.pause();
+                mIsPlaying = false;
+                setPlaybackState(PlaybackState.STATE_PAUSED);
+            }else{
+                Log.d(TAG, CTAG + "!mIsPlaying");
+                mIsPlaying = true;
+                mPlayerService.play();
+                setPlaybackState(PlaybackState.STATE_PLAYING);
+            }
         }
     }
     
@@ -631,6 +633,9 @@ public class DashboardMusicFragment extends BaseFragment{
         // MFL Playback Button
         String mflPlaybackBtn = mSettings.getString("mflMediaButton", "2");
         mMFLPlaybackMode = MFLPlaybackModes.fromString(mflPlaybackBtn);
+        
+        // AUX is the current default mode because that's what we load up to
+        mRadioMode = RadioModes.AUX;
         
         // Layouts
         mRadioLayout = (LinearLayout) v.findViewById(R.id.radioAudio);
@@ -798,6 +803,7 @@ public class DashboardMusicFragment extends BaseFragment{
                     }
                     mRadioLayout.setVisibility(View.GONE);
                     mTabletLayout.setVisibility(View.VISIBLE);
+                    mMediaSessionSelector.setVisibility(View.VISIBLE);
                 }else{
                     if(mIsPlaying){
                         mPlayerService.pause();
@@ -808,6 +814,7 @@ public class DashboardMusicFragment extends BaseFragment{
                     }
                     mRadioLayout.setVisibility(View.VISIBLE);
                     mTabletLayout.setVisibility(View.GONE);
+                    mMediaSessionSelector.setVisibility(View.GONE);
                 }
             }
         });
@@ -826,7 +833,9 @@ public class DashboardMusicFragment extends BaseFragment{
             @Override
             public boolean onTouch(View v, MotionEvent event) {
                 String action = (event.getAction() == MotionEvent.ACTION_DOWN) ? "Press" : "Release";
-                sendIBusCommand(IBusCommand.Commands.valueOf(v.getTag().toString() + action));
+                sendIBusCommand(
+                    IBusCommand.Commands.valueOf(v.getTag().toString() + action)
+                );
                 return false;
             }
         };
@@ -837,8 +846,7 @@ public class DashboardMusicFragment extends BaseFragment{
         btnRadioAM.setOnTouchListener(touchAction);
         btnPrev.setOnTouchListener(touchAction);
         btnNext.setOnTouchListener(touchAction);
-	
-        mRadioMode = RadioModes.AUX;
+
         // Hide the toggle slider for CD53 units
 	if(mRadioType != RadioTypes.BM53){
 	    mBtnMusicMode.setVisibility(View.GONE);
