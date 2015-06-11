@@ -183,6 +183,7 @@ public class SettingsFragment extends PreferenceFragment{
 		    );
 		    prefVal = sPrefs.getString(key, "");
 		    break;
+		case "settings_mflMediaButton":
 		case "settingRadioType":
 		    prefVal = sPrefs.getString(key, "");
 		    break;

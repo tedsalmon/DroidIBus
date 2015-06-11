@@ -104,6 +104,8 @@ public class IBusSystem{
         
         public void onVoiceBtnPress() {}
         
+        public void onVoiceBtnHold() {}
+        
         // Telephone System
         public void onUpdateIKEDisplay(final String text) {}
         

@@ -281,6 +281,7 @@ public class MusicControllerService extends NotificationListenerService implemen
         Set<String> activeTokens = mMediaControllers.keySet();
         for(String sToken: activeTokens){
             if(!currentSessions.contains(sToken)){
+                Log.d(TAG, CTAG + "Removing session token " + sToken);
                 mMediaControllers.remove(sToken);
                 mMediaControllerSessionMap.values().remove(sToken);
             }
