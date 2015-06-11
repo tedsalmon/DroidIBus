@@ -25,6 +25,13 @@
             android:summary="@string/settings_changeTextColor_summ"
             android:key="nightColorsWithInterior"
             android:defaultValue="false" />
+        <ListPreference
+            android:title="@string/settings_mflMediaButton"
+            android:summary="@string/settings_mflMediaButton_summ"
+            android:key="mflMediaButton"
+            android:entries="@array/settings_mflMediaButton_options"
+            android:entryValues="@array/settings_mflMediaButton_options_values"
+            android:defaultValue="2" />
     </PreferenceCategory>
     <PreferenceCategory android:title="@string/settings_carValueSettings">
         <net.littlebigisland.droidibus.activity.preferences.TimePreference

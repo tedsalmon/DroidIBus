@@ -122,8 +122,13 @@ public class TelephoneSystem extends IBusSystem{
         public void mapReceived(ArrayList<Byte> msg) {
             currentMessage = msg;
             if(currentMessage.get(3) == 0x3B){
-                if(currentMessage.get(4) == (byte) 0xA0) // Voice Btn
+                if(currentMessage.get(4) == (byte) 0xA0){ // Voice Btn
                     triggerCallback("onVoiceBtnPress");
+                }
+                if(currentMessage.get(4) == (byte) 0x90){
+                    triggerCallback("onVoiceBtnHold");
+                }
+                
             }
         }
         
