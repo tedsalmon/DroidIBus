@@ -7,10 +7,13 @@ package net.littlebigisland.droidibus.activity;
  */
 
 //import net.littlebigisland.droidibus.ibus.IBusCallbackReceiver;
+import java.util.Calendar;
+
 import net.littlebigisland.droidibus.ibus.IBusCommand;
 import net.littlebigisland.droidibus.ibus.IBusSystem;
 import net.littlebigisland.droidibus.ibus.IBusMessageService;
 import net.littlebigisland.droidibus.ibus.IBusMessageService.IOIOBinder;
+import android.app.Activity;
 import android.app.Fragment;
 import android.content.ComponentName;
 import android.content.Context;
@@ -65,6 +68,14 @@ public class BaseFragment extends Fragment{
                 changeTextColors((ViewGroup) child, colorId);
             }
         }
+    }
+    
+    /**
+     * Wrapper that returns the time in milliseconds
+     * @return Time in Miliseconds from Calendar Module
+     */
+    public long getTimeNow(){
+        return Calendar.getInstance().getTimeInMillis();
     }
     
     /**
@@ -141,11 +152,14 @@ public class BaseFragment extends Fragment{
         final IBusCommand.Commands cmd, 
         final long delayMils, final Object... args
     ){
-        new Handler(getActivity().getMainLooper()).postDelayed(new Runnable(){
-            public void run(){
-                sendIBusCommand(cmd, args);
-            }
-        }, delayMils);
+        Activity mainAct = getActivity();
+        if(mainAct != null){
+            new Handler(mainAct.getMainLooper()).postDelayed(new Runnable(){
+                public void run(){
+                    sendIBusCommand(cmd, args);
+                }
+            }, delayMils);
+        }
     }
     
     public void showToast(String toastText){
