@@ -43,7 +43,7 @@ public class DashboardFragment extends BaseFragment{
          */
         @Override
         public void onUpdateIgnitionSate(final int state){
-            int screenState = (state > 0) ? SCREEN_ON : SCREEN_ON;
+            int screenState = (state > 0) ? SCREEN_ON : SCREEN_OFF;
             setScreenState(screenState);
         }
 
