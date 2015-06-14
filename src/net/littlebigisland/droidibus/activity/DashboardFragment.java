@@ -12,13 +12,10 @@ import net.littlebigisland.droidibus.ibus.IBusMessageService;
 import net.littlebigisland.droidibus.ibus.IBusSystem;
 import android.app.FragmentTransaction;
 import android.content.ComponentName;
-import android.content.Context;
 import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.IBinder;
-import android.os.PowerManager;
-import android.os.PowerManager.WakeLock;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -30,10 +27,11 @@ public class DashboardFragment extends BaseFragment{
     
     protected Handler mHandler = new Handler();
     
+    public static final int SCREEN_ON = 1;
+    public static final int SCREEN_OFF = 0;
+    
     protected SharedPreferences mSettings = null;
     
-    protected PowerManager mPowerManager = null;
-    protected WakeLock mScreenWakeLock;
     protected boolean mScreenOn = false;
     
     protected boolean mPopulatedFragments = false;
@@ -45,8 +43,8 @@ public class DashboardFragment extends BaseFragment{
          */
         @Override
         public void onUpdateIgnitionSate(final int state){
-            boolean carState = (state > 0) ? true : false;
-            changeScreenState(carState);
+            int screenState = (state > 0) ? SCREEN_ON : SCREEN_ON;
+            setScreenState(screenState);
         }
 
     };
@@ -72,50 +70,28 @@ public class DashboardFragment extends BaseFragment{
      * Acquire a screen wake lock to either turn the screen on or off
      * @param screenState if true, turn the screen on, else turn it off
      */
-    @SuppressWarnings("deprecation")
-    private void changeScreenState(boolean screenState){
-        if(mPowerManager == null){
-            mPowerManager = (PowerManager) getActivity(
-            ).getSystemService(Context.POWER_SERVICE);
-        }
-        boolean modeChange = false;
+    public void setScreenState(int screenState){
         Window window = getActivity().getWindow();
         WindowManager.LayoutParams layoutP = window.getAttributes();
+        int screenParams = WindowManager.LayoutParams.FLAG_TURN_SCREEN_ON |
+            WindowManager.LayoutParams.FLAG_DISMISS_KEYGUARD |
+            WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON;
         
-        if(screenState && !mScreenOn){
+        if(screenState == SCREEN_ON && !mScreenOn){
             Log.d(TAG, CTAG + "Acquiring WakeLock");
-            modeChange = true;
             mScreenOn = true;
             layoutP.screenBrightness = -1;
-            mScreenWakeLock = mPowerManager.newWakeLock(
-                PowerManager.FULL_WAKE_LOCK |
-                PowerManager.ACQUIRE_CAUSES_WAKEUP,
-                "screenWakeLock"
-            );
-            window.addFlags(WindowManager.LayoutParams.FLAG_DISMISS_KEYGUARD);
-            mScreenWakeLock.acquire();
+            window.addFlags(screenParams);
         }
         
-        if(!screenState && mScreenOn){
+        if(screenState == SCREEN_OFF && mScreenOn){
             Log.d(TAG, CTAG + "Shutting the screen off");
-            modeChange = true;
             mScreenOn = false;
+            window.clearFlags(screenParams);
             layoutP.screenBrightness = 0;
-            releaseWakelock();
         }
         
-        if(modeChange){
-            window.setAttributes(layoutP);
-        }
-    }
-    
-    private void releaseWakelock(){
-        if(mScreenWakeLock != null){
-            if(mScreenWakeLock.isHeld()){
-                Log.d(TAG, CTAG + "Releasing system wakelock");
-                mScreenWakeLock.release();
-            }
-        }
+        window.setAttributes(layoutP);
     }
     
     @Override
@@ -133,7 +109,7 @@ public class DashboardFragment extends BaseFragment{
             mPopulatedFragments = true;
         }
         // Keep a wake lock
-        changeScreenState(true);
+        setScreenState(SCREEN_ON);
         return v;
     }
     
@@ -142,33 +118,16 @@ public class DashboardFragment extends BaseFragment{
         super.onActivityCreated(savedInstanceState);
         CTAG = "DashboardFragment: ";
         Log.d(TAG, CTAG + "onActivityCreated()");
-        // Bind required background services last since the callback
-        // functions depend on the view items being initialized
         if(!mIBusConnected){
             serviceStarter(IBusMessageService.class, mIBusConnection);
         }
     }
     
     @Override
-    public void onPause(){
-        super.onPause();
-        Log.d(TAG, CTAG + "onPause()");
-        releaseWakelock();
-    }
-    
-    @Override
-    public void onResume(){
-        super.onResume();
-        Log.d(TAG, CTAG + "onResume()");
-        // Keep a wake lock
-        changeScreenState(true);
-    }
-    
-    @Override
     public void onDestroy(){
         super.onDestroy();
         Log.d(TAG, CTAG + "onDestroy()");
-        releaseWakelock();
+        setScreenState(SCREEN_OFF);
         if(mIBusConnected){
             mIBusService.unregisterCallback(mIBusCallbacks);
             serviceStopper(IBusMessageService.class, mIBusConnection);
