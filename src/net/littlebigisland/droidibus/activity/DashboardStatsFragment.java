@@ -73,7 +73,7 @@ public class DashboardStatsFragment extends BaseFragment{
             }else{
 		// Change to MPH
                 mSpeedField.setText(
-                    String.valueOf((int) (speed * 2) * 0.621371)
+                    String.valueOf((int) ((speed * 2) * 0.621371))
 		);
             }
         }
