@@ -24,6 +24,7 @@ import android.widget.ListView;
 public class MainActivity extends Activity {
     private DrawerLayout mDrawerLayout = null;
     private ListView mDrawerList = null;
+    private ArrayAdapter<String> mDrawerListAdapter = null;
     private ActionBarDrawerToggle mDrawerToggle;
     
     private Fragment[] mFragments = {
@@ -95,6 +96,8 @@ public class MainActivity extends Activity {
 		    }
 		}
 	    );
+            mDrawerList.clearChoices();
+            mDrawerListAdapter.notifyDataSetChanged();
             mDrawerLayout.closeDrawer(mDrawerList);
         }
     };
@@ -163,10 +166,11 @@ public class MainActivity extends Activity {
         getActionBar().setIcon(R.drawable.ic_drawer);
         getActionBar().setDisplayHomeAsUpEnabled(true);
         
-        // set up the drawer's list view with items and click listener
-        mDrawerList.setAdapter(
-	    new ArrayAdapter<String>(this, R.layout.drawer_item, settingsItems)
-	);
+        // Set up the drawer's list view with items and click listener
+        mDrawerListAdapter = new ArrayAdapter<String>(
+            this, R.layout.drawer_item, settingsItems
+        );
+        mDrawerList.setAdapter(mDrawerListAdapter);
         mDrawerList.setOnItemClickListener(mDrawerClickListener);
 	
         if(savedInstanceState == null){
