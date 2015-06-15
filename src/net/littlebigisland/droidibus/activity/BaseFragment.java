@@ -7,7 +7,10 @@ package net.littlebigisland.droidibus.activity;
  */
 
 //import net.littlebigisland.droidibus.ibus.IBusCallbackReceiver;
+import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.List;
+import java.util.concurrent.Executor;
 
 import net.littlebigisland.droidibus.ibus.IBusCommand;
 import net.littlebigisland.droidibus.ibus.IBusSystem;
@@ -32,9 +35,31 @@ public class BaseFragment extends Fragment{
     public String TAG = "DroidIBus";
     public String CTAG = "";
 
-    // NEVER override these in a child class! The service won't connected
+    // NEVER override these in a child class! The service won't connect
     public IBusMessageService mIBusService = null;
     public boolean mIBusConnected = false;
+    
+    protected ThreadExecutor mThreadExecutor = new ThreadExecutor();
+    
+    protected class ThreadExecutor implements Executor{
+        
+        // Thread List
+        protected List<Thread> mThreadList = new ArrayList<Thread>();
+        
+        @Override
+        public void execute(Runnable command) {
+            Thread childThread = new Thread(command);
+            mThreadList.add(childThread);
+            childThread.start();
+        }
+        
+        public void terminateTasks(){
+            for(Thread childThread: mThreadList){
+                childThread.interrupt();
+            }
+        }
+        
+    }
     
     public class IBusServiceConnection implements ServiceConnection{
         
@@ -165,5 +190,11 @@ public class BaseFragment extends Fragment{
     public void showToast(String toastText){
         Context appContext = getActivity();
         Toast.makeText(appContext, toastText, Toast.LENGTH_LONG).show();
+    }
+    
+    @Override
+    public void onDestroy(){
+        super.onDestroy();
+        mThreadExecutor.terminateTasks();
     }
 }
