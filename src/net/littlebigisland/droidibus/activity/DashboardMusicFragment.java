@@ -9,7 +9,6 @@ package net.littlebigisland.droidibus.activity;
 
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Calendar;
 import java.util.HashMap;
 import java.util.List;
 
@@ -93,12 +92,12 @@ public class DashboardMusicFragment extends BaseFragment{
     protected boolean mIsPlaying = false;
     protected boolean mWasPlaying = false;
     protected long mSongDuration = 1;
+    protected boolean mCanSeek = true;
 
     protected RadioModes mRadioMode = null;
     protected RadioTypes mRadioType = null;
     protected long mLastRadioStatus = 0;
-    protected long mLastModeChange = 0;
-    protected long mLastRadioStatusRequest = 0;
+    protected boolean mRadioModeSatisfied = true;
     protected boolean mCDPlayerPlaying = false;
     
     protected MFLPlaybackModes mMFLPlaybackMode = null;
@@ -134,9 +133,11 @@ public class DashboardMusicFragment extends BaseFragment{
         public void onServiceConnected(ComponentName name, IBinder service){
             super.onServiceConnected(name, service);
             registerIBusCallback(mIBusCallbacks, mHandler);
+            Log.d(TAG, CTAG + "IBus Service Connected");
+
             if(mRadioType == RadioTypes.BM53){
-                Log.d(TAG, CTAG + "IBus Service Connected");
-                mHandler.post(mRadioUpdaterThread);
+                Log.d(TAG, CTAG + "Starting mRadioUpdater");
+                mThreadExecutor.execute(mRadioUpdater);
             }
         }
         
@@ -162,6 +163,8 @@ public class DashboardMusicFragment extends BaseFragment{
                 Log.d(TAG, CTAG + "Calling getPlayBackState()");
                 setPlaybackState(playerRemote.getPlaybackState().getState());
             }
+            mThreadExecutor.execute(mSeekbarUpdater);
+            
             mHandler.post(mUpdateAvailableControllers);
         }
 
@@ -177,71 +180,84 @@ public class DashboardMusicFragment extends BaseFragment{
         @Override
         public void run(){
             if(mMediaPlayerConnected){
-                setMediaControllerSelection(
-                    mPlayerService.getMediaSessions()
-                );
+                setMediaControllerSelection(mPlayerService.getMediaSessions());
             }
             mHandler.postDelayed(this, CONTROLLER_UPDATE_RATE);
         }
     };
     
-    private Runnable mUpdateSeekBar = new Runnable(){
+    private Runnable mSeekbarUpdater = new Runnable(){
+        
+        int mProgress = 0;
+        boolean mShouldRun = true;
+        Runnable mSendUpdate = new Runnable(){
+            @Override
+            public void run(){
+                mPlayerScrubBar.setProgress(mProgress);
+            }
+         };
+
         @Override
         public void run(){
-            MediaController mc = mPlayerService.getMediaController();
-            if(mc != null){
-                if(mc.getPlaybackState() != null){
-                    mPlayerScrubBar.setProgress(
-                        (int) mc.getPlaybackState().getPosition()
-                    );
+            while(mShouldRun && !Thread.currentThread().isInterrupted()){
+                MediaController mc = mPlayerService.getMediaController();
+                if(mc != null){
+                    if(mc.getPlaybackState() != null){
+                        mProgress = (int) mc.getPlaybackState().getPosition();
+                        if(canSeek()){
+                            mHandler.post(mSendUpdate);
+                        }
+                    }
                 }
-                mHandler.postDelayed(this, SEEKBAR_UPDATE_RATE);
+                try{
+                    Thread.sleep(SEEKBAR_UPDATE_RATE);
+                }catch(InterruptedException e){
+                    Log.e(TAG, CTAG + "mUpdateSeekBar InterruptedException");
+                    mShouldRun = false;
+                }
             }
+            return;
         }
+        
     };
 
     /**
      *  This thread should make sure to send out and request
      *  any IBus messages that the BM usually would.
-     *  We should also make sure to keep the radio on "Info"
-     *  mode at all times here.
-     *  -This is only required if the user has a BM53-
+     *  We should also keep the radio on "Info" mode at all times here.
      */
-    private Runnable mRadioUpdaterThread = new Runnable(){
-        public void run(){
-            final int radioStatusTimeout = 2000;
-            if(mIBusService.getLinkState() && mIBusConnected){
-                getActivity().runOnUiThread(new Runnable(){
-                    @Override
-                    public void run(){
-                        long now = Calendar.getInstance().getTimeInMillis();
+    private Runnable mRadioUpdater = new Runnable(){
 
-                        // Ask the radio for it's status
-			long timeSinceStat = now - mLastRadioStatusRequest;
-                        if(timeSinceStat >= radioStatusTimeout){
-                            sendIBusCommand(
-				IBusCommand.Commands.BMToRadioGetStatus
-			    );
-                        }
-                        
-                        long statusDiff = now - mLastRadioStatus;
-                        if(statusDiff > radioStatusTimeout &&
-			   mRadioMode != RadioModes.AUX
-			){
-                            sendIBusCommand(
-				IBusCommand.Commands.BMToRadioInfoPress
-			    );
-                            sendIBusCommandDelayed(
-				IBusCommand.Commands.BMToRadioInfoRelease,
-				500
-			    );
-                        }
+        private long mLastUpdate = 0;
+        private int mTimeout = 5000;
+        
+        @Override
+        public void run(){
+            boolean linkConn = mIBusService.getLinkState();
+            while(!Thread.currentThread().isInterrupted()){
+                long timeNow = getTimeNow();
+                if(linkConn && (timeNow - mLastUpdate) >= mTimeout){
+                    mLastUpdate = timeNow;
+                    sendIBusCommand(IBusCommand.Commands.BMToRadioGetStatus);
+                    long statusDiff = timeNow - mLastRadioStatus;
+                    if(statusDiff > mTimeout && mRadioMode != RadioModes.AUX){
+                        sendIBusCommand(
+                            IBusCommand.Commands.BMToRadioInfoPress
+                        );
+                        sendIBusCommandDelayed(
+                            IBusCommand.Commands.BMToRadioInfoRelease, 500
+                        );
                     }
-                });
+                }
+                try{
+                    Thread.sleep(mTimeout);
+                }catch(InterruptedException e){
+                    Log.e(TAG, CTAG + "mRadioUpdater InterruptedException");
+                }
             }
-            mHandler.postDelayed(this, radioStatusTimeout);
+            return;
         }
-    };
+    };   
     
     private MediaController.Callback mPlayerCallbacks = new MediaController.Callback(){
         
@@ -274,13 +290,12 @@ public class DashboardMusicFragment extends BaseFragment{
         * @param text Text to set
         */
         @Override
-        public void onUpdateRadioStation(final String text){
+        public void onUpdateRadioStation(final String text){            
             // If this is a BM53 unit, we should listen for
             // Updates to the station text
             if(mRadioType == RadioTypes.BM53){
-                RadioModes lastState = mRadioMode; 
                 switch(text){
-                    case "TR 01 ":
+                    case "TR 01":
                     case "NO CD":
                         mRadioMode = RadioModes.CD;
                         break;
@@ -291,42 +306,34 @@ public class DashboardMusicFragment extends BaseFragment{
                         mRadioMode = RadioModes.Radio;
                         break;
                 }
-        
-                if(lastState != mRadioMode){
-                    mLastModeChange = Calendar.getInstance().getTimeInMillis();
-                }
-            
-                /* 
-                We're not in the right mode, sync with the car
-                Make sure this isn't CD mode and that we're not in the middle of a mode change
-                by making sure we've been in the current mode for at least 1.5 seconds
-                If lastState is null then we should also check as this is the first bit of data
-                see about radio mode 
-                */
-                if((!(mRadioMode == RadioModes.CD) && (Calendar.getInstance().getTimeInMillis() - mLastModeChange) > 1500) || lastState == null){
-                    if(mRadioMode == RadioModes.AUX && mTabletLayout.getVisibility() == View.GONE){
+                // Sync modes with the car
+                // Make sure we're not changing modes
+                if(mRadioModeSatisfied){
+                    int auxMode = mTabletLayout.getVisibility();
+                    if(mRadioMode == RadioModes.AUX && auxMode == View.GONE){
+                        Log.d(TAG, CTAG + "Toggle to radio");
                         mBtnMusicMode.toggle();
                     }
-                    if(!(mRadioMode == RadioModes.AUX) && mTabletLayout.getVisibility() == View.VISIBLE){
+                    if(mRadioMode != RadioModes.AUX && auxMode == View.VISIBLE){
+                        Log.d(TAG, CTAG + "Toggle to AUX");
                         mBtnMusicMode.toggle();
                     }
                 }
-            
-                mLastRadioStatus = Calendar.getInstance().getTimeInMillis();
+                mLastRadioStatus = getTimeNow();
                 mStationText.setText(text);
             }
         }
 		
     	@Override
         public void onUpdateRadioBrodcasts(final String broadcastType){
-            mLastRadioStatus = Calendar.getInstance().getTimeInMillis();
+            mLastRadioStatus = getTimeNow();
             mBroadcastField.setText(broadcastType);
         }
 
         @Override
         public void onUpdateRadioStereoIndicator(final String stereoIndicator){
             if(mRadioLayout.getVisibility() == View.VISIBLE){
-                mLastRadioStatus = Calendar.getInstance().getTimeInMillis();
+                mLastRadioStatus = getTimeNow();
                 int visibility = (stereoIndicator.equals("")) ? View.GONE : View.VISIBLE;
                 mStereoField.setVisibility(visibility);
             }
@@ -334,7 +341,7 @@ public class DashboardMusicFragment extends BaseFragment{
 
         @Override
         public void onUpdateRadioRDSIndicator(final String rdsIndicator){
-            mLastRadioStatus = Calendar.getInstance().getTimeInMillis();
+            mLastRadioStatus = getTimeNow();
             if(mRadioLayout.getVisibility() == View.VISIBLE){
                 int visibility = (rdsIndicator.equals("")) ? View.GONE : View.VISIBLE;
                 mRDSField.setVisibility(visibility);
@@ -343,7 +350,7 @@ public class DashboardMusicFragment extends BaseFragment{
 
         @Override
         public void onUpdateRadioProgramIndicator(final String currentProgram){
-            mLastRadioStatus = Calendar.getInstance().getTimeInMillis();
+            mLastRadioStatus = getTimeNow();
             mProgramField.setText(currentProgram);
         }
         
@@ -352,24 +359,26 @@ public class DashboardMusicFragment extends BaseFragment{
         */
         @Override
         public void onUpdateIgnitionSate(final int state) {
-            boolean carState = (state > 0) ? true : false;
-            if(carState){
-                if(mMediaPlayerConnected && mRadioMode == RadioModes.AUX && !mIsPlaying && mWasPlaying){
-                    // Post a runnable to play the last song in 3.5 seconds
-                    new Handler(getActivity().getMainLooper()).postDelayed(new Runnable(){
-                        @Override
-                        public void run() {
-                            mPlayerService.play();
-                            mIsPlaying = true;
-                        }
-                    }, 1000);
-                    mWasPlaying = false;
-                }
-            }else{
-                if(mMediaPlayerConnected && mRadioMode == RadioModes.AUX && mIsPlaying){
-                    mPlayerService.pause();
-                    mIsPlaying = false;
-                    mWasPlaying = true;
+            boolean carIsOn = (state > 0) ? true : false;
+            if(mMediaPlayerConnected && mRadioMode == RadioModes.AUX){
+                if(carIsOn){
+                    if(!mIsPlaying && mWasPlaying){
+                        // Post a runnable to play the last song in 2.5 seconds
+                        mHandler.postDelayed(new Runnable(){
+                            @Override
+                            public void run(){
+                                mPlayerService.play();
+                                mIsPlaying = true;
+                            }
+                        }, 2500);
+                        mWasPlaying = false;
+                    }
+                }else{
+                    if(mIsPlaying){
+                        mPlayerService.pause();
+                        mIsPlaying = false;
+                        mWasPlaying = true;
+                    }
                 }
             }
         }
@@ -392,7 +401,7 @@ public class DashboardMusicFragment extends BaseFragment{
         public void onVoiceBtnPress(){
             // Re-purpose this button to pause/play music
             if(mMFLPlaybackMode == MFLPlaybackModes.PRESS){
-                togglePlayback();
+                togglePlaybackInAux();
             }
         }
         
@@ -400,17 +409,18 @@ public class DashboardMusicFragment extends BaseFragment{
         public void onVoiceBtnHold(){
             // Re-purpose this button to pause/play music
             if(mMFLPlaybackMode == MFLPlaybackModes.HOLD){
-                togglePlayback();
+                togglePlaybackInAux();
             }
         }
         
         @Override
         public void onUpdateRadioStatus(int status){
-	    mLastRadioStatusRequest = Calendar.getInstance().getTimeInMillis();
             // Radio is off, turn it on
             if(status == 0){
                 sendIBusCommand(IBusCommand.Commands.BMToRadioPwrPress);
-                sendIBusCommandDelayed(IBusCommand.Commands.BMToRadioPwrRelease, 500);
+                sendIBusCommandDelayed(
+                    IBusCommand.Commands.BMToRadioPwrRelease, 250
+                );
             }
         }
         
@@ -418,11 +428,17 @@ public class DashboardMusicFragment extends BaseFragment{
         public void onRadioCDStatusRequest(){
             // Tell the Radio we have a CD on track 1
             byte trackAndCD = (byte) 0x01;
-            sendIBusCommand(IBusCommand.Commands.BMToRadioCDStatus, 0, trackAndCD, trackAndCD);
-            if(!mCDPlayerPlaying){
-                sendIBusCommand(IBusCommand.Commands.BMToRadioCDStatus, 0, trackAndCD, trackAndCD);
+            sendIBusCommand(
+                IBusCommand.Commands.BMToRadioCDStatus, 0, trackAndCD, trackAndCD
+            );
+            if(mCDPlayerPlaying){
+                sendIBusCommand(
+                    IBusCommand.Commands.BMToRadioCDStatus, 1, trackAndCD, trackAndCD
+                );
             }else{
-                sendIBusCommand(IBusCommand.Commands.BMToRadioCDStatus, 1, trackAndCD, trackAndCD);
+                sendIBusCommand(
+                    IBusCommand.Commands.BMToRadioCDStatus, 0, trackAndCD, trackAndCD
+                );
             }
         }
         
@@ -440,26 +456,42 @@ public class DashboardMusicFragment extends BaseFragment{
 
     };
     
-    private void changeRadioMode(final RadioModes mode){
-        new Thread(new Runnable(){
-            public void run(){
-                try{
-                    if(mRadioType == RadioTypes.BM53){
-                        Log.d(TAG, String.format("Current mode = %s, desired mode = %s", mRadioMode.toString(), mode.toString() ));
-                        if( (mode == RadioModes.AUX && !(mRadioMode== RadioModes.AUX)) ||  
-                            (mode == RadioModes.Radio && (mRadioMode != RadioModes.Radio)) ){
-                            sendIBusCommand(IBusCommand.Commands.BMToRadioModePress);
-                            sendIBusCommandDelayed(IBusCommand.Commands.BMToRadioModeRelease, 300);
+    private void changeRadioMode(final RadioModes desiredMode){
+        if(mRadioType == RadioTypes.BM53 && mIBusService.getLinkState()){
+            mRadioModeSatisfied = false;
+            mThreadExecutor.execute(new Runnable(){
+                
+                @Override
+                public void run(){
+                    while(desiredMode != mRadioMode && !mRadioModeSatisfied){
+                        Log.d(TAG, 
+                            String.format(
+                                CTAG + "Radio Mode: %s -> %s", mRadioMode.toString(),
+                                desiredMode.toString()
+                            )
+                        );
+                        sendIBusCommand(
+                            IBusCommand.Commands.BMToRadioModePress
+                        );
+                        sendIBusCommandDelayed(
+                            IBusCommand.Commands.BMToRadioModeRelease, 250
+                        );
+                        try{
                             Thread.sleep(1000);
-                            changeRadioMode(mode);
+                        }catch (InterruptedException e){
+                            Log.e(TAG, CTAG + "mModeChanger InterruptedException");
+                        }
+                        if(desiredMode == mRadioMode){
+                            mRadioModeSatisfied = true;
                         }
                     }
-                }catch(InterruptedException e){
-                    Log.e(TAG, CTAG + e.getStackTrace().toString());
+                    mRadioModeSatisfied = true;
+                    return;
                 }
-            }
-        }).start();
-    }
+
+            });
+        }
+    }  
     
     /**
      * Reset the elements of the music player view
@@ -483,6 +515,14 @@ public class DashboardMusicFragment extends BaseFragment{
             appName = cname;
         }
         return appName;
+    }
+    
+    private boolean canSeek(){
+        return mCanSeek;
+    }
+    
+    private void setCanSeek(boolean canSeek){
+        mCanSeek = canSeek;
     }
     
     /**
@@ -572,7 +612,6 @@ public class DashboardMusicFragment extends BaseFragment{
                 mPlayerControlBtn.setImageResource(
                     android.R.drawable.ic_media_pause
                 );
-                mHandler.post(mUpdateSeekBar);
                 break;
             default:
                 mIsPlaying = false;
@@ -584,18 +623,22 @@ public class DashboardMusicFragment extends BaseFragment{
     }
     
     private void togglePlayback(){
+        if(mIsPlaying){
+            Log.d(TAG, CTAG + "mIsPlaying");
+            mPlayerService.pause();
+            mIsPlaying = false;
+            setPlaybackState(PlaybackState.STATE_PAUSED);
+        }else{
+            Log.d(TAG, CTAG + "!mIsPlaying");
+            mIsPlaying = true;
+            mPlayerService.play();
+            setPlaybackState(PlaybackState.STATE_PLAYING);
+        }
+    }
+    
+    private void togglePlaybackInAux(){
         if(mRadioMode == RadioModes.AUX){
-            if(mIsPlaying){
-                Log.d(TAG, CTAG + "mIsPlaying");
-                mPlayerService.pause();
-                mIsPlaying = false;
-                setPlaybackState(PlaybackState.STATE_PAUSED);
-            }else{
-                Log.d(TAG, CTAG + "!mIsPlaying");
-                mIsPlaying = true;
-                mPlayerService.play();
-                setPlaybackState(PlaybackState.STATE_PLAYING);
-            }
+            togglePlayback();
         }
     }
     
@@ -633,9 +676,6 @@ public class DashboardMusicFragment extends BaseFragment{
         // MFL Playback Button
         String mflPlaybackBtn = mSettings.getString("mflMediaButton", "2");
         mMFLPlaybackMode = MFLPlaybackModes.fromString(mflPlaybackBtn);
-        
-        // AUX is the current default mode because that's what we load up to
-        mRadioMode = RadioModes.AUX;
         
         // Layouts
         mRadioLayout = (LinearLayout) v.findViewById(R.id.radioAudio);
@@ -754,7 +794,7 @@ public class DashboardMusicFragment extends BaseFragment{
         mPlayerPrevBtn.setOnClickListener(playbackButtonClickListener);
         mPlayerNextBtn.setOnClickListener(playbackButtonClickListener);
         mPlayerControlBtn.setOnClickListener(playbackButtonClickListener);
-        
+
         mPlayerScrubBar.setOnSeekBarChangeListener(new OnSeekBarChangeListener(){
             private float mSeekPosition = 0; 
             @Override
@@ -765,14 +805,14 @@ public class DashboardMusicFragment extends BaseFragment{
             }
 
             @Override
-            public void onStartTrackingTouch(SeekBar seekBar) {
-                mHandler.removeCallbacks(mUpdateSeekBar);
+            public void onStartTrackingTouch(SeekBar seekBar){
+                setCanSeek(false);
             }
 
             @Override
             public void onStopTrackingTouch(SeekBar seekBar) {
                 mPlayerService.seekTo((long)mSeekPosition);
-                mHandler.post(mUpdateSeekBar);
+                setCanSeek(true);
             }
         });
 
@@ -794,13 +834,11 @@ public class DashboardMusicFragment extends BaseFragment{
 
         mBtnMusicMode.setOnCheckedChangeListener(new OnCheckedChangeListener(){
             public void onCheckedChanged(CompoundButton buttonView, boolean isChecked){
-                Log.d(TAG, "Changing Music Mode");
+                Log.d(TAG, CTAG + "Changing Music Mode");
                 // Tablet Mode if checked, else Radio
                 if(isChecked){
                     // Send IBus Message
-                    if(! (mRadioMode == RadioModes.AUX) && mRadioType == RadioTypes.BM53){
-                        changeRadioMode(RadioModes.AUX);
-                    }
+                    changeRadioMode(RadioModes.AUX);
                     mRadioLayout.setVisibility(View.GONE);
                     mTabletLayout.setVisibility(View.VISIBLE);
                     mMediaSessionSelector.setVisibility(View.VISIBLE);
@@ -809,9 +847,7 @@ public class DashboardMusicFragment extends BaseFragment{
                         mPlayerService.pause();
                     }
                     // Send IBus Message
-                    if((mRadioMode == RadioModes.AUX || mRadioMode == RadioModes.CD) && mRadioType == RadioTypes.BM53){
-                        changeRadioMode(RadioModes.Radio);
-                    }
+                    changeRadioMode(RadioModes.Radio);
                     mRadioLayout.setVisibility(View.VISIBLE);
                     mTabletLayout.setVisibility(View.GONE);
                     mMediaSessionSelector.setVisibility(View.GONE);
@@ -819,8 +855,6 @@ public class DashboardMusicFragment extends BaseFragment{
             }
         });
 
-
-        
         OnClickListener clickSingleAction = new OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -846,6 +880,9 @@ public class DashboardMusicFragment extends BaseFragment{
         btnRadioAM.setOnTouchListener(touchAction);
         btnPrev.setOnTouchListener(touchAction);
         btnNext.setOnTouchListener(touchAction);
+        
+        // Default radio mode
+        mRadioMode = RadioModes.AUX;
 
         // Hide the toggle slider for CD53 units
 	if(mRadioType != RadioTypes.BM53){
@@ -855,7 +892,7 @@ public class DashboardMusicFragment extends BaseFragment{
 	}
         return v;
     }
-    
+
     @Override
     public void onResume(){
         super.onResume();
@@ -870,7 +907,7 @@ public class DashboardMusicFragment extends BaseFragment{
     @Override
     public void onDestroy(){
         super.onDestroy();
-        Log.d(TAG, CTAG + "onDestroy() called");
+        Log.d(TAG, CTAG + "onDestroy()");
         if(mIBusConnected){
             mIBusService.unregisterCallback(mIBusCallbacks);
             serviceStopper(IBusMessageService.class, mIBusConnection);
