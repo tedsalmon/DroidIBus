@@ -240,7 +240,7 @@ public class DashboardMusicFragment extends BaseFragment{
                     mLastUpdate = timeNow;
                     sendIBusCommand(IBusCommand.Commands.BMToRadioGetStatus);
                     long statusDiff = timeNow - mLastRadioStatus;
-                    if(statusDiff > mTimeout){
+                    if(statusDiff > mTimeout && mRadioMode != RadioModes.AUX){
                         sendIBusCommand(
                             IBusCommand.Commands.BMToRadioInfoPress
                         );
@@ -359,24 +359,26 @@ public class DashboardMusicFragment extends BaseFragment{
         */
         @Override
         public void onUpdateIgnitionSate(final int state) {
-            boolean carState = (state > 0) ? true : false;
-            if(carState){
-                if(mMediaPlayerConnected && mRadioMode == RadioModes.AUX && !mIsPlaying && mWasPlaying){
-                    // Post a runnable to play the last song in 2.5 seconds
-                    mHandler.postDelayed(new Runnable(){
-                        @Override
-                        public void run(){
-                            mPlayerService.play();
-                            mIsPlaying = true;
-                        }
-                    }, 2500);
-                    mWasPlaying = false;
-                }
-            }else{
-                if(mMediaPlayerConnected && mRadioMode == RadioModes.AUX && mIsPlaying){
-                    mPlayerService.pause();
-                    mIsPlaying = false;
-                    mWasPlaying = true;
+            boolean carIsOn = (state > 0) ? true : false;
+            if(mMediaPlayerConnected && mRadioMode == RadioModes.AUX){
+                if(carIsOn){
+                    if(!mIsPlaying && mWasPlaying){
+                        // Post a runnable to play the last song in 2.5 seconds
+                        mHandler.postDelayed(new Runnable(){
+                            @Override
+                            public void run(){
+                                mPlayerService.play();
+                                mIsPlaying = true;
+                            }
+                        }, 2500);
+                        mWasPlaying = false;
+                    }
+                }else{
+                    if(mIsPlaying){
+                        mPlayerService.pause();
+                        mIsPlaying = false;
+                        mWasPlaying = true;
+                    }
                 }
             }
         }
@@ -835,14 +837,12 @@ public class DashboardMusicFragment extends BaseFragment{
                 Log.d(TAG, CTAG + "Changing Music Mode");
                 // Tablet Mode if checked, else Radio
                 if(isChecked){
-                    Log.d(TAG, CTAG + "Is checked!");
                     // Send IBus Message
                     changeRadioMode(RadioModes.AUX);
                     mRadioLayout.setVisibility(View.GONE);
                     mTabletLayout.setVisibility(View.VISIBLE);
                     mMediaSessionSelector.setVisibility(View.VISIBLE);
                 }else{
-                    Log.d(TAG, CTAG + "Is NOT checked!");
                     if(mIsPlaying){
                         mPlayerService.pause();
                     }
