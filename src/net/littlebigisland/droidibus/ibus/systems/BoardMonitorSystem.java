@@ -36,15 +36,18 @@ public class BoardMonitorSystem extends IBusSystem{
         public void mapReceived(ArrayList<Byte> msg){
             currentMessage = msg;
             switch(currentMessage.get(3)){
-                case 0x4A: // Radio On/Off Status Message
+                case 0x4A:
+                    // Radio On/Off Status Message
                     // 68 04 F0 4A <data> <CRC>
-                    // I believe 0x00 is the broadcasted state when the radio is coming online?
-                    // Either way it's not something we want to catch as it'll throw off our states
-                    if(currentMessage.get(4) != (byte) 0x00){
-                        // 1 for on, 0 for off
-                        int radioStatus = (currentMessage.get(4) == (byte)0xFF) ? 1 : 0;
-                        triggerCallback("onUpdateRadioStatus", radioStatus);
+                    // Simple 1 and zero for on and off
+                    int radioStatus = 0;
+                    byte radStat = currentMessage.get(4);
+                    if(radStat == (byte)0xFF || radStat == (byte)0x90){
+                        radioStatus = 1;
+                    }else{
+                        radioStatus = 0;
                     }
+                    triggerCallback("onUpdateRadioStatus", radioStatus);
                     break;
                 case 0x38:
                     // IBus Message: 68 06 F0 38 00 00 00 A6
