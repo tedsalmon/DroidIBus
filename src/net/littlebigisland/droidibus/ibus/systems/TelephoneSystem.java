@@ -5,6 +5,7 @@ import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 
 import android.annotation.SuppressLint;
@@ -24,6 +25,21 @@ public class TelephoneSystem extends IBusSystem{
         @SuppressLint("UseSparseArrays") 
         private Map<Byte, Method> IBusNavigationMap = new HashMap<Byte, Method>();
         
+        private String bcdToIntString(String value){
+            return String.format(Locale.US, "%02d", Integer.parseInt(value));
+        }
+        
+        private double decimalMinsToDecimalDeg(String deg, String mins, String secs){
+            double degrees = Double.parseDouble(deg);
+            double minutes = Double.parseDouble(mins);
+            double seconds = Double.parseDouble(secs);
+            
+            double minSecsInDecimal = (((minutes * 60) + seconds) / 3600);
+            
+            return degrees+minSecsInDecimal;
+            
+        }
+        
         public void parseGPSData(){
             // Parse out coordinate data
             List<String> coordData = new ArrayList<String>();
@@ -37,22 +53,31 @@ public class TelephoneSystem extends IBusSystem{
                     )
                 );
             }
-            String latitudeNorthSouth = (String.format("%s", currentMessage.get(9)).charAt(1) == '0') ? "N" : "S";
-            String longitudeEastWest = (String.format("%s", currentMessage.get(14)).charAt(1) == '0') ? "E" : "W";
+
+            String latitudeNorthSouth = (
+                bcdToIntString(coordData.get(3)).charAt(1) == '0'
+            ) ? "N" : "S";
+            
+            String longitudeEastWest = (
+                bcdToIntString(coordData.get(8)).charAt(1) == '0'
+            ) ? "E" : "W";
+            
             triggerCallback("onUpdateGPSCoordinates",
                 String.format(
-                    "%s%s%s'%s\"%s %s%s%s'%s\"%s", 
+                    "%.4f%s%s %.4f%s%s", 
                     //Latitude
-                    coordData.get(0),
+                    decimalMinsToDecimalDeg(
+                        coordData.get(0), coordData.get(1), coordData.get(2)
+                    ),
                     (char) 0x00B0,
-                    (int) Math.round(Double.parseDouble(coordData.get(1)+coordData.get(2))),
-                    coordData.get(3).charAt(0),
                     latitudeNorthSouth,
                     //Longitude
-                    Integer.parseInt(coordData.get(4) + coordData.get(5)),
+                    decimalMinsToDecimalDeg(
+                        coordData.get(4) + coordData.get(5),
+                        coordData.get(6),
+                        coordData.get(7)
+                    ),
                     (char) 0x00B0,
-                    (int) Math.round(Double.parseDouble(coordData.get(6)+coordData.get(7))),
-                    coordData.get(8).charAt(0),
                     longitudeEastWest
                 )
             );
@@ -66,10 +91,9 @@ public class TelephoneSystem extends IBusSystem{
             
             // Parse out time data which is in UTC
             String gpsUTCTime = String.format(
-                    "%s:%s:%s",
-                    currentMessage.get(18),
-                    currentMessage.get(19),
-                    currentMessage.get(20)
+                "%s:%s",
+                bcdToIntString(bcdToStr(currentMessage.get(18))),
+                bcdToIntString(bcdToStr(currentMessage.get(19)))
             );
             
             triggerCallback("onUpdateGPSTime", gpsUTCTime);
