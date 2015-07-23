@@ -42,7 +42,7 @@ public class IBusSystem{
     
     /**
      * Abstract class for all defined callbacks
-     * TODO Mobe this to the message service instead?
+     * TODO Move this to the message service instead?
      */
     public static abstract class Callbacks{
     
