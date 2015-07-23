@@ -39,15 +39,16 @@ public class BoardMonitorSystem extends IBusSystem{
                 case 0x4A:
                     // Radio On/Off Status Message
                     // 68 04 F0 4A <data> <CRC>
+                    // Suspected states:
+                    // 0x00 == Off | 0xFF == Turning on
+                    // 0x90 == Radio on? | 0x5F == Loading?
                     // Simple 1 and zero for on and off
-                    int radioStatus = 0;
-                    byte radStat = currentMessage.get(4);
-                    if(radStat == (byte)0xFF || radStat == (byte)0x90){
-                        radioStatus = 1;
-                    }else{
-                        radioStatus = 0;
+                    byte radStat = (byte) currentMessage.get(4);
+                    if(radStat == (byte)0xFF || radStat == (byte)0x00){
+                        int radioStatus = (radStat == (byte)0xFF) ? 1 : 0;
+                        triggerCallback("onUpdateRadioStatus", radioStatus);
                     }
-                    triggerCallback("onUpdateRadioStatus", radioStatus);
+                    // Else it is a state we don't care about
                     break;
                 case 0x38:
                     // IBus Message: 68 06 F0 38 00 00 00 A6

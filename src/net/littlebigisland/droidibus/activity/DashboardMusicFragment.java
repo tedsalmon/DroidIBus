@@ -234,6 +234,7 @@ public class DashboardMusicFragment extends BaseFragment{
         @Override
         public void run(){
             boolean linkConn = mIBusService.getLinkState();
+            Log.d(TAG, "mRadioUpdater is running");
             while(!Thread.currentThread().isInterrupted()){
                 long timeNow = getTimeNow();
                 if(linkConn && (timeNow - mLastUpdate) >= mTimeout){
@@ -255,6 +256,7 @@ public class DashboardMusicFragment extends BaseFragment{
                     Log.e(TAG, CTAG + "mRadioUpdater InterruptedException");
                 }
             }
+            Log.d(TAG, "mRadioUpdater is returning");
             return;
         }
     };   
@@ -419,7 +421,7 @@ public class DashboardMusicFragment extends BaseFragment{
             if(status == 0){
                 sendIBusCommand(IBusCommand.Commands.BMToRadioPwrPress);
                 sendIBusCommandDelayed(
-                    IBusCommand.Commands.BMToRadioPwrRelease, 250
+                    IBusCommand.Commands.BMToRadioPwrRelease, 500
                 );
             }
         }
