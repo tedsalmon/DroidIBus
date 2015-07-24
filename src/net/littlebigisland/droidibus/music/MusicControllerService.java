@@ -10,9 +10,9 @@ package net.littlebigisland.droidibus.music;
  */
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 import android.content.ComponentName;
 import android.content.Context;
@@ -278,11 +278,12 @@ public class MusicControllerService extends NotificationListenerService implemen
         }
         
         // Remove Controllers that aren't active
-        Set<String> activeTokens = mMediaControllers.keySet();
-        for(String sToken: activeTokens){
+        Iterator<String> sessionTokens = mMediaControllers.keySet().iterator();
+        while(sessionTokens.hasNext()){
+            String sToken = sessionTokens.next();
             if(!currentSessions.contains(sToken)){
                 Log.d(TAG, CTAG + "Removing session token " + sToken);
-                mMediaControllers.remove(sToken);
+                sessionTokens.remove();
                 mMediaControllerSessionMap.values().remove(sToken);
             }
         }
