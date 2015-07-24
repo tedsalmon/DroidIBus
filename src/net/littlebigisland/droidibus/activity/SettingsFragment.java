@@ -157,9 +157,7 @@ public class SettingsFragment extends PreferenceFragment{
 	new OnSharedPreferenceChangeListener(){
     
 	@Override
-	public void onSharedPreferenceChanged(
-	    SharedPreferences sPrefs, String key
-	){
+	public void onSharedPreferenceChanged(SharedPreferences sPrefs, String key){
 	    String prefVal = null;
 	    switch(key){
 		case "obcDate":

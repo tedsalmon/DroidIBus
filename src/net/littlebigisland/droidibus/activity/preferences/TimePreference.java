@@ -1,6 +1,7 @@
 package net.littlebigisland.droidibus.activity.preferences;
 
-import android.annotation.SuppressLint;
+import java.util.Locale;
+
 import android.content.Context;
 import android.preference.DialogPreference;
 import android.util.AttributeSet;
@@ -51,15 +52,16 @@ public class TimePreference extends DialogPreference{
         picker.setCurrentMinute(lastMinute);
     }
 
-    @SuppressLint("DefaultLocale") // Dumb TODO FIX
     @Override
     protected void onDialogClosed(boolean positiveResult){
         super.onDialogClosed(positiveResult);
-        if (positiveResult){
-            lastHour=picker.getCurrentHour();
-            lastMinute=picker.getCurrentMinute();
-            String currentTime = String.format("%02d:%02d", lastHour, lastMinute);
-            if (callChangeListener(currentTime)){
+        if(positiveResult){
+            lastHour = picker.getCurrentHour();
+            lastMinute = picker.getCurrentMinute();
+            String currentTime = String.format(
+                Locale.US, "%02d:%02d", lastHour, lastMinute
+            );
+            if(callChangeListener(currentTime)){
                 persistString(currentTime);
             }
         }

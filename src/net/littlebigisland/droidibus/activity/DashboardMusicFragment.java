@@ -17,7 +17,6 @@ import net.littlebigisland.droidibus.ibus.IBusCommand;
 import net.littlebigisland.droidibus.ibus.IBusMessageService;
 import net.littlebigisland.droidibus.ibus.IBusSystem;
 import net.littlebigisland.droidibus.music.MusicControllerService;
-import android.annotation.SuppressLint;
 import android.content.ComponentName;
 import android.content.ServiceConnection;
 import android.content.SharedPreferences;
@@ -333,11 +332,11 @@ public class DashboardMusicFragment extends BaseFragment{
         }
 
         @Override
-        public void onUpdateRadioStereoIndicator(final String stereoIndicator){
+        public void onUpdateRadioStereoIndicator(final String stIndicator){
             if(mRadioLayout.getVisibility() == View.VISIBLE){
                 mLastRadioStatus = getTimeNow();
-                int visibility = (stereoIndicator.equals("")) ? View.GONE : View.VISIBLE;
-                mStereoField.setVisibility(visibility);
+                int vis = (stIndicator.equals("")) ? View.GONE : View.VISIBLE;
+                mStereoField.setVisibility(vis);
             }
         }
 
@@ -345,8 +344,8 @@ public class DashboardMusicFragment extends BaseFragment{
         public void onUpdateRadioRDSIndicator(final String rdsIndicator){
             mLastRadioStatus = getTimeNow();
             if(mRadioLayout.getVisibility() == View.VISIBLE){
-                int visibility = (rdsIndicator.equals("")) ? View.GONE : View.VISIBLE;
-                mRDSField.setVisibility(visibility);
+                int vis = (rdsIndicator.equals("")) ? View.GONE : View.VISIBLE;
+                mRDSField.setVisibility(vis);
             }
         }
 
@@ -447,52 +446,55 @@ public class DashboardMusicFragment extends BaseFragment{
         @Override
         public void onLightStatus(int lightStatus){
             if(mSettings.getBoolean("nightColorsWithInterior", false)){
-                int color = (lightStatus == 1) ? R.color.nightColor : R.color.dayColor;
-                // Only change the color if it's different
-                if(color != mCurrentTextColor){
-                    mCurrentTextColor = color;
-                    changeTextColors(mRadioLayout, color);
-                }
+                return;
+            }
+            int color = (lightStatus == 1) ? R.color.nightColor : R.color.dayColor;
+            // Only change the color if it's different
+            if(color != mCurrentTextColor){
+                mCurrentTextColor = color;
+                changeTextColors(mRadioLayout, color);
             }
         }
 
     };
     
     private void changeRadioMode(final RadioModes desiredMode){
-        if(mRadioType == RadioTypes.BM53 && mIBusService.getLinkState()){
-            mRadioModeSatisfied = false;
-            mThreadExecutor.execute(new Runnable(){
-                
-                @Override
-                public void run(){
-                    while(desiredMode != mRadioMode && !mRadioModeSatisfied){
-                        Log.d(TAG, 
-                            String.format(
-                                CTAG + "Radio Mode: %s -> %s", mRadioMode.toString(),
-                                desiredMode.toString()
-                            )
-                        );
-                        sendIBusCommand(
-                            IBusCommand.Commands.BMToRadioModePress
-                        );
-                        sendIBusCommandDelayed(
-                            IBusCommand.Commands.BMToRadioModeRelease, 250
-                        );
-                        try{
-                            Thread.sleep(1000);
-                        }catch (InterruptedException e){
-                            Log.e(TAG, CTAG + "mModeChanger InterruptedException");
-                        }
-                        if(desiredMode == mRadioMode){
-                            mRadioModeSatisfied = true;
-                        }
-                    }
-                    mRadioModeSatisfied = true;
-                    return;
-                }
-
-            });
+        if(mRadioType != RadioTypes.BM53 || !mIBusService.getLinkState()){
+            return;
         }
+        mRadioModeSatisfied = false;
+        mThreadExecutor.execute(new Runnable(){
+            
+            @Override
+            public void run(){
+                while(desiredMode != mRadioMode && !mRadioModeSatisfied){
+                    Log.d(TAG, 
+                        String.format(
+                            CTAG + "Radio Mode: Current %s -> Desired %s", 
+                            mRadioMode.toString(),
+                            desiredMode.toString()
+                        )
+                    );
+                    sendIBusCommand(
+                        IBusCommand.Commands.BMToRadioModePress
+                    );
+                    sendIBusCommandDelayed(
+                        IBusCommand.Commands.BMToRadioModeRelease, 250
+                    );
+                    try{
+                        Thread.sleep(1000);
+                    }catch (InterruptedException e){
+                        Log.e(TAG, CTAG + "mModeChanger InterruptedException");
+                    }
+                    if(desiredMode == mRadioMode){
+                        mRadioModeSatisfied = true;
+                    }
+                }
+                mRadioModeSatisfied = true;
+                return;
+            }
+
+        });
     }  
     
     /**
@@ -820,13 +822,13 @@ public class DashboardMusicFragment extends BaseFragment{
 
         // Register Button actions
         if(mRadioType == RadioTypes.BM53){
-            btnVolUp.setTag(IBusCommand.Commands.BMToRadioVolumeUp.name());
-            btnVolDown.setTag(IBusCommand.Commands.BMToRadioVolumeDown.name());
+            btnVolUp.setTag(IBusCommand.Commands.BMToRadioVolumeUp);
+            btnVolDown.setTag(IBusCommand.Commands.BMToRadioVolumeDown);
             btnPrev.setTag("BMToRadioTuneRev");
             btnNext.setTag("BMToRadioTuneFwd");
         }else{
-            btnVolUp.setTag(IBusCommand.Commands.SWToRadioVolumeUp.name());
-            btnVolDown.setTag(IBusCommand.Commands.SWToRadioVolumeDown.name());
+            btnVolUp.setTag(IBusCommand.Commands.SWToRadioVolumeUp);
+            btnVolDown.setTag(IBusCommand.Commands.SWToRadioVolumeDown);
             btnPrev.setTag("SWToRadioTuneRev");
             btnNext.setTag("SWToRadioTuneFwd");
         }
@@ -860,18 +862,31 @@ public class DashboardMusicFragment extends BaseFragment{
         OnClickListener clickSingleAction = new OnClickListener() {
             @Override
             public void onClick(View v) {
-                sendIBusCommand(IBusCommand.Commands.valueOf(v.getTag().toString()));
+                sendIBusCommand((IBusCommand.Commands) v.getTag());
             }
         };
         
-        OnTouchListener touchAction = new OnTouchListener() {
-            @SuppressLint("ClickableViewAccessibility")
+        OnTouchListener touchAction = new OnTouchListener(){
+            
             @Override
-            public boolean onTouch(View v, MotionEvent event) {
-                String action = (event.getAction() == MotionEvent.ACTION_DOWN) ? "Press" : "Release";
-                sendIBusCommand(
-                    IBusCommand.Commands.valueOf(v.getTag().toString() + action)
-                );
+            public boolean onTouch(View v, MotionEvent event){
+                IBusCommand.Commands cmd = null;
+                switch(event.getAction()){
+                    case MotionEvent.ACTION_DOWN:
+                       cmd = IBusCommand.Commands.valueOf(
+                           v.getTag().toString() + "Press"
+                       );
+                       break;
+                    case MotionEvent.ACTION_UP:
+                        cmd = IBusCommand.Commands.valueOf(
+                            v.getTag().toString() + "Release"
+                        );
+                        break;
+                }
+                if(cmd != null){
+                    sendIBusCommand(cmd);
+                }
+                v.performClick();
                 return false;
             }
         };

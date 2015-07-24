@@ -5,6 +5,8 @@ package net.littlebigisland.droidibus.activity;
  * @author Ted <tass2001@gmail.com>
  * @package net.littlebigisland.droidibus.activity
  */
+import java.util.HashMap;
+
 import net.littlebigisland.droidibus.R;
 import net.littlebigisland.droidibus.ibus.IBusCommand;
 import net.littlebigisland.droidibus.ibus.IBusMessageService;
@@ -28,7 +30,10 @@ import android.widget.TextView;
 public class DashboardStatsFragment extends BaseFragment{
     
     protected Handler mHandler = new Handler();
+    
     protected SharedPreferences mSettings = null;
+    
+    HashMap<String,String> mIKEIdentifiers = new HashMap<String,String>();
     
     // Views in the Activity
     protected RelativeLayout mDashboardLayout;
@@ -375,33 +380,25 @@ public class DashboardStatsFragment extends BaseFragment{
 
         // Set the long press of values for IKE resets
         OnLongClickListener valueResetter = new OnLongClickListener(){
+            
             @Override
             public boolean onLongClick(View v){
-		String tagStr = v.getTag().toString();
-		IBusCommand.Commands action = IBusCommand.Commands.valueOf(
-		    tagStr
-		);
-                switch(action){
-                    case BMToIKEResetFuel1:
-                        showToast("Resetting Fuel 1 Value");
-                        break;
-                    case BMToIKEResetFuel2:
-                        showToast("Resetting Fuel 2 Value");
-                        break;
-                    case BMToIKEResetAvgSpeed:
-                        showToast("Resetting Average Speed Value");
-                        break;
-                    default:
-                            break;
-                }
-                sendIBusCommand(action);
+		IBusCommand.Commands cmd = (IBusCommand.Commands) v.getTag();
+		String cmdType = mIKEIdentifiers.get(cmd.toString());
+		showToast(String.format("Resetting %s Value", cmdType));
+                sendIBusCommand(cmd);
                 return true;
             }
+            
         };
         
-        mFuel1Field.setTag(IBusCommand.Commands.BMToIKEResetFuel1.name());
-        mFuel2Field.setTag(IBusCommand.Commands.BMToIKEResetFuel1.name());
-        mAvgSpeedField.setTag(IBusCommand.Commands.BMToIKEResetAvgSpeed.name());
+        mFuel1Field.setTag(IBusCommand.Commands.BMToIKEResetFuel1);
+        mFuel2Field.setTag(IBusCommand.Commands.BMToIKEResetFuel2);
+        mAvgSpeedField.setTag(IBusCommand.Commands.BMToIKEResetAvgSpeed);
+
+        mIKEIdentifiers.put("BMToIKEResetFuel1", "Fuel 1");
+        mIKEIdentifiers.put("BMToIKEResetFuel2", "Fuel 2");
+        mIKEIdentifiers.put("BMToIKEResetFuel2", "Average Speed");
 
         mFuel1Field.setOnLongClickListener(valueResetter);
         mFuel2Field.setOnLongClickListener(valueResetter);
