@@ -14,7 +14,7 @@ public class BroadcastSystem extends IBusSystem{
         private final byte mOBCData = 0x24;
         /**
          * Handle OBC messages sent from IKE
-         * IBus Message: 80 0C FF 24 <System> 00 32 31 3A 31 30 20 20 6E 
+         * IBus Message: 80 0C FF 24 <System> 00 <Data> <CRC>
          */
         private void OBCData(){
             // Minus two because the array starts at zero
@@ -95,9 +95,9 @@ public class BroadcastSystem extends IBusSystem{
         
         public void mapReceived(ArrayList<Byte> msg){
             currentMessage = msg;
-            byte operation = msg.get(3);
-            if(operation == mOBCData)
+            if(msg.get(3) == mOBCData){
                 OBCData();
+            }
         }
         
     }
