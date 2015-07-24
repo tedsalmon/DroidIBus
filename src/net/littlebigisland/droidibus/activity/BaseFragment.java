@@ -96,6 +96,26 @@ public class BaseFragment extends Fragment{
     }
     
     /**
+     * Get the IBus link state - Useful to check if we can write to the bus
+     * @return boolean IBus link state
+     */
+    public boolean getIBusLinkState(){
+        if(mIBusConnected){
+            if(mIBusService != null){
+                return mIBusService.getLinkState();
+            }else{
+                // This shouldn't happen!
+                Log.e(TAG, CTAG + "mIBusService is null!");
+                showToast(
+                    "DroidIBus has encountered an IBus connection error and must stop"
+                );
+                getActivity().finish();
+            }
+        }
+        return false;
+    }
+    
+    /**
      * Wrapper that returns the time in milliseconds
      * @return Time in Miliseconds from Calendar Module
      */
@@ -168,7 +188,7 @@ public class BaseFragment extends Fragment{
     public void sendIBusCommand(
         final IBusCommand.Commands cmd, final Object... args
     ){
-        if(mIBusConnected && mIBusService.getLinkState()){
+        if(getIBusLinkState()){
             mIBusService.sendCommand(new IBusCommand(cmd, args));
         }
     }

@@ -217,6 +217,26 @@ public class SettingsFragment extends PreferenceFragment{
 	}
 	
     };
+    
+    /**
+     * Get the IBus link state - Useful to check if we can write to the bus
+     * @return boolean IBus link state
+     */
+    public boolean getIBusLinkState(){
+        if(mIBusConnected){
+            if(mIBusService != null){
+                return mIBusService.getLinkState();
+            }else{
+                // This shouldn't happen!
+                Log.e(TAG, CTAG + "mIBusService is null!");
+                showToast(
+                    "DroidIBus has encountered an IBus connection error and must stop"
+                );
+                getActivity().finish();
+            }
+        }
+        return false;
+    }
 
     @SuppressWarnings("rawtypes")
     private void serviceStarter(Class cls, ServiceConnection svcConn){
@@ -270,7 +290,7 @@ public class SettingsFragment extends PreferenceFragment{
     private void sendIBusCommand(
         final IBusCommand.Commands cmd, final Object... args
     ){
-        if(mIBusConnected && mIBusService.getLinkState()){
+        if(getIBusLinkState()){
             mIBusService.sendCommand(new IBusCommand(cmd, args));
         }
     }
