@@ -60,6 +60,12 @@ public class GFXNavigationSystem extends IBusSystem{
         private String decodeData(){
             // Radio RDS starts 6 bytes in, metadata at 7
             int startByte = (currentMessage.get(3) == stationText) ? 6 : 7;
+            // Remove control characters - Anything under 0x20 matches
+            for(int i = startByte; i < currentMessage.size() - 2; i++){
+                if(currentMessage.get(i) < (byte)0x20){
+                    currentMessage.remove(i);
+                }
+            }
             // Skip the CRC
             int endByte = currentMessage.size() - 2;
             
