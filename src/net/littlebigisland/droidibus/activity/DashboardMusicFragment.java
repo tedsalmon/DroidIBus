@@ -233,11 +233,10 @@ public class DashboardMusicFragment extends BaseFragment{
         
         @Override
         public void run(){
-            boolean linkConn = mIBusService.getLinkState();
             Log.d(TAG, "mRadioUpdater is running");
             while(!Thread.currentThread().isInterrupted()){
                 long timeNow = getTimeNow();
-                if(linkConn && (timeNow - mLastUpdate) >= mTimeout){
+                if(getIBusLinkState() && (timeNow - mLastUpdate) >= mTimeout){
                     mLastUpdate = timeNow;
                     sendIBusCommand(IBusCommand.Commands.BMToRadioGetStatus);
                     long statusDiff = timeNow - mLastRadioStatus;
@@ -459,7 +458,7 @@ public class DashboardMusicFragment extends BaseFragment{
     };
     
     private void changeRadioMode(final RadioModes desiredMode){
-        if(mRadioType == RadioTypes.BM53 && mIBusService.getLinkState()){
+        if(mRadioType == RadioTypes.BM53 && getIBusLinkState()){
             mRadioModeSatisfied = false;
             mThreadExecutor.execute(new Runnable(){
                 
