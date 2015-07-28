@@ -158,10 +158,12 @@ public class DashboardMusicFragment extends BaseFragment{
             
             MediaController playerRemote = mPlayerService.getMediaController();
             if(playerRemote != null){
-                Log.d(TAG, CTAG + "Calling getMetadata()");
                 setMediaMetadata(playerRemote.getMetadata());
-                Log.d(TAG, CTAG + "Calling getPlayBackState()");
-                setPlaybackState(playerRemote.getPlaybackState().getState());
+                
+                PlaybackState playbackState = playerRemote.getPlaybackState();
+                if(playbackState != null){
+                    setPlaybackState(playbackState.getState());
+                }
             }
             mThreadExecutor.execute(mSeekbarUpdater);
             
@@ -606,8 +608,8 @@ public class DashboardMusicFragment extends BaseFragment{
         }
     }
     
-    private void setPlaybackState(int state){
-        switch(state){
+    private void setPlaybackState(int playbackState){
+        switch(playbackState){
             case PlaybackState.STATE_PLAYING:
                 mIsPlaying = true;
                 mPlayerControlBtn.setImageResource(
