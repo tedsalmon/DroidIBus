@@ -47,70 +47,70 @@ public class IBusSystem{
     public static abstract class Callbacks{
     
         // Radio System
-        public void onUpdateRadioStation(final String text) {}
+        public void onUpdateRadioStation(final String text){}
         
-        public void onUpdateRadioBrodcasts(final String broadcastType) {}
+        public void onUpdateRadioBrodcasts(final String broadcastType){}
         
-        public void onUpdateRadioStereoIndicator(final String stereoIndicator) {}
+        public void onUpdateRadioStereoIndicator(final String stereoIndicator){}
         
-        public void onUpdateRadioRDSIndicator(final String rdsIndicator) {}
+        public void onUpdateRadioRDSIndicator(final String rdsIndicator){}
         
-        public void onUpdateRadioProgramIndicator(final String currentProgram) {}
+        public void onUpdateRadioProgramIndicator(final String currentProgram){}
         
-        public void onUpdateRadioStatus(final int status) {}
+        public void onUpdateRadioStatus(final int status){}
         
-        public void onRadioCDStatusRequest() {}
+        public void onRadioCDStatusRequest(){}
         
         // IKE System
-        public void onUpdateRange(final String range) {}
+        public void onUpdateRange(final String range){}
     
-        public void onUpdateOutdoorTemp(final String temp) {}
+        public void onUpdateOutdoorTemp(final String temp){}
     
-        public void onUpdateFuel1(final String mpg) {}
+        public void onUpdateFuel1(final String mpg){}
     
-        public void onUpdateFuel2(final String mpg) {}
+        public void onUpdateFuel2(final String mpg){}
     
-        public void onUpdateAvgSpeed(final String speed) {}
+        public void onUpdateAvgSpeed(final String speed){}
         
-        public void onUpdateTime(final String time) {}
+        public void onUpdateTime(final String time){}
         
-        public void onUpdateDate(final String date) {}
+        public void onUpdateDate(final String date){}
         
-        public void onUpdateSpeed(final int speed) {}
+        public void onUpdateSpeed(final int speed){}
     
-        public void onUpdateRPM(final int rpm) {}
+        public void onUpdateRPM(final int rpm){}
         
-        public void onUpdateCoolantTemp(final int temp) {}
+        public void onUpdateCoolantTemp(final int temp){}
         
-        public void onUpdateIgnitionSate(final int state) {}
+        public void onUpdateIgnitionSate(final int state){}
         
-        public void onUpdateUnits(final String units) {}
+        public void onUpdateUnits(final String units){}
         
         // Navigation System
-        public void onUpdateStreetLocation(final String streetName) {}
+        public void onUpdateStreetLocation(final String streetName){}
         
         public void onUpdateGPSAltitude(final int altitude) {}
         
-        public void onUpdateGPSCoordinates(final String gpsCoordinates) {}
+        public void onUpdateGPSCoordinates(final String gpsCoordinates){}
         
-        public void onUpdateGPSTime(final String time) {}
+        public void onUpdateGPSTime(final String time){}
         
-        public void onUpdateLocale(final String cityName) {}
+        public void onUpdateLocale(final String cityName){}
         
         // Steering Wheel System
-        public void onTrackFwd() {}
+        public void onTrackFwd(){}
         
-        public void onTrackPrev() {}
+        public void onTrackPrev(){}
         
-        public void onVoiceBtnPress() {}
+        public void onVoiceBtnPress(){}
         
-        public void onVoiceBtnHold() {}
+        public void onVoiceBtnHold(){}
         
         // Telephone System
-        public void onUpdateIKEDisplay(final String text) {}
+        public void onUpdateIKEDisplay(final String text){}
         
         // Light Control System
-        public void onLightStatus(final int lightStatus) {}
+        public void onLightStatus(final int lightStatus){}
     }
     
     // Simple class to hold our Receiver and Handler for each activity registered for callbacks
@@ -301,7 +301,7 @@ public class IBusSystem{
                         Log.d(TAG, String.format("Triggering '%s()'", callback.toString()));
                         Method cb = mCallbackReceiver.getClass().getMethod(callback);
                         cb.invoke(mCallbackReceiver);
-                    }catch (IllegalAccessException | IllegalArgumentException | InvocationTargetException | NoSuchMethodException e) {
+                    }catch(IllegalAccessException | IllegalArgumentException | InvocationTargetException | NoSuchMethodException e){
                         e.printStackTrace();
                     }
                 }
@@ -328,7 +328,7 @@ public class IBusSystem{
                         Log.d(TAG, String.format("Triggering '%s()' with value '%s'", callback.toString(), value));
                         Method cb = mCallbackReceiver.getClass().getMethod(callback, String.class);
                         cb.invoke(mCallbackReceiver, value);
-                    }catch (IllegalAccessException | IllegalArgumentException | InvocationTargetException | NoSuchMethodException e) {
+                    }catch(IllegalAccessException | IllegalArgumentException | InvocationTargetException | NoSuchMethodException e){
                         e.printStackTrace();
                     }
                 }
@@ -355,7 +355,7 @@ public class IBusSystem{
                         Log.d(TAG, String.format("Triggering '%s()' with value '%s'", callback.toString(), value));
                         Method cb = mCallbackReceiver.getClass().getMethod(callback, int.class);
                         cb.invoke(mCallbackReceiver, value);
-                    }catch (IllegalAccessException | IllegalArgumentException | InvocationTargetException | NoSuchMethodException e) {
+                    }catch(IllegalAccessException | IllegalArgumentException | InvocationTargetException | NoSuchMethodException e){
                         e.printStackTrace();
                     }
                 }

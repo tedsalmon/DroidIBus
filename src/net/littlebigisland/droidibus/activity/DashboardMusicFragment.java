@@ -104,6 +104,7 @@ public class DashboardMusicFragment extends BaseFragment{
     
     private enum RadioModes{
         AUX,
+        TAPE,
         CD,
         Radio
     }
@@ -157,19 +158,18 @@ public class DashboardMusicFragment extends BaseFragment{
             
             MediaController playerRemote = mPlayerService.getMediaController();
             if(playerRemote != null){
-                Log.d(TAG, CTAG + "Calling getMetadata()");
                 setMediaMetadata(playerRemote.getMetadata());
-                Log.d(TAG, CTAG + "Calling getPlayBackState()");
                 setPlaybackState(playerRemote.getPlaybackState().getState());
             }
             mThreadExecutor.execute(mSeekbarUpdater);
-            
+
             mHandler.post(mUpdateAvailableControllers);
         }
 
         @Override
         public void onServiceDisconnected(ComponentName name){
             Log.d(TAG, CTAG + "MusicControllerService Disconnected");
+            mHandler.removeCallbacks(mUpdateAvailableControllers);
             mMediaPlayerConnected = false;
         }
 
@@ -290,38 +290,44 @@ public class DashboardMusicFragment extends BaseFragment{
         * @param text Text to set
         */
         @Override
-        public void onUpdateRadioStation(final String text){            
+        public void onUpdateRadioStation(final String text){
+            if(mRadioType != RadioTypes.BM53){
+                return;
+            }
             // If this is a BM53 unit, we should listen for
             // Updates to the station text
-            if(mRadioType == RadioTypes.BM53){
-                switch(text){
-                    case "TR 01":
-                    case "NO CD":
-                        mRadioMode = RadioModes.CD;
-                        break;
-                    case "AUX":
-                        mRadioMode = RadioModes.AUX;
-                        break;
-                    default:
-                        mRadioMode = RadioModes.Radio;
-                        break;
-                }
-                // Sync modes with the car
-                // Make sure we're not changing modes
-                if(mRadioModeSatisfied){
-                    int auxMode = mTabletLayout.getVisibility();
-                    if(mRadioMode == RadioModes.AUX && auxMode == View.GONE){
-                        Log.d(TAG, CTAG + "Toggle to radio");
-                        mBtnMusicMode.toggle();
-                    }
-                    if(mRadioMode != RadioModes.AUX && auxMode == View.VISIBLE){
-                        Log.d(TAG, CTAG + "Toggle to AUX");
-                        mBtnMusicMode.toggle();
-                    }
-                }
-                mLastRadioStatus = getTimeNow();
-                mStationText.setText(text);
+            switch(text){
+                case "NO CD":
+                case "CD 1-04":
+                case "TR 01":
+                    mRadioMode = RadioModes.CD;
+                    break;
+                case "TAPE A":
+                case "TAPE B":
+                    mRadioMode = RadioModes.TAPE;
+                    break;
+                case "AUX":
+                    mRadioMode = RadioModes.AUX;
+                    break;
+                default:
+                    mRadioMode = RadioModes.Radio;
+                    break;
             }
+            // Sync modes with the car
+            // Make sure we're not changing modes
+            if(mRadioModeSatisfied){
+                int auxMode = mTabletLayout.getVisibility();
+                if(mRadioMode == RadioModes.AUX && auxMode == View.GONE){
+                    Log.d(TAG, CTAG + "Toggle to radio");
+                    mBtnMusicMode.toggle();
+                }
+                if(mRadioMode != RadioModes.AUX && auxMode == View.VISIBLE){
+                    Log.d(TAG, CTAG + "Toggle to AUX");
+                    mBtnMusicMode.toggle();
+                }
+            }
+            mLastRadioStatus = getTimeNow();
+            mStationText.setText(text);
         }
 		
     	@Override

@@ -45,8 +45,7 @@ import android.util.Log;
 
 public class IBusMessageService extends IOIOService{
     
-    private final static String TAG = "DroidIBus";
-    private final static String CTAG = "IBusMessageService: ";
+    private final static String TAG = "DroidIBus::IBusMessageService";
     
     private final IBinder mBinder = new IOIOBinder();
     private ArrayList<IBusCommand> mCommandQueue = new ArrayList<IBusCommand>();
@@ -73,8 +72,8 @@ public class IBusMessageService extends IOIOService{
      * @see ioio.lib.util.android.IOIOService#createIOIOLooper()
      */
     @Override
-    protected IOIOLooper createIOIOLooper() {
-        return new BaseIOIOLooper() {
+    protected IOIOLooper createIOIOLooper(){
+        return new BaseIOIOLooper(){
             
             private Uart IBusConn;
             private InputStream busIn;
@@ -84,14 +83,13 @@ public class IBusMessageService extends IOIOService{
             private DigitalOutput faultPin;
             private DigitalOutput chipSelectPin;
             
-            private int IBusRXPinId = 10;
-            private int IBusTXPinId = 13;
-            private int chipSelectPinId = 11;
-            private int faultPinId = 12;
+            private static final int IBUS_RX_PIN = 10;
+            private static final int IBUS_TX_PIN = 13;
+            private static final int IBUS_CS_PIN = 11;
+            private static final int IBUS_ER_PIN = 12;
             
             private int msgLength = 0;
             
-            private Calendar time;
             private long lastRead;
             private long lastSend;
 
@@ -110,25 +108,24 @@ public class IBusMessageService extends IOIOService{
             protected void setup() throws ConnectionLostException, InterruptedException {
                 Log.d(TAG, "Running IOIO Setup");
                 IBusConn = ioio_.openUart(
-                    IBusRXPinId, IBusTXPinId, 9600, Uart.Parity.EVEN, Uart.StopBits.ONE
+                    IBUS_RX_PIN, IBUS_TX_PIN, 9600, Uart.Parity.EVEN, Uart.StopBits.ONE
                 );
                 statusLED = ioio_.openDigitalOutput(IOIO.LED_PIN, true);
                 /* Set these HIGH per the MCP2004 data sheet. 
-                 * Not required so long as you put a 270ohm resistor from 5V to pin 2 */
-                chipSelectPin = ioio_.openDigitalOutput(chipSelectPinId, true);
+                 * Not required so long as you put a 10k 
+                 * resistor from 3.3V to pin 2 */
+                chipSelectPin = ioio_.openDigitalOutput(IBUS_CS_PIN, true);
                 chipSelectPin.write(true);
-                faultPin = ioio_.openDigitalOutput(faultPinId, true);
+                
+                faultPin = ioio_.openDigitalOutput(IBUS_ER_PIN, true);
                 faultPin.write(true);
                 
                 busIn = IBusConn.getInputStream();
                 busOut = IBusConn.getOutputStream();
                 
-                // Timeout stuff 
-                time = Calendar.getInstance();
-                lastRead = time.getTimeInMillis();
-                // Add 250ms so that we don't spam the buffer
-                // when the view starts asking IKE for data 
-                lastSend = time.getTimeInMillis() + 250;
+                lastRead = getTime();
+                // Add 250ms to prevent bus spam 
+                lastSend = getTime() + 250;
                 mIsIOIOConnected = true;
             }
             
@@ -142,45 +139,44 @@ public class IBusMessageService extends IOIOService{
             @Override
             public void loop() throws ConnectionLostException, InterruptedException{
                 // Timeout the buffer if we don't get data for 75ms
-                long timeNow = Calendar.getInstance().getTimeInMillis();
-                if (((timeNow - lastRead) > 75) && readBuffer.size() > 2) {
-                    Log.d(
-                        TAG, 
-                        String.format(
-                            "Clearing buffer of < %s > due to timeout",
-                            formatBytes(readBuffer)
-                        )
-                    );
+                if ((getTime() - lastRead) > 75){
+                    Log.d(TAG, "Buffer Timeout: " + formatBytes(readBuffer));
                     readBuffer.clear();
                 }
                 try {
-                    /* Handle incoming IBus data.
-                     * Read incoming bytes into readBuffer.
-                     * Skip if there's nothing to read.
-                     */
-                    if (busIn.available() > 0) {
+                    /* Read incoming bytes into readBuffer or skip if empty */
+                    if(busIn.available() > 0){
                         statusLED.write(true);
-                        lastRead = Calendar.getInstance().getTimeInMillis();
+                        lastRead = getTime();
                         readBuffer.add((byte) busIn.read());
                         /* Set message size to a large number (256) if we haven't gotten the message
                          * length from the second byte of the IBus Message, else set message length to 
                          * the length provided by IBus.
                          */
                         if(readBuffer.size() == 1){
-                            msgLength = 256;
+                            msgLength = 128;
                         }else if(readBuffer.size() == 2){
                             msgLength = (int) readBuffer.get(1);
                         }
                         if(msgLength == 0){
-                            Log.e(TAG, CTAG + "Got Buffer size of 0!");
+                            Log.e(TAG, "Invalid buffer size: 0");
+                        }else{
+                            if(readBuffer.size() > (msgLength + 2)){
+                                Log.e(TAG, 
+                                    "Buffer larger than message: " + 
+                                    formatBytes(readBuffer)
+                                );
+                                readBuffer.clear();
+                            }
                         }
-                        // Read until readBuffer contains msgLength plus two more bytes for the full message
-                        if (readBuffer.size() == msgLength + 2) {
+                        // Read until buffer contains message length plus the
+                        // length of the message
+                        if(readBuffer.size() == msgLength + 2){
                             // Make sure the message checksum checks out and that it's at least 3 bytes in length
                             // otherwise it's invalid and should be discarded. 0x00 0x00 will pass a XOR
                             // and the prior test BUT is NOT valid and shouldn't be processed.
                             if(checksumMessage(readBuffer) && readBuffer.size() >= 3) {
-                                Log.d(TAG, CTAG + String.format(
+                                Log.d(TAG, String.format(
                                     "Received Message (%s -> %s): %s",
                                     mDeviceLookup.get(readBuffer.get(0)),
                                     mDeviceLookup.get(readBuffer.get(2)),
@@ -189,10 +185,7 @@ public class IBusMessageService extends IOIOService{
                                 handleMessage(readBuffer);
                             }else{
                                 Log.d(
-                                    TAG,
-                                    String.format(
-                                        CTAG + "Failed checksum or incomplete message < %s >", formatBytes(readBuffer)
-                                    )
+                                    TAG, "Message checksum failure: " + formatBytes(readBuffer)
                                 );
                             }
                             readBuffer.clear();
@@ -201,7 +194,7 @@ public class IBusMessageService extends IOIOService{
                     }else if(mCommandQueue.size() > 0){
                         statusLED.write(true);
                         // Wait at least 100ms between messages and then write out to the bus to avoid collisions
-                        if ((timeNow - lastSend) > 100){
+                        if ((getTime() - lastSend) > 100){
                             // Pop out the command from the Array
                             IBusCommand command = mCommandQueue.get(0);
                             // Get the command type enum
@@ -222,8 +215,7 @@ public class IBusMessageService extends IOIOService{
                                     outboundMsg = (byte[]) requestedMethod.invoke(clsInstance, cmdArgs);
                                 }
                             }catch(IllegalAccessException | IllegalArgumentException | InvocationTargetException | NoSuchMethodException e){
-                                Log.d(TAG, CTAG + "Error invoking method in IBus outbound queue: " + e.toString() + " " + e.getMessage());
-                                e.printStackTrace();
+                                Log.e(TAG, "Error invoking method in IBus outbound queue: " + e.toString() + " " + e.getMessage());
                             }
                             // Write the message out to the bus byte by byte
                             String out = String.format("Sending %s Command out: ", cmdType.toString());
@@ -231,14 +223,14 @@ public class IBusMessageService extends IOIOService{
                                 out = String.format("%s %02X", out, outboundMsg[i]);
                                 busOut.write(outboundMsg[i]);
                             }
-                            Log.d(TAG, CTAG + out);
+                            Log.d(TAG, out);
                             mCommandQueue.remove(0);
-                            lastSend = Calendar.getInstance().getTimeInMillis();
+                            lastSend = getTime();
                         }
                         statusLED.write(false);
                     }
                 }catch(IOException e){
-                    Log.e(TAG, String.format("IOIO IOException [%s] in IBusService.loop()", e.getMessage()));
+                    Log.e(TAG, String.format("IOIO IOException [%s]", e.getMessage()));
                 }
                 Thread.sleep(2);
             }
@@ -271,6 +263,10 @@ public class IBusMessageService extends IOIOService{
                     data = String.format("%s %02X ", data, msgBuffer.get(i));
                 }
                 return data;
+            }
+            
+            private long getTime(){
+                return Calendar.getInstance().getTimeInMillis();
             }
                 
             /**
