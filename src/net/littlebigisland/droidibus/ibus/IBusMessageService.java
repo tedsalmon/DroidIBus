@@ -20,6 +20,7 @@ import java.util.Map;
 
 import net.littlebigisland.droidibus.ibus.systems.BoardMonitorSystem;
 import net.littlebigisland.droidibus.ibus.systems.BroadcastSystem;
+import net.littlebigisland.droidibus.ibus.systems.FrontDisplay;
 import net.littlebigisland.droidibus.ibus.systems.GlobalBroadcastSystem;
 import net.littlebigisland.droidibus.ibus.systems.GFXNavigationSystem;
 import net.littlebigisland.droidibus.ibus.systems.IKESystem;
@@ -346,6 +347,10 @@ public class IBusMessageService extends IOIOService{
             IBusSysMap.put(
                 IBusSystem.Devices.Broadcast.toByte(),
                 new BroadcastSystem()
+            );
+            IBusSysMap.put(
+                IBusSystem.Devices.FrontDisplay.toByte(),
+                new FrontDisplay()
             );
             IBusSysMap.put(
                 IBusSystem.Devices.GFXNavigationDriver.toByte(),

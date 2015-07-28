@@ -232,11 +232,10 @@ public class DashboardMusicFragment extends BaseFragment{
         
         @Override
         public void run(){
-            boolean linkConn = mIBusService.getLinkState();
             Log.d(TAG, "mRadioUpdater is running");
             while(!Thread.currentThread().isInterrupted()){
                 long timeNow = getTimeNow();
-                if(linkConn && (timeNow - mLastUpdate) >= mTimeout){
+                if(getIBusLinkState() && (timeNow - mLastUpdate) >= mTimeout){
                     mLastUpdate = timeNow;
                     sendIBusCommand(IBusCommand.Commands.BMToRadioGetStatus);
                     long statusDiff = timeNow - mLastRadioStatus;
@@ -459,42 +458,40 @@ public class DashboardMusicFragment extends BaseFragment{
     };
     
     private void changeRadioMode(final RadioModes desiredMode){
-        if(mRadioType != RadioTypes.BM53 || !mIBusService.getLinkState()){
-            return;
-        }
-        mRadioModeSatisfied = false;
-        mThreadExecutor.execute(new Runnable(){
-            
-            @Override
-            public void run(){
-                while(desiredMode != mRadioMode && !mRadioModeSatisfied){
-                    Log.d(TAG, 
-                        String.format(
-                            CTAG + "Radio Mode: Current %s -> Desired %s", 
-                            mRadioMode.toString(),
-                            desiredMode.toString()
-                        )
-                    );
-                    sendIBusCommand(
-                        IBusCommand.Commands.BMToRadioModePress
-                    );
-                    sendIBusCommandDelayed(
-                        IBusCommand.Commands.BMToRadioModeRelease, 250
-                    );
-                    try{
-                        Thread.sleep(1000);
-                    }catch (InterruptedException e){
-                        Log.e(TAG, CTAG + "mModeChanger InterruptedException");
+        if(mRadioType == RadioTypes.BM53 && getIBusLinkState()){
+            mRadioModeSatisfied = false;
+            mThreadExecutor.execute(new Runnable(){
+                
+                @Override
+                public void run(){
+                    while(desiredMode != mRadioMode && !mRadioModeSatisfied){
+                        Log.d(TAG, 
+                            String.format(
+                                CTAG + "Radio Mode: %s -> %s", mRadioMode.toString(),
+                                desiredMode.toString()
+                            )
+                        );
+                        sendIBusCommand(
+                            IBusCommand.Commands.BMToRadioModePress
+                        );
+                        sendIBusCommandDelayed(
+                            IBusCommand.Commands.BMToRadioModeRelease, 250
+                        );
+                        try{
+                            Thread.sleep(1000);
+                        }catch (InterruptedException e){
+                            Log.e(TAG, CTAG + "mModeChanger InterruptedException");
+                        }
+                        if(desiredMode == mRadioMode){
+                            mRadioModeSatisfied = true;
+                        }
                     }
-                    if(desiredMode == mRadioMode){
-                        mRadioModeSatisfied = true;
-                    }
+                    mRadioModeSatisfied = true;
+                    return;
                 }
-                mRadioModeSatisfied = true;
-                return;
-            }
 
-        });
+            });
+        }
     }  
     
     /**

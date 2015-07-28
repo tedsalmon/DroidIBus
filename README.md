@@ -49,7 +49,7 @@ Right now I can read/write to the IBus through a [IOIO](https://github.com/ytai/
 
 [Here's a picture of my breadboard](http://i.imgur.com/GgRS2Hj.jpg)
 
-[Here is an archaic Fritzing design of the board](https://docs.google.com/file/d/0B_R-TsYhwbCcc2xtSU5VSWpKTUU)
+[Here is the basic Fritzing design of the board](https://docs.google.com/file/d/0B_R-TsYhwbCcc2xtSU5VSWpKTUU)
 
 ## Parts List
 
