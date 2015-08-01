@@ -60,9 +60,9 @@ public class IBusSystem{
         
         public void onRadioCDStatusRequest(){}
         
-        public void onScreenStateChange(final int state){}
+        public void onUpdateScreenState(final int state){}
         
-        public void onScreenItemUpdate(final int item, final int value){}
+        public void onUpdateToneLevels(int bass, int treb, int fade, int bal){}
         
         // IKE System
         public void onUpdateRange(final String range){}
@@ -375,6 +375,41 @@ public class IBusSystem{
                         Log.d(TAG, String.format("Triggering '%s()' with value '%s'", callback.toString(), value));
                         Method cb = mCallbackReceiver.getClass().getMethod(callback, int.class);
                         cb.invoke(mCallbackReceiver, value);
+                    }catch(IllegalAccessException | IllegalArgumentException | 
+                          InvocationTargetException | NoSuchMethodException e){
+                        Log.e(
+                            TAG, 
+                            String.format(
+                                "Error triggering callback: %s - %s",
+                                e.getClass().toString(), e.getMessage()
+                            )
+                        );
+                        e.printStackTrace();
+                    }
+                }
+            });
+        }
+    }
+    
+    public void triggerCallback(final String callback, final int valOne, 
+            final int valTwo, final int valThree, final int valFour){
+        for (String key : mRegisteredCallbacks.keySet()){
+            final CallbackHolder tempCallback = mRegisteredCallbacks.get(key);
+            final Handler mHandler = tempCallback.getHandler();
+            final Callbacks mCallbackReceiver = tempCallback.getReceiver();
+            mHandler.post(new Runnable(){
+                @Override
+                public void run(){
+                    try{
+                        Log.d(TAG, String.format(
+                            "Triggering '%s()' with valuees '%s, %s, %s, %s'",
+                            callback.toString(), valOne, valTwo, valThree, valFour
+                            )
+                        );
+                        Method cb = mCallbackReceiver.getClass().getMethod(
+                            callback, int.class, int.class, int.class, int.class
+                        );
+                        cb.invoke(mCallbackReceiver, valOne, valTwo, valThree, valFour);
                     }catch(IllegalAccessException | IllegalArgumentException | 
                           InvocationTargetException | NoSuchMethodException e){
                         Log.e(
