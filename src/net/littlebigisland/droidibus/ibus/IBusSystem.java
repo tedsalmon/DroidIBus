@@ -42,7 +42,6 @@ public class IBusSystem{
     
     /**
      * Abstract class for all defined callbacks
-     * TODO Move this to the message service instead?
      */
     public static abstract class Callbacks{
     
@@ -60,6 +59,10 @@ public class IBusSystem{
         public void onUpdateRadioStatus(final int status){}
         
         public void onRadioCDStatusRequest(){}
+        
+        public void onScreenStateChange(final int state){}
+        
+        public void onScreenItemUpdate(final int item, final int value){}
         
         // IKE System
         public void onUpdateRange(final String range){}
@@ -111,6 +114,7 @@ public class IBusSystem{
         
         // Light Control System
         public void onLightStatus(final int lightStatus){}
+
     }
     
     // Simple class to hold our Receiver and Handler for each activity registered for callbacks
@@ -274,7 +278,7 @@ public class IBusSystem{
      */
     public void registerCallback(Callbacks cb, Handler handler){
         mRegisteredCallbacks.put(cb.toString(), new CallbackHolder(cb, handler));
-        for (Object key : IBusDestinationSystems.keySet()){
+        for (Object key: IBusDestinationSystems.keySet()){
             IBusDestinationSystems.get(key).registerCallback(cb, handler);
         }
     }
@@ -296,12 +300,20 @@ public class IBusSystem{
             final Callbacks mCallbackReceiver = tempCallback.getReceiver();
             mHandler.post(new Runnable(){
                 @Override
-                public void run() {
+                public void run(){
                     try{
                         Log.d(TAG, String.format("Triggering '%s()'", callback.toString()));
                         Method cb = mCallbackReceiver.getClass().getMethod(callback);
                         cb.invoke(mCallbackReceiver);
-                    }catch(IllegalAccessException | IllegalArgumentException | InvocationTargetException | NoSuchMethodException e){
+                    }catch(IllegalAccessException | IllegalArgumentException |
+                           InvocationTargetException | NoSuchMethodException e){
+                        Log.e(
+                            TAG, 
+                            String.format(
+                                "Error triggering callback: %s - %s",
+                                e.getClass().toString(), e.getMessage()
+                            )
+                        );
                         e.printStackTrace();
                     }
                 }
@@ -328,7 +340,15 @@ public class IBusSystem{
                         Log.d(TAG, String.format("Triggering '%s()' with value '%s'", callback.toString(), value));
                         Method cb = mCallbackReceiver.getClass().getMethod(callback, String.class);
                         cb.invoke(mCallbackReceiver, value);
-                    }catch(IllegalAccessException | IllegalArgumentException | InvocationTargetException | NoSuchMethodException e){
+                    }catch(IllegalAccessException | IllegalArgumentException | 
+                          InvocationTargetException | NoSuchMethodException e){
+                        Log.e(
+                            TAG, 
+                            String.format(
+                                "Error triggering callback: %s - %s",
+                                e.getClass().toString(), e.getMessage()
+                            )
+                        );
                         e.printStackTrace();
                     }
                 }
@@ -350,12 +370,20 @@ public class IBusSystem{
             final Callbacks mCallbackReceiver = tempCallback.getReceiver();
             mHandler.post(new Runnable(){
                 @Override
-                public void run() {
+                public void run(){
                     try{
                         Log.d(TAG, String.format("Triggering '%s()' with value '%s'", callback.toString(), value));
                         Method cb = mCallbackReceiver.getClass().getMethod(callback, int.class);
                         cb.invoke(mCallbackReceiver, value);
-                    }catch(IllegalAccessException | IllegalArgumentException | InvocationTargetException | NoSuchMethodException e){
+                    }catch(IllegalAccessException | IllegalArgumentException | 
+                          InvocationTargetException | NoSuchMethodException e){
+                        Log.e(
+                            TAG, 
+                            String.format(
+                                "Error triggering callback: %s - %s",
+                                e.getClass().toString(), e.getMessage()
+                            )
+                        );
                         e.printStackTrace();
                     }
                 }

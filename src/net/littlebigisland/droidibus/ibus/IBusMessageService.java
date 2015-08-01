@@ -42,34 +42,32 @@ import android.os.Handler;
 import android.os.IBinder;
 import android.util.Log;
 
-
+@SuppressLint("UseSparseArrays")
 public class IBusMessageService extends IOIOService{
     
     private final static String TAG = "DroidIBus::IBusMessageService";
     
     private final IBinder mBinder = new IOIOBinder();
     private ArrayList<IBusCommand> mCommandQueue = new ArrayList<IBusCommand>();
-    @SuppressLint("UseSparseArrays")
+    
     private Map<Byte, IBusSystem> IBusSysMap = new HashMap<Byte, IBusSystem>();
-    @SuppressLint("UseSparseArrays")
+
     private Map<Byte, String> mDeviceLookup = new HashMap<Byte, String>();
     private boolean mIsIOIOConnected = false;
     private int mClientsConnected = 0;
     
     
-    public class IOIOBinder extends Binder {
-        public IBusMessageService getService() {
+    public class IOIOBinder extends Binder{
+        public IBusMessageService getService(){
             return IBusMessageService.this;
         }
     }
     
     /**
-     * This is the thread on which all the IOIO activity happens. It will be run
-     * every time the application is resumed and aborted when it is paused. The
-     * method setup() will be called right after a connection with the IOIO has
-     * been established (which might happen several times!). Then, loop() will
-     * be called repetitively until the IOIO gets disconnected.
-     * @see ioio.lib.util.android.IOIOService#createIOIOLooper()
+     * This is the thread on which all the IOIO activity happens. The
+     * setup() method will be called right after a connection with the IOIO has
+     * been established, which might happen several times! After loop() will
+     * be called repetitively until the IOIO is disconnected.
      */
     @Override
     protected IOIOLooper createIOIOLooper(){
@@ -88,6 +86,15 @@ public class IBusMessageService extends IOIOService{
             private static final int IBUS_CS_PIN = 11;
             private static final int IBUS_ER_PIN = 12;
             
+            // Set the IBus message protocol byte indexes
+            private static final int MSG_SRC_IDX = 0;
+            private static final int MSG_LEN_IDX = 1;
+            private static final int MSG_DEST_IDX = 2;
+            
+            // Settings in milliseconds
+            private static final int BUFFER_TIMEOUT = 75;
+            private static final int SEND_WAIT = 100;
+
             private int msgLength = 0;
             
             private long lastRead;
@@ -97,18 +104,16 @@ public class IBusMessageService extends IOIOService{
             
             /**
              * Called every time a connection with IOIO has been established.
-             * Setup the connection to the IBus and bring up the CS/Fault Pins on the MCP2004
+             * Setup the connection to the IBus using the MCP2004
              * 
-             * @throws ConnectionLostException
-             *             When IOIO connection is lost.
-             * 
-             * @see ioio.lib.util.AbstractIOIOActivity.IOIOThread#setup()
+             * @throws ConnectionLostException When IOIO connection is lost.
              */
             @Override
-            protected void setup() throws ConnectionLostException, InterruptedException {
-                Log.d(TAG, "Running IOIO Setup");
+            protected void setup() throws ConnectionLostException, InterruptedException{
+                Log.d(TAG, "IOIO Setup");
                 IBusConn = ioio_.openUart(
-                    IBUS_RX_PIN, IBUS_TX_PIN, 9600, Uart.Parity.EVEN, Uart.StopBits.ONE
+                    IBUS_RX_PIN, IBUS_TX_PIN, 9600, 
+                    Uart.Parity.EVEN, Uart.StopBits.ONE
                 );
                 statusLED = ioio_.openDigitalOutput(IOIO.LED_PIN, true);
                 /* Set these HIGH per the MCP2004 data sheet. 
@@ -138,133 +143,165 @@ public class IBusMessageService extends IOIOService{
              */
             @Override
             public void loop() throws ConnectionLostException, InterruptedException{
-                // Timeout the buffer if we don't get data for 75ms
-                if ((getTime() - lastRead) > 75){
-                    Log.d(TAG, "Buffer Timeout: " + formatBytes(readBuffer));
+                long timeNow = getTime();
+                long lastCmdSent = timeNow - lastSend;
+                long lastCmdRead = timeNow - lastRead;
+                // Clear the buffer if we don't get data for 75ms
+                if(lastCmdRead >= BUFFER_TIMEOUT && !readBuffer.isEmpty()){
+                    logBufferError("Buffer Timeout", readBuffer);
                     readBuffer.clear();
                 }
-                try {
-                    /* Read incoming bytes into readBuffer or skip if empty */
+                try{
+                    // Read into buffer when bytes are available
                     if(busIn.available() > 0){
                         statusLED.write(true);
                         lastRead = getTime();
                         readBuffer.add((byte) busIn.read());
-                        /* Set message size to a large number (256) if we haven't gotten the message
-                         * length from the second byte of the IBus Message, else set message length to 
-                         * the length provided by IBus.
-                         */
-                        if(readBuffer.size() == 1){
-                            msgLength = 128;
-                        }else if(readBuffer.size() == 2){
-                            msgLength = (int) readBuffer.get(1);
-                        }
-                        if(msgLength == 0){
-                            Log.e(TAG, "Invalid buffer size: 0");
-                        }else{
-                            if(readBuffer.size() > (msgLength + 2)){
-                                Log.e(TAG, 
-                                    "Buffer larger than message: " + 
-                                    formatBytes(readBuffer)
-                                );
+
+                        if(readBuffer.size() > 1){
+                            if(readBuffer.size() == 2){
+                                msgLength = (int)readBuffer.get(MSG_LEN_IDX);
+                                if(msgLength <= 0){
+                                    Log.e(TAG, "Invalid buffer size: " + msgLength);
+                                    readBuffer.clear();
+                                }
+                            }
+                            if(readBuffer.size() > msgLength + 2){
+                                logBufferError("Buffer too large", readBuffer);
+                                readBuffer.clear();
+                            }
+                            // Read until buffer size equals the message length
+                            if(readBuffer.size() == msgLength + 2){
+                                handleMessage(readBuffer);
                                 readBuffer.clear();
                             }
                         }
-                        // Read until buffer contains message length plus the
-                        // length of the message
-                        if(readBuffer.size() == msgLength + 2){
-                            // Make sure the message checksum checks out and that it's at least 3 bytes in length
-                            // otherwise it's invalid and should be discarded. 0x00 0x00 will pass a XOR
-                            // and the prior test BUT is NOT valid and shouldn't be processed.
-                            if(checksumMessage(readBuffer) && readBuffer.size() >= 3) {
-                                Log.d(TAG, String.format(
-                                    "Received Message (%s -> %s): %s",
-                                    mDeviceLookup.get(readBuffer.get(0)),
-                                    mDeviceLookup.get(readBuffer.get(2)),
-                                    formatBytes(readBuffer)
-                                ));
-                                handleMessage(readBuffer);
-                            }else{
-                                Log.d(
-                                    TAG, "Message checksum failure: " + formatBytes(readBuffer)
-                                );
-                            }
-                            readBuffer.clear();
-                        }
                         statusLED.write(false);
-                    }else if(mCommandQueue.size() > 0){
+                    }else if(!mCommandQueue.isEmpty() && lastCmdSent > SEND_WAIT){
                         statusLED.write(true);
-                        // Wait at least 100ms between messages and then write out to the bus to avoid collisions
-                        if ((getTime() - lastSend) > 100){
-                            // Pop out the command from the Array
-                            IBusCommand command = mCommandQueue.get(0);
-                            // Get the command type enum
-                            IBusCommand.Commands cmdType = command.commandType;
-                            // Get the instance of the class which implements the method we're looking for
-                            IBusSystem clsInstance = IBusSysMap.get(
-                                cmdType.getSystem().toByte()
-                            );
-                            // Get the command Varargs to pass. Very possible that this is null and that's okay
-                            Object cmdArgs = command.commandArgs;
-                            byte[] outboundMsg = new byte[]{};
-                            try{
-                                if(cmdArgs == null){
-                                    Method requestedMethod = clsInstance.getClass().getMethod(cmdType.getMethodName());
-                                    outboundMsg = (byte[]) requestedMethod.invoke(clsInstance);
-                                }else{
-                                    Method requestedMethod = clsInstance.getClass().getMethod(cmdType.getMethodName(), Object[].class);
-                                    outboundMsg = (byte[]) requestedMethod.invoke(clsInstance, cmdArgs);
-                                }
-                            }catch(IllegalAccessException | IllegalArgumentException | InvocationTargetException | NoSuchMethodException e){
-                                Log.e(TAG, "Error invoking method in IBus outbound queue: " + e.toString() + " " + e.getMessage());
-                            }
-                            // Write the message out to the bus byte by byte
-                            String out = String.format("Sending %s Command out: ", cmdType.toString());
-                            for(int i = 0; i < outboundMsg.length; i++){
-                                out = String.format("%s %02X", out, outboundMsg[i]);
-                                busOut.write(outboundMsg[i]);
-                            }
-                            Log.d(TAG, out);
-                            mCommandQueue.remove(0);
-                            lastSend = getTime();
+                        // Pop out the command from the Array
+                        IBusCommand cmd = mCommandQueue.get(0);
+                        // Send the message out
+                        byte[] cmdBytes = genOutboundMessage(cmd);
+                        // Write the message out to the bus byte by byte
+                        for(byte cmdByte: cmdBytes){
+                            busOut.write(cmdByte);
                         }
+                        Log.d(TAG, 
+                            String.format(
+                                "Sending Command %s: %s",
+                                cmd.commandType.toString(),
+                                bytesToString(cmdBytes)
+                            )
+                        );
+                        mCommandQueue.remove(0);
+                        lastSend = getTime();
                         statusLED.write(false);
                     }
                 }catch(IOException e){
-                    Log.e(TAG, String.format("IOIO IOException [%s]", e.getMessage()));
+                    Log.e(
+                       TAG, String.format("Bus IOException: %s", e.getMessage())
+                    );
                 }
                 Thread.sleep(2);
             }
             
+            /**
+             * Converts an ArrayList of bytes into a String
+             * @param msgBuffer
+             * @return String octal representation of bytes
+             */
+            private String bytesToString(ArrayList<Byte> msgBuffer){
+                String data = "";
+                for(byte msgByte: msgBuffer){
+                    data += String.format("%02X ", msgByte);
+                }
+                return data;
+            }
+            
+            /**
+             * Converts a byte array into a String
+             * @param msgBuffer
+             * @return String octal representation of bytes
+             */
+            private String bytesToString(byte[] msgBuffer){
+                String data = "";
+                for(byte msgByte: msgBuffer){
+                    data += String.format("%02X ", msgByte);
+                }
+                return data;
+            }
                 
             /**
-             * Verify that the IBus Message is legitimate 
-             * by XORing all bytes if correct, the product 
-             * should be 0x00
+             * Verify that the IBus Message is not corrupt by 
+             * XORing all bytes if correct. The return should be 0x00
              * 
-             * @param ArrayList<byte> msgBuffer    The buffer containing all bytes in the Message
-             * @return boolean     true if the message isn't corrupt, otherwise false
+             * @param  msgBuffer  The buffer containing bytes
+             * @return true if the message isn't corrupt, otherwise false
              */
             private boolean checksumMessage(ArrayList<Byte> msgBuffer){
                 byte cksum = 0x00;
-                for(byte msg : msgBuffer){
+                for(byte msg: msgBuffer){
                     cksum = (byte) (cksum ^ msg);
                 }
                 return (cksum == 0x00) ? true : false;
             }
             
+            /**
+             * Called when IOIO disconnects
+             */
             @Override
             public void disconnected(){
+                Log.d(TAG, "IOIO Disconnect");
+                IBusConn.close();
                 mIsIOIOConnected = false;
             }
             
-            private String formatBytes(ArrayList<Byte> msgBuffer){
-                String data = "";
-                for(int i = 0; i < msgBuffer.size(); i++){
-                    data = String.format("%s %02X ", data, msgBuffer.get(i));
+            /**
+             * Generates bytes for the given message
+             * 
+             * @param command The IBusCommand object to create bytes for
+             * @return Array of bytes containing the message for the bus
+             */
+            private byte[] genOutboundMessage(IBusCommand command){
+                byte[] cmdBytes = new byte[]{};
+                // Get the command type enum
+                IBusCommand.Commands cmdType = command.commandType;
+                // Get the instance of the class which implements this method
+                IBusSystem clsInstance = IBusSysMap.get(
+                    cmdType.getSystem().toByte()
+                );
+                // Get the command arguments
+                Object cmdArgs = command.commandArgs;
+                try{
+                    Class<? extends IBusSystem> cls = clsInstance.getClass();
+                    String methodName = cmdType.getMethodName();
+                    // If cmdArgs is null, this send the method statically.
+                    if(cmdArgs == null){
+                        Method cmdMethod = cls.getMethod(methodName);
+                        cmdBytes = (byte[]) cmdMethod.invoke(clsInstance);
+                    }else{
+                        Method cmdMethod = cls.getMethod(methodName, Object[].class);
+                        cmdBytes = (byte[]) cmdMethod.invoke(clsInstance, cmdArgs);
+                    }
+                }catch(IllegalAccessException | IllegalArgumentException | 
+                        InvocationTargetException | NoSuchMethodException e){
+                    Log.e(
+                        TAG,
+                        String.format(
+                            "Error invoking method in outbound queue: %s - %s",
+                            e.toString(),
+                            e.getMessage()
+                        )
+                    );
                 }
-                return data;
+                return cmdBytes;
             }
             
+            /**
+             * Get the current time in milliseconds
+             * @return long Time in milliseconds
+             */
             private long getTime(){
                 return Calendar.getInstance().getTimeInMillis();
             }
@@ -274,13 +311,33 @@ public class IBusMessageService extends IOIOService{
              * @param msg
              */
             private void handleMessage(ArrayList<Byte> msg){
-                // The third byte of the message indicates it's destination
-                try{
-                    IBusSysMap.get(msg.get(2)).mapReceived(msg);
-                }catch(NullPointerException e){
-                    // Things not in the map throw a NullPointerException
+                byte src = msg.get(MSG_SRC_IDX);
+                byte dest = msg.get(MSG_DEST_IDX);
+                if(checksumMessage(msg)){
+                    Log.d(TAG, String.format(
+                        "Received Message (%s -> %s): %s",
+                        mDeviceLookup.get(src), mDeviceLookup.get(dest),
+                        bytesToString(msg)
+                    ));
+                    IBusSystem system = IBusSysMap.get(dest);
+                    if(system != null){
+                        system.mapReceived(msg);
+                    }
+                }else{
+                    logBufferError("Message failed checksum test", msg);
                 }
             }
+            
+            /**
+             * Log buffer errors
+             * @param err The error message
+             * @param msg The buffer at the time of the error
+             */
+            private void logBufferError(String err, ArrayList<Byte> msg){
+                Log.e(TAG, String.format("%s: %s", err, bytesToString(msg)));
+            }
+            
+            
         };
     }
     
@@ -289,8 +346,8 @@ public class IBusMessageService extends IOIOService{
     }
     
     public void registerCallback(IBusSystem.Callbacks cb, Handler handler){
-        if(IBusSysMap.size() > 0){
-            for (IBusSystem sys : IBusSysMap.values()){
+        if(!IBusSysMap.isEmpty()){
+            for (IBusSystem sys: IBusSysMap.values()){
                 sys.registerCallback(cb, handler);
             }
         }
@@ -305,8 +362,8 @@ public class IBusMessageService extends IOIOService{
     }
     
     public void unregisterCallback(IBusSystem.Callbacks cb){
-        if(IBusSysMap.size() > 0){
-            for (IBusSystem sys : IBusSysMap.values()){
+        if(!IBusSysMap.isEmpty()){
+            for (IBusSystem sys: IBusSysMap.values()){
                 sys.unregisterCallback(cb);
             }
         }
@@ -321,21 +378,21 @@ public class IBusMessageService extends IOIOService{
     @Override
     public void onDestroy(){
         super.onDestroy();
-        Log.d(TAG, "IBusMessageService: onDestroy()");
+        Log.d(TAG, "onDestroy()");
     }
     
     @Override
     public int onStartCommand(Intent intent, int flags, int startId){
-        // Call super.onStart because it starts the IOIOAndroidApplicationHelper 
-        // and super.onStartCommand is not implemented
-        super.onStart(intent, startId);
-        Log.d(TAG, "IBusMessageService: onStartCommand()");
-        for(IBusSystem.Devices d : IBusSystem.Devices.values()){
-            mDeviceLookup.put(d.toByte(), d.name());
+        super.onStartCommand(intent, flags, startId);
+        Log.d(TAG, "onStartCommand()");
+        if(mDeviceLookup.isEmpty()){
+            for(IBusSystem.Devices d : IBusSystem.Devices.values()){
+                mDeviceLookup.put(d.toByte(), d.name());
+            }
         }
         // Initiate values for IBus System handlers
-        if(IBusSysMap.size() == 0){
-            Log.d(TAG, "IBusMessageService: Filling IBusSysMap");
+        if(IBusSysMap.isEmpty()){
+            Log.d(TAG, "Filling IBus System Map");
             IBusSysMap.put(
                 IBusSystem.Devices.BoardMonitor.toByte(),
                 new BoardMonitorSystem()
@@ -379,7 +436,7 @@ public class IBusMessageService extends IOIOService{
     @Override
     public boolean onUnbind(Intent intent){
         super.onUnbind(intent);
-        Log.d(TAG, "IBusMessageService: onUnbind()");
+        Log.d(TAG, "onUnbind()");
         mClientsConnected--;
         if(mClientsConnected == 0){
             stopSelf();

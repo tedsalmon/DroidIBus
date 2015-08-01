@@ -156,11 +156,9 @@ public class DashboardMusicFragment extends BaseFragment{
             mMediaPlayerConnected = true;
             mPlayerService.registerCallback(mPlayerCallbacks, mHandler);
             
-            MediaController playerRemote = mPlayerService.getMediaController();
-            if(playerRemote != null){
-                setMediaMetadata(playerRemote.getMetadata());
-                setPlaybackState(playerRemote.getPlaybackState().getState());
-            }
+            setMediaMetadata(mPlayerService.getMediaMetadata());
+            setPlaybackState(mPlayerService.getMediaPlaybackState());
+            
             mThreadExecutor.execute(mSeekbarUpdater);
 
             mHandler.post(mUpdateAvailableControllers);
@@ -173,6 +171,140 @@ public class DashboardMusicFragment extends BaseFragment{
             mMediaPlayerConnected = false;
         }
 
+    };
+    
+    private OnTouchListener mCommandTouchListener = new OnTouchListener(){
+        
+        @Override
+        public boolean onTouch(View v, MotionEvent event){
+            IBusCommand.Commands cmd = null;
+            switch(event.getAction()){
+                case MotionEvent.ACTION_DOWN:
+                    cmd = IBusCommand.Commands.valueOf(
+                        v.getTag().toString() + "Press"
+                    );
+                    break;
+                case MotionEvent.ACTION_UP:
+                    cmd = IBusCommand.Commands.valueOf(
+                        v.getTag().toString() + "Release"
+                    );
+                    break;
+            }
+            if(cmd != null){
+                sendIBusCommand(cmd);
+            }
+            v.performClick();
+            return false;
+        }
+        
+    };
+    
+    private OnTouchListener mMetadataTouchListener = new OnTouchListener(){
+
+        @Override
+        public boolean onTouch(View v, MotionEvent event){
+            MediaController mc = mPlayerService.getMediaController();
+            if(mc != null){
+                startActivity(
+                    mPackageManager.getLaunchIntentForPackage(
+                        mc.getPackageName()
+                    )
+                );
+            }
+            v.performClick();
+            return false;
+        }
+        
+    };
+    
+    private OnClickListener mPlaybackClickListener = new OnClickListener(){
+        @Override
+        public void onClick(View v){
+            switch(v.getId()) {
+                case R.id.playerPrevBtn:
+                    mPlayerService.skipToPrevious();
+                    break;
+                case R.id.playerNextBtn:
+                    mPlayerService.skipToNext();
+                    break;
+                case R.id.playerPlayPauseBtn:
+                    togglePlayback();
+                    break;
+            }
+        }
+    };
+    
+    private OnClickListener mCommandClickListener = new OnClickListener(){
+        @Override
+        public void onClick(View v){
+            sendIBusCommand((IBusCommand.Commands) v.getTag());
+        }
+    };
+    
+    private OnCheckedChangeListener mModeChangeListener = new OnCheckedChangeListener(){
+        public void onCheckedChanged(CompoundButton buttonView, boolean isChecked){
+            Log.d(TAG, CTAG + "Changing Music Mode");
+            // Tablet Mode if checked, else Radio
+            if(isChecked){
+                // Send IBus Message
+                changeRadioMode(RadioModes.AUX);
+                mRadioLayout.setVisibility(View.GONE);
+                mTabletLayout.setVisibility(View.VISIBLE);
+                mMediaSessionSelector.setVisibility(View.VISIBLE);
+            }else{
+                if(mIsPlaying){
+                    mPlayerService.pause();
+                }
+                // Send IBus Message
+                changeRadioMode(RadioModes.Radio);
+                mRadioLayout.setVisibility(View.VISIBLE);
+                mTabletLayout.setVisibility(View.GONE);
+                mMediaSessionSelector.setVisibility(View.GONE);
+            }
+        }
+    };
+    
+    private OnSeekBarChangeListener mSeekbarChangeListener = new OnSeekBarChangeListener(){
+        private float mSeekPosition = 0; 
+        @Override
+        public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser){
+            if(mMediaPlayerConnected && fromUser){
+                mSeekPosition = mSongDuration * ((float)progress / (float)seekBar.getMax());
+            }
+        }
+
+        @Override
+        public void onStartTrackingTouch(SeekBar seekBar){
+            mCanSeek = false;
+        }
+
+        @Override
+        public void onStopTrackingTouch(SeekBar seekBar) {
+            mPlayerService.seekTo((long)mSeekPosition);
+            mCanSeek = true;
+        }
+    };
+    
+    private OnItemSelectedListener mMediaSessionSelectedListener = new OnItemSelectedListener(){
+        
+        @Override
+        public void onItemSelected(AdapterView<?> parent, View view,
+                int position, long id) {
+            clearMusicPlayerView();
+            String remoteName = mMediaControllerNames.get(
+                (String) mMediaSessionSelector.getSelectedItem()
+            );
+            Log.d(TAG, CTAG + "Setting session to " + remoteName);
+            mMediaSessionSelector.setSelection(position);
+            mPlayerService.setMediaSession(remoteName);
+            
+            setMediaMetadata(mPlayerService.getMediaMetadata());
+            setPlaybackState(mPlayerService.getMediaPlaybackState());
+        }
+
+        @Override
+        public void onNothingSelected(AdapterView<?> parent){}
+        
     };
     
     private Runnable mUpdateAvailableControllers = new Runnable(){
@@ -199,14 +331,10 @@ public class DashboardMusicFragment extends BaseFragment{
         @Override
         public void run(){
             while(mShouldRun && !Thread.currentThread().isInterrupted()){
-                MediaController mc = mPlayerService.getMediaController();
-                if(mc != null){
-                    if(mc.getPlaybackState() != null){
-                        mProgress = (int) mc.getPlaybackState().getPosition();
-                        if(canSeek()){
-                            mHandler.post(mSendUpdate);
-                        }
-                    }
+                PlaybackState pbState = mPlayerService.getMediaPlaybackState();
+                if(pbState != null && mCanSeek){
+                    mProgress = (int) pbState.getPosition();
+                    mHandler.post(mSendUpdate);
                 }
                 try{
                     Thread.sleep(SEEKBAR_UPDATE_RATE);
@@ -450,7 +578,7 @@ public class DashboardMusicFragment extends BaseFragment{
         
         @Override
         public void onLightStatus(int lightStatus){
-            if(mSettings.getBoolean("nightColorsWithInterior", false)){
+            if(!mSettings.getBoolean("nightColorsWithInterior", false)){
                 return;
             }
             int color = (lightStatus == 1) ? R.color.nightColor : R.color.dayColor;
@@ -498,7 +626,7 @@ public class DashboardMusicFragment extends BaseFragment{
 
             });
         }
-    }  
+    }
     
     /**
      * Reset the elements of the music player view
@@ -522,14 +650,6 @@ public class DashboardMusicFragment extends BaseFragment{
             appName = cname;
         }
         return appName;
-    }
-    
-    private boolean canSeek(){
-        return mCanSeek;
-    }
-    
-    private void setCanSeek(boolean canSeek){
-        mCanSeek = canSeek;
     }
     
     /**
@@ -606,14 +726,12 @@ public class DashboardMusicFragment extends BaseFragment{
             }
             mPlayerScrubBar.setMax((int) mSongDuration);
         }else{
-            Log.e(
-                TAG, CTAG + "MediaMetadata is null on the session owners side"
-            );
+            Log.e(TAG, CTAG + "MediaMetadata is null");
         }
     }
     
-    private void setPlaybackState(int state){
-        switch(state){
+    private void setPlaybackState(int playbackState){
+        switch(playbackState){
             case PlaybackState.STATE_PLAYING:
                 mIsPlaying = true;
                 mPlayerControlBtn.setImageResource(
@@ -626,6 +744,14 @@ public class DashboardMusicFragment extends BaseFragment{
                     android.R.drawable.ic_media_play
                 );
                 break;
+        }
+    }
+    
+    private void setPlaybackState(PlaybackState playbackState){
+        if(playbackState != null){
+            setPlaybackState(playbackState.getState());
+        }else{
+            Log.e(TAG, CTAG + "PlaybackState is null");
         }
     }
     
@@ -650,7 +776,7 @@ public class DashboardMusicFragment extends BaseFragment{
     }
     
     @Override
-    public void onActivityCreated (Bundle savedInstanceState){
+    public void onActivityCreated(Bundle savedInstanceState){
         super.onActivityCreated(savedInstanceState);
 	CTAG = "DashboardMusicFragment: ";
         Log.d(TAG, CTAG + "onActivityCreated Called");
@@ -711,119 +837,17 @@ public class DashboardMusicFragment extends BaseFragment{
         mProgramField = (TextView) v.findViewById(R.id.radioProgram);
         mBroadcastField = (TextView) v.findViewById(R.id.radioBroadcast);
         
-        // Buttons
+        // Radio Controls
+        mBtnMusicMode = (Switch) v.findViewById(R.id.btnMusicMode);
+        
         ImageButton btnVolUp = (ImageButton) v.findViewById(R.id.btnVolUp);
         ImageButton btnVolDown = (ImageButton) v.findViewById(R.id.btnVolDown);
         Button btnRadioFM = (Button) v.findViewById(R.id.btnRadioFM);
         Button btnRadioAM = (Button) v.findViewById(R.id.btnRadioAM);
-        mBtnMusicMode = (Switch) v.findViewById(R.id.btnMusicMode);
         ImageButton btnPrev = (ImageButton) v.findViewById(R.id.btnPrev);
         ImageButton btnNext = (ImageButton) v.findViewById(R.id.btnNext);
         
-        // Assign actions to view members
-        
-        // Scroll Title
-        mPlayerTitleText.setSelected(true);
-        
-        // Make the meta data click-able into the active media player
-        mMetaDataLayout.setOnTouchListener(new OnTouchListener(){
-
-            @Override
-            public boolean onTouch(View v, MotionEvent event) {
-                MediaController mc = mPlayerService.getMediaController();
-                if(mc != null){
-                    startActivity(
-                        mPackageManager.getLaunchIntentForPackage(
-                            mc.getPackageName()
-                        )
-                    );
-                }
-                v.performClick();
-                return false;
-            }
-            
-        });
-        
-        mMediaControllerSelectorAdapter = new ArrayAdapter<String>(
-            getActivity().getApplicationContext(),
-            android.R.layout.simple_spinner_item,
-            mMediaControllerSelectorList
-        );
-        mMediaControllerSelectorAdapter.setDropDownViewResource(
-            android.R.layout.simple_spinner_dropdown_item
-        );
-        mMediaSessionSelector.setAdapter(mMediaControllerSelectorAdapter);
-        
-        mMediaSessionSelector.setOnItemSelectedListener(new OnItemSelectedListener(){
-            
-            @Override
-            public void onItemSelected(AdapterView<?> parent, View view,
-                    int position, long id) {
-                clearMusicPlayerView();
-                String remoteName = mMediaControllerNames.get(
-                    (String) mMediaSessionSelector.getSelectedItem()
-                );
-                Log.d(TAG, CTAG + "Setting session to " + remoteName);
-                mMediaSessionSelector.setSelection(position);
-                mPlayerService.setMediaSession(remoteName);
-                MediaController mc = mPlayerService.getMediaController();
-                if(mc != null){
-                    setMediaMetadata(mc.getMetadata());
-                    PlaybackState pb = mc.getPlaybackState();
-                    if(pb != null){
-                        setPlaybackState(pb.getState());
-                    }
-                }
-            }
-
-            @Override
-            public void onNothingSelected(AdapterView<?> parent){}
-            
-        });
-        
-        OnClickListener playbackButtonClickListener = new OnClickListener(){
-            @Override
-            public void onClick(View v){
-                switch(v.getId()) {
-                    case R.id.playerPrevBtn:
-                        mPlayerService.skipToPrevious();
-                        break;
-                    case R.id.playerNextBtn:
-                        mPlayerService.skipToNext();
-                        break;
-                    case R.id.playerPlayPauseBtn:
-                        togglePlayback();
-                        break;
-                }
-            }
-        };
-
-        mPlayerPrevBtn.setOnClickListener(playbackButtonClickListener);
-        mPlayerNextBtn.setOnClickListener(playbackButtonClickListener);
-        mPlayerControlBtn.setOnClickListener(playbackButtonClickListener);
-
-        mPlayerScrubBar.setOnSeekBarChangeListener(new OnSeekBarChangeListener(){
-            private float mSeekPosition = 0; 
-            @Override
-            public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser){
-                if(mMediaPlayerConnected && fromUser){
-                    mSeekPosition = mSongDuration * ((float)progress / (float)seekBar.getMax());
-                }
-            }
-
-            @Override
-            public void onStartTrackingTouch(SeekBar seekBar){
-                setCanSeek(false);
-            }
-
-            @Override
-            public void onStopTrackingTouch(SeekBar seekBar) {
-                mPlayerService.seekTo((long)mSeekPosition);
-                setCanSeek(true);
-            }
-        });
-
-        // Register Button actions
+        // Register button commands
         if(mRadioType == RadioTypes.BM53){
             btnVolUp.setTag(IBusCommand.Commands.BMToRadioVolumeUp);
             btnVolDown.setTag(IBusCommand.Commands.BMToRadioVolumeDown);
@@ -838,68 +862,37 @@ public class DashboardMusicFragment extends BaseFragment{
         
         btnRadioFM.setTag("BMToRadioFM");
         btnRadioAM.setTag("BMToRadioAM");
-
-        mBtnMusicMode.setOnCheckedChangeListener(new OnCheckedChangeListener(){
-            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked){
-                Log.d(TAG, CTAG + "Changing Music Mode");
-                // Tablet Mode if checked, else Radio
-                if(isChecked){
-                    // Send IBus Message
-                    changeRadioMode(RadioModes.AUX);
-                    mRadioLayout.setVisibility(View.GONE);
-                    mTabletLayout.setVisibility(View.VISIBLE);
-                    mMediaSessionSelector.setVisibility(View.VISIBLE);
-                }else{
-                    if(mIsPlaying){
-                        mPlayerService.pause();
-                    }
-                    // Send IBus Message
-                    changeRadioMode(RadioModes.Radio);
-                    mRadioLayout.setVisibility(View.VISIBLE);
-                    mTabletLayout.setVisibility(View.GONE);
-                    mMediaSessionSelector.setVisibility(View.GONE);
-                }
-            }
-        });
-
-        OnClickListener clickSingleAction = new OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                sendIBusCommand((IBusCommand.Commands) v.getTag());
-            }
-        };
         
-        OnTouchListener touchAction = new OnTouchListener(){
-            
-            @Override
-            public boolean onTouch(View v, MotionEvent event){
-                IBusCommand.Commands cmd = null;
-                switch(event.getAction()){
-                    case MotionEvent.ACTION_DOWN:
-                       cmd = IBusCommand.Commands.valueOf(
-                           v.getTag().toString() + "Press"
-                       );
-                       break;
-                    case MotionEvent.ACTION_UP:
-                        cmd = IBusCommand.Commands.valueOf(
-                            v.getTag().toString() + "Release"
-                        );
-                        break;
-                }
-                if(cmd != null){
-                    sendIBusCommand(cmd);
-                }
-                v.performClick();
-                return false;
-            }
-        };
+        // Scroll Title
+        mPlayerTitleText.setSelected(true);
         
-        btnVolUp.setOnClickListener(clickSingleAction);
-        btnVolDown.setOnClickListener(clickSingleAction);
-        btnRadioFM.setOnTouchListener(touchAction);
-        btnRadioAM.setOnTouchListener(touchAction);
-        btnPrev.setOnTouchListener(touchAction);
-        btnNext.setOnTouchListener(touchAction);
+        // Set Adapter for music player selector
+        mMediaControllerSelectorAdapter = new ArrayAdapter<String>(
+            getActivity().getApplicationContext(),
+            android.R.layout.simple_spinner_item,
+            mMediaControllerSelectorList
+        );
+        mMediaControllerSelectorAdapter.setDropDownViewResource(
+            android.R.layout.simple_spinner_dropdown_item
+        );
+        mMediaSessionSelector.setAdapter(mMediaControllerSelectorAdapter);
+        
+        // Set listeners onto objects
+        btnVolUp.setOnClickListener(mCommandClickListener);
+        btnVolDown.setOnClickListener(mCommandClickListener);
+        btnRadioFM.setOnTouchListener(mCommandTouchListener);
+        btnRadioAM.setOnTouchListener(mCommandTouchListener);
+        btnPrev.setOnTouchListener(mCommandTouchListener);
+        btnNext.setOnTouchListener(mCommandTouchListener);
+        
+        mPlayerPrevBtn.setOnClickListener(mPlaybackClickListener);
+        mPlayerNextBtn.setOnClickListener(mPlaybackClickListener);
+        mPlayerControlBtn.setOnClickListener(mPlaybackClickListener);
+        mBtnMusicMode.setOnCheckedChangeListener(mModeChangeListener);
+        
+        mMetaDataLayout.setOnTouchListener(mMetadataTouchListener);
+        mMediaSessionSelector.setOnItemSelectedListener(mMediaSessionSelectedListener);
+        mPlayerScrubBar.setOnSeekBarChangeListener(mSeekbarChangeListener);
         
         // Default radio mode
         mRadioMode = RadioModes.AUX;

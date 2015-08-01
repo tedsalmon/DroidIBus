@@ -17,6 +17,7 @@ import java.util.Map;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
+import android.media.MediaMetadata;
 import android.media.session.MediaSessionManager;
 import android.media.session.MediaController;
 import android.media.session.PlaybackState;
@@ -82,6 +83,26 @@ public class MusicControllerService extends NotificationListenerService implemen
             index++;
         }
         return sessionNames;
+    }
+    
+    /**
+     * Returns the Metadata from the active media controller
+     */
+    public MediaMetadata getMediaMetadata(){
+        if(mActiveMediaController != null){
+            return mActiveMediaController.getMetadata();
+        }
+        return null;
+    }
+    
+    /**
+     * Returns the Playback state of the active media controller
+     */
+    public PlaybackState getMediaPlaybackState(){
+        if(mActiveMediaController != null){
+            return mActiveMediaController.getPlaybackState();
+        }
+        return null;
     }
     
     /**
