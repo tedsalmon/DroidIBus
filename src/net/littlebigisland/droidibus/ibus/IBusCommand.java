@@ -58,6 +58,10 @@ public class IBusCommand{
         BMToGMGetDoorStatus(IBusSystem.Devices.BoardMonitor, "getDoorsRequest"),
         // BoardMonitor to Global Broadcast Address Commands
         BMToGlobalBroadcastAliveMessage(IBusSystem.Devices.BoardMonitor, "sendAliveMessage"),
+        
+        // Global Broadcast to IKE Commands
+        GlobalBroadcastToIKEGetMileage(IBusSystem.Devices.GlobalBroadcast, "getMileage"),
+        
         // Steering Wheel to Radio Commands
         SWToRadioVolumeUp(IBusSystem.Devices.MultiFunctionSteeringWheel, "sendVolumeUp"),
         SWToRadioVolumeDown(IBusSystem.Devices.MultiFunctionSteeringWheel, "sendVolumeDown"),

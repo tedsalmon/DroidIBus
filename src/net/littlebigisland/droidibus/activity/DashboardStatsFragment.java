@@ -262,6 +262,7 @@ public class DashboardStatsFragment extends BaseFragment{
         sendIBusCommand(IBusCommand.Commands.BMToIKEGetOutdoorTemp);
         sendIBusCommand(IBusCommand.Commands.BMToIKEGetRange);
         sendIBusCommand(IBusCommand.Commands.BMToIKEGetAvgSpeed);
+        sendIBusCommand(IBusCommand.Commands.GlobalBroadcastToIKEGetMileage);
     }
 	
     public void updateDisplayedUnits(){		
