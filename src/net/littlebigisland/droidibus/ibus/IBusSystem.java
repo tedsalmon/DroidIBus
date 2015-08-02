@@ -62,7 +62,11 @@ public class IBusSystem{
         
         public void onUpdateScreenState(final int state){}
         
-        public void onUpdateToneLevels(int bass, int treb, int fade, int bal){}
+        public void onUpdateToneLevels(final int bass, final int treb, final int fade, final int bal){}
+        
+        public void onUpdateRDSStatus(final int status){}
+        
+        public void onUpdatePTYStatus(final int status){}
         
         // IKE System
         public void onUpdateRange(final String range){}

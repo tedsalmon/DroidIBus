@@ -46,11 +46,11 @@ public class GFXNavigationSystem extends IBusSystem{
                     switch(currentMessage.get(6)){
                         case RDS_VAL:
                             int rds = (currentMessage.get(20) == 0x2A) ? 1: 0;
-                            triggerCallback("", rds);
+                            triggerCallback("onUpdateRDSStatus", rds);
                             break;
                         case PTY_VAL:
                             int pty = (currentMessage.get(20) == 0x2A) ? 1: 0;
-                            triggerCallback("", pty);
+                            triggerCallback("onUpdatePTYStatus", pty);
                             break;
                     }
                     break;
@@ -63,15 +63,14 @@ public class GFXNavigationSystem extends IBusSystem{
                     break;
                 case TONE_DATA:
                     int bass = getToneLevel(ToneType.BASS, currentMessage.get(4));
-                    int treb = getToneLevel(ToneType.BASS, currentMessage.get(5));
-                    int fade = getToneLevel(ToneType.BASS, currentMessage.get(6));
-                    int bal = getToneLevel(ToneType.BASS, currentMessage.get(7));
+                    int treb = getToneLevel(ToneType.TREB, currentMessage.get(5));
+                    int fade = getToneLevel(ToneType.FADE, currentMessage.get(6));
+                    int bal = getToneLevel(ToneType.BAL, currentMessage.get(7));
                     triggerCallback("onUpdateToneLevels", bass, treb, fade, bal);
                     break;
                 case RADIO_METADATA:
                     byte metaDataType = currentMessage.get(6);
                     String dataText = decodeData();
-
                     switch(metaDataType){
                         case 0x41: // Broadcast Type
                             triggerCallback("onUpdateRadioBrodcasts", dataText);
