@@ -58,6 +58,13 @@ public class GFXNavigationSystem extends IBusSystem{
                     triggerCallback("onUpdateRadioStation", decodeData());
                     break;
                 case SCREEN_UPDATE:
+                    /* Screen modes:
+                     68 04 3B 46 01 10 -> Gracefully returned to BMBT
+                     68 04 3B 46 02 13 -> Move to BMBT Screen - Timeout
+                     68 04 3B 46 04 15 -> Move to RDS from SEL - Timeout
+                     68 04 3B 46 08 19 -> Move to RDS from Tone
+                     68 04 3B 46 0C 1D -> Clear middle area / Seen every time other messages are sent
+                     */
                     byte screen_mode = currentMessage.get(4);
                     triggerCallback("onUpdateScreenState", (int) screen_mode);
                     break;
