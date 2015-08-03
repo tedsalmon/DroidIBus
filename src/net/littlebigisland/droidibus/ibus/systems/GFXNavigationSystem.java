@@ -69,11 +69,24 @@ public class GFXNavigationSystem extends IBusSystem{
                     triggerCallback("onUpdateScreenState", (int) screen_mode);
                     break;
                 case TONE_DATA:
-                    int bass = getToneLevel(ToneType.BASS, currentMessage.get(4));
-                    int treb = getToneLevel(ToneType.TREB, currentMessage.get(5));
-                    int fade = getToneLevel(ToneType.FADE, currentMessage.get(6));
-                    int bal = getToneLevel(ToneType.BAL, currentMessage.get(7));
-                    triggerCallback("onUpdateToneLevels", bass, treb, fade, bal);
+                    // Check to make sure we're getting the right data
+                    if(currentMessage.get(1) == 0x07){
+                        int bass = getToneLevel(
+                            ToneType.BASS, currentMessage.get(4)
+                        );
+                        int treb = getToneLevel(
+                            ToneType.TREB, currentMessage.get(5)
+                        );
+                        int fade = getToneLevel(
+                            ToneType.FADE, currentMessage.get(6)
+                        );
+                        int bal = getToneLevel(
+                            ToneType.BAL, currentMessage.get(7)
+                        );
+                        triggerCallback(
+                            "onUpdateToneLevels", bass, treb, fade, bal
+                        );
+                    }
                     break;
                 case RADIO_METADATA:
                     byte metaDataType = currentMessage.get(6);

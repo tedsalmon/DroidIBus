@@ -406,7 +406,7 @@ public class IBusSystem{
                 public void run(){
                     try{
                         Log.d(TAG, String.format(
-                            "Triggering '%s()' with valuees '%s, %s, %s, %s'",
+                            "Triggering '%s()' with values '%s, %s, %s, %s'",
                             callback.toString(), valOne, valTwo, valThree, valFour
                             )
                         );
