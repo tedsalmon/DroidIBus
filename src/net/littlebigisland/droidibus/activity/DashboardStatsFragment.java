@@ -7,9 +7,10 @@ package net.littlebigisland.droidibus.activity;
  */
 import java.util.HashMap;
 
+import net.littlebigisland.droidibus.services.IBusMessageService;
+
 import net.littlebigisland.droidibus.R;
 import net.littlebigisland.droidibus.ibus.IBusCommand;
-import net.littlebigisland.droidibus.ibus.IBusMessageService;
 import net.littlebigisland.droidibus.ibus.IBusSystem;
 import android.content.ComponentName;
 import android.content.SharedPreferences;

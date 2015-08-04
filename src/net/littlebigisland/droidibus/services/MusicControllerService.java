@@ -1,4 +1,4 @@
-package net.littlebigisland.droidibus.music;
+package net.littlebigisland.droidibus.services;
  
 /**
  * MusicControllerService class

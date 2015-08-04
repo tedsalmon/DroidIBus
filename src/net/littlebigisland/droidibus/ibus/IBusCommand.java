@@ -6,8 +6,8 @@ package net.littlebigisland.droidibus.ibus;
  */
 public class IBusCommand{
     
-    Commands commandType = null;
-    Object commandArgs = null;
+    public Commands commandType = null;
+    public Object commandArgs = null;
     
     /**
     * This should be better explained. Basically, we hold an enum with two values,

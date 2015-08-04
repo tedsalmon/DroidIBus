@@ -6,10 +6,11 @@ package net.littlebigisland.droidibus.activity;
  */
 import java.util.Calendar;
 
+import net.littlebigisland.droidibus.services.IBusMessageService;
+import net.littlebigisland.droidibus.services.IBusMessageService.IOIOBinder;
+
 import net.littlebigisland.droidibus.R;
 import net.littlebigisland.droidibus.ibus.IBusCommand;
-import net.littlebigisland.droidibus.ibus.IBusMessageService;
-import net.littlebigisland.droidibus.ibus.IBusMessageService.IOIOBinder;
 import net.littlebigisland.droidibus.ibus.IBusSystem;
 import android.content.ComponentName;
 import android.content.Context;

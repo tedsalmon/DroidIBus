@@ -6,9 +6,9 @@ package net.littlebigisland.droidibus.activity;
  * @package net.littlebigisland.droidibus.activity
  */
 
+import net.littlebigisland.droidibus.services.IBusMessageService;
 import net.littlebigisland.droidibus.R;
 import net.littlebigisland.droidibus.ibus.IBusCommand;
-import net.littlebigisland.droidibus.ibus.IBusMessageService;
 import net.littlebigisland.droidibus.ibus.IBusSystem;
 import android.app.FragmentTransaction;
 import android.content.ComponentName;

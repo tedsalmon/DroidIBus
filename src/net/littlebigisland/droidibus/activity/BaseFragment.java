@@ -12,10 +12,11 @@ import java.util.Calendar;
 import java.util.List;
 import java.util.concurrent.Executor;
 
+import net.littlebigisland.droidibus.services.IBusMessageService;
+import net.littlebigisland.droidibus.services.IBusMessageService.IOIOBinder;
+
 import net.littlebigisland.droidibus.ibus.IBusCommand;
 import net.littlebigisland.droidibus.ibus.IBusSystem;
-import net.littlebigisland.droidibus.ibus.IBusMessageService;
-import net.littlebigisland.droidibus.ibus.IBusMessageService.IOIOBinder;
 import android.app.Fragment;
 import android.content.ComponentName;
 import android.content.Context;

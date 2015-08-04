@@ -39,7 +39,7 @@
                 android:resource="@xml/accessory_filter" />
         </activity>
         
-        <service android:name=".ibus.IBusMessageService" android:exported="false">
+        <service android:name="services.IBusMessageService" android:exported="false">
             <intent-filter>
                 <action
                     android:name="android.hardware.usb.action.USB_ACCESSORY_ATTACHED" />
@@ -48,7 +48,7 @@
                 android:name="android.hardware.usb.action.USB_ACCESSORY_ATTACHED"
                 android:resource="@xml/accessory_filter" />
         </service>
-        <service android:name=".music.MusicControllerService"
+        <service android:name="services.MusicControllerService"
             android:permission="android.permission.BIND_NOTIFICATION_LISTENER_SERVICE">
             <intent-filter>
                 <action

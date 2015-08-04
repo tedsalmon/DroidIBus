@@ -1,4 +1,4 @@
-package net.littlebigisland.droidibus.ibus;
+package net.littlebigisland.droidibus.services;
 /**
  * IBusService
  * Communicate with the IBus using the IOIO
@@ -18,6 +18,8 @@ import java.util.Calendar;
 import java.util.HashMap;
 import java.util.Map;
 
+import net.littlebigisland.droidibus.ibus.IBusCommand;
+import net.littlebigisland.droidibus.ibus.IBusSystem;
 import net.littlebigisland.droidibus.ibus.systems.BoardMonitorSystem;
 import net.littlebigisland.droidibus.ibus.systems.BroadcastSystem;
 import net.littlebigisland.droidibus.ibus.systems.FrontDisplay;

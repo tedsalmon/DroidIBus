@@ -12,11 +12,12 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 
+import net.littlebigisland.droidibus.services.IBusMessageService;
+import net.littlebigisland.droidibus.services.MusicControllerService;
+
 import net.littlebigisland.droidibus.R;
 import net.littlebigisland.droidibus.ibus.IBusCommand;
-import net.littlebigisland.droidibus.ibus.IBusMessageService;
 import net.littlebigisland.droidibus.ibus.IBusSystem;
-import net.littlebigisland.droidibus.music.MusicControllerService;
 import android.content.ComponentName;
 import android.content.ServiceConnection;
 import android.content.SharedPreferences;
