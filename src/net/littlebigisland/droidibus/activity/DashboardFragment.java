@@ -55,7 +55,7 @@ public class DashboardFragment extends BaseFragment{
             registerIBusCallback(mIBusCallbacks, mHandler);
             // Emulate BoardMonitor Bootup on connect
             Log.d(TAG, CTAG + "BoardMonitor Bootup Performed");
-            sendIBusCommand(IBusCommand.Commands.BMToIKEGetIgnitionStatus);
+            sendIBusCommand(IBusCommand.Commands.GFXToIKEGetIgnitionStatus);
             sendIBusCommand(IBusCommand.Commands.BMToLCMGetDimmerStatus);
             sendIBusCommand(IBusCommand.Commands.BMToGMGetDoorStatus);
         }

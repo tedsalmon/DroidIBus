@@ -247,18 +247,18 @@ public class DashboardStatsFragment extends BaseFragment{
      */
     private void boardMonitorBootup(){
         sendIBusCommand(IBusCommand.Commands.BMToGlobalBroadcastAliveMessage);
-        sendIBusCommand(IBusCommand.Commands.BMToIKEGetIgnitionStatus);
+        sendIBusCommand(IBusCommand.Commands.GFXToIKEGetIgnitionStatus);
         sendIBusCommand(IBusCommand.Commands.BMToLCMGetDimmerStatus);
         sendIBusCommand(IBusCommand.Commands.BMToGMGetDoorStatus);
         // Send a "get" request to populate the values on screen
         // Do it here because this is when the service methods come into scope
-        sendIBusCommand(IBusCommand.Commands.BMToIKEGetTime);
-        sendIBusCommand(IBusCommand.Commands.BMToIKEGetDate);
-        sendIBusCommand(IBusCommand.Commands.BMToIKEGetFuel1);
-        sendIBusCommand(IBusCommand.Commands.BMToIKEGetFuel2);
-        sendIBusCommand(IBusCommand.Commands.BMToIKEGetOutdoorTemp);
-        sendIBusCommand(IBusCommand.Commands.BMToIKEGetRange);
-        sendIBusCommand(IBusCommand.Commands.BMToIKEGetAvgSpeed);
+        sendIBusCommand(IBusCommand.Commands.GFXToIKEGetTime);
+        sendIBusCommand(IBusCommand.Commands.GFXToIKEGetDate);
+        sendIBusCommand(IBusCommand.Commands.GFXToIKEGetFuel1);
+        sendIBusCommand(IBusCommand.Commands.GFXToIKEGetFuel2);
+        sendIBusCommand(IBusCommand.Commands.GFXToIKEGetOutdoorTemp);
+        sendIBusCommand(IBusCommand.Commands.GFXToIKEGetRange);
+        sendIBusCommand(IBusCommand.Commands.GFXToIKEGetAvgSpeed);
     }
 	
     public void updateDisplayedUnits(){		
@@ -389,9 +389,9 @@ public class DashboardStatsFragment extends BaseFragment{
             
         };
         
-        mFuel1Field.setTag(IBusCommand.Commands.BMToIKEResetFuel1);
-        mFuel2Field.setTag(IBusCommand.Commands.BMToIKEResetFuel2);
-        mAvgSpeedField.setTag(IBusCommand.Commands.BMToIKEResetAvgSpeed);
+        mFuel1Field.setTag(IBusCommand.Commands.GFXToIKEResetFuel1);
+        mFuel2Field.setTag(IBusCommand.Commands.GFXToIKEResetFuel2);
+        mAvgSpeedField.setTag(IBusCommand.Commands.GFXToIKEResetAvgSpeed);
 
         mIKEIdentifiers.put("BMToIKEResetFuel1", "Fuel 1");
         mIKEIdentifiers.put("BMToIKEResetFuel2", "Fuel 2");

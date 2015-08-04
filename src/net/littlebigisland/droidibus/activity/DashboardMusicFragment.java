@@ -94,6 +94,7 @@ public class DashboardMusicFragment extends BaseFragment{
     protected RadioModes mRadioMode = RadioModes.AUX;
     protected RadioTypes mRadioType = RadioTypes.BM53;
     protected long mLastRadioStatus = 0;
+    protected long mLastInfoRequest = 0;
     protected boolean mRadioModeSatisfied = true;
     protected boolean mCDPlayerPlaying = false;
     
@@ -129,7 +130,7 @@ public class DashboardMusicFragment extends BaseFragment{
             if(mRadioType == RadioTypes.BM53){
                 Log.d(TAG, CTAG + "Starting mRadioUpdater");
                 mThreadExecutor.execute(mRadioUpdater);
-                mHandler.postDelayed(mSendInfoButton, 5000);
+                mHandler.postDelayed(mSendInfoButton, 2500);
             }
         }
         
@@ -343,6 +344,7 @@ public class DashboardMusicFragment extends BaseFragment{
     private Runnable mSendInfoButton = new Runnable(){
         @Override
         public void run(){
+            //long now = getTimeNow();
             sendPressReleaseCommand("BMToRadioInfo");
         }
     };
@@ -432,12 +434,6 @@ public class DashboardMusicFragment extends BaseFragment{
                     mRadioMode = RadioModes.Radio;
                     break;
             }
-            if(!mStationText.equals(text)){
-                mBroadcastField.setText("");
-                mProgramField.setText("");
-                mStereoField.setVisibility(View.GONE);
-                mRDSField.setVisibility(View.GONE);
-            }
             // Sync modes with the car
             // Make sure we're not changing modes
             if(mRadioModeSatisfied){
@@ -497,9 +493,9 @@ public class DashboardMusicFragment extends BaseFragment{
                     }
                     // This if will only trigger if the car WAS previously off
                     if(mIgnitionState == IgnitionStates.OFF){
-                        // Wait 8 seconds to send info request to make sure the 
+                        // Wait 5 seconds to send info request to make sure the 
                         // BM53 is on the right screen, getting RDS updates
-                        mHandler.postDelayed(mSendInfoButton, 8000);
+                        mHandler.postDelayed(mSendInfoButton, 5000);
                     }
                 }else{
                     if(mIsPlaying){
@@ -583,12 +579,11 @@ public class DashboardMusicFragment extends BaseFragment{
         
         @Override
         public void onUpdateScreenState(int state){
-            byte screenState = (byte) state;
             // Screen state 01 and 02
-            switch(screenState){
+            switch((byte) state){
                 case 0x01: // Gracefully went home menu
                 case 0x02: // Timed out to home menu
-                    sendPressReleaseCommand("BMToRadioInfo");
+                    mHandler.postDelayed(mSendInfoButton, 150);
                     break;
             }
         }
@@ -660,7 +655,7 @@ public class DashboardMusicFragment extends BaseFragment{
         );
         if(cmdPress != null && cmdRelease != null){
             sendIBusCommand(cmdPress);
-            sendIBusCommandDelayed(cmdRelease, 150);
+            sendIBusCommandDelayed(cmdRelease, 250);
         }else{
             showToast("Error sending unknown IBus Command " + cmdName);
         }

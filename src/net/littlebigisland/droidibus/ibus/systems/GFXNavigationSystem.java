@@ -1,9 +1,22 @@
 package net.littlebigisland.droidibus.ibus.systems;
 import java.util.ArrayList;
+import java.util.Locale;
 
 import net.littlebigisland.droidibus.ibus.IBusSystem;
 
 public class GFXNavigationSystem extends IBusSystem{
+    
+    // Main Systems
+    private static final byte GFX_DRIVER = Devices.GFXNavigationDriver.toByte();
+    private static final byte IKE_SYSTEM = Devices.InstrumentClusterElectronics.toByte();
+    
+    // OBC Functions
+    private byte OBCRequest = 0x41;
+    private byte OBCRequestGet = 0x01;
+    private byte OBCRequestReset = 0x10;
+    private byte OBCRequestSet = 0x40;
+    private byte OBCUnitSet = 0x15;
+    
     
     private static final byte[] BASS_LEVELS = new byte[]{
         (byte) 0x9C, (byte) 0x9A, (byte) 0x98, (byte) 0x96, (byte) 0x94,
@@ -175,6 +188,191 @@ public class GFXNavigationSystem extends IBusSystem{
              return -1;
          }
 
+    }
+    
+    /**
+     * Generate an IKE message requesting a value reset for the given system.
+     * @param system The hex value of the system in question
+     * @param checksum The hex value of the message checksum
+     * @return Byte array of message to send to IBus
+     */
+    private byte[] IKEGetRequest(int system, int checksum){
+        return new byte[] {
+            GFX_DRIVER, 0x05, IKE_SYSTEM, 
+            OBCRequest, (byte)system, OBCRequestGet, (byte)checksum
+        };
+    }
+    
+    /**
+     * Generate an IKE message requesting the value for the given system.
+     * @param system The hex value of the system in question
+     * @param checksum The hex value of the message checksum
+     * @return Byte array of message to send to IBus
+     */
+    private byte[] IKEResetRequest(int system, int checksum){
+        return new byte[] {
+            GFX_DRIVER, 0x05, IKE_SYSTEM, 
+            OBCRequest, (byte)system, OBCRequestReset, (byte)checksum 
+        };
+    }
+    
+    /**
+     * Issue a Get request for the "Time" Value.
+     * @return Byte array of message to send to IBus
+     */
+    public byte[] getTime(){
+        return IKEGetRequest(0x01, 0xFF);
+    }
+    
+    /**
+     * Issue a Get request for the "Date" Value.
+     * @return Byte array of message to send to IBus
+     */
+    public byte[] getDate(){
+        return IKEGetRequest(0x02, 0xFC);
+    }
+    
+    /**
+     * Issue a Get request for the "Outdoor Temp" Value.
+     * @return Byte array of message to send to IBus
+     */
+    public byte[] getOutdoorTemp(){
+        return IKEGetRequest(0x03, 0xFD);
+    }
+    
+    /**
+     * Issue a Get request for the "Consumption 1" Value.
+     * @return Byte array of message to send to IBus
+     */
+    public byte[] getFuel1(){
+        return IKEGetRequest(0x04, 0xFA);
+    }
+    
+    /**
+     * Issue a Get request for the "Consumption 2" Value.
+     * @return Byte array of message to send to IBus
+     */
+    public byte[] getFuel2(){
+        return IKEGetRequest(0x05, 0xFB);
+    }
+    
+    /**
+     * Issue a Get request for the "Fuel Tank Range" Value.
+     * @return Byte array of message to send to IBus
+     */
+    public byte[] getRange(){
+        return IKEGetRequest(0x06, 0xF8);
+    }
+    
+    /**
+     * Issue a Get request for the "Avg. Speed" Value.
+     * @return Byte array of message to send to IBus
+     */
+    public byte[] getAvgSpeed(){
+        return IKEGetRequest(0x0A, 0xF4);
+    }
+    
+    /**
+     * Reset the "Consumption 1" IKE metric
+     * @return Byte array of message to send to IBus
+     */
+    public byte[] resetFuel1(){
+        return IKEResetRequest(0x04, 0xEB);
+    }
+    
+    /**
+     * Reset the "Consumption 2" IKE metric
+     * @return Byte array of message to send to IBus
+     */
+    public byte[] resetFuel2(){
+        return IKEResetRequest(0x05, 0xEA);
+    }
+    
+    /**
+     * Reset the "Avg. Speed" IKE metric
+     * @return Byte array of message to send to IBus
+     */
+    public byte[] resetAvgSpeed(){
+        return IKEResetRequest(0x0A, 0xE5);
+    }
+    
+    /**
+     * Send a new time setting to the IKE
+     * IBus message: 3B 06 80 40 01 <Hours> <Mins> <CRC>
+     * @param args Two ints MUST be provided
+     *  int hours, int minutes
+     * @return Byte array of composed message to send to IBus
+     */
+    public byte[] setTime(Object... args){
+        int hours = (Integer) args[0];
+        int minutes = (Integer) args[1];
+        byte[] completedMessage = new byte[]{
+            GFX_DRIVER, 0x06, IKE_SYSTEM, OBCRequestSet, 0x01, (byte)hours, (byte)minutes, 0x00
+        };
+        completedMessage[completedMessage.length - 1] = genMessageCRC(completedMessage);
+        return completedMessage;
+    }
+    
+    /**
+     * Send a new date setting to the IKE
+     * IBus message: 3B 07 80 40 02 <Day> <Month> <Year> <CRC>
+     * @param args Three ints MUST be provided
+     *     int day, int month, int year
+     * @return Byte array of composed message to send to IBus
+     */
+    public byte[] setDate(Object... args){
+        int day = (Integer) args[0];
+        int month = (Integer) args[1];
+        int year = (Integer) args[2];
+        
+        byte[] completedMessage = new byte[]{
+            GFX_DRIVER, 0x07, IKE_SYSTEM, OBCRequestSet, 0x02, (byte)day, (byte)month, (byte)year, 0x00
+        };
+        completedMessage[completedMessage.length - 1] = genMessageCRC(completedMessage);
+        return completedMessage;
+    }
+    
+    /**
+     * Send a new unit setting to the IKE
+     * All units must be set at once, oh well.
+     * 3B 07 80 15 F2 72 1A 00 33
+     * IBus message: 3B 07 80 15 <Vehicle Type/Language> <Units> <Consumption Units> <Engine Type> <CRC>
+     * @param args Three ints MUST be provided
+     *     int day, int month, int year
+     * @return Byte array of composed message to send to IBus
+     */
+    public byte[] setUnits(Object... args){
+        int speedUnit = (Integer) args[0]; // 0 = Km/h 1 = /MPH
+        int distanceUnit = (Integer) args[1]; // 0 = Km 1 = Mi
+        int tempUnit = (Integer) args[2]; // 0 = C 1 = F
+        int dateTimeUnit = (Integer) args[3]; // 0 = 24h 1 = 12h
+        int consumptionUnit = (Integer) args[4]; // 0 = L/100 1 = MPG 11 = KM/L
+        
+        byte allUnits = (byte) Integer.parseInt(
+            String.format(
+                "%s%s%s%s00%s%s", 
+                dateTimeUnit, distanceUnit, distanceUnit, 
+                speedUnit, tempUnit, dateTimeUnit 
+            ),
+            2
+        );
+        
+        String consumptionType = String.format(Locale.US, "%02d", consumptionUnit);
+        byte consumptionUnits =(byte) Integer.parseInt(
+            String.format(
+                "0%s%s%s%s%s", dateTimeUnit, dateTimeUnit, 
+                distanceUnit, consumptionType, consumptionType
+            ),
+            2
+        );
+
+        byte[] cmdMsg = new byte[]{
+            GFX_DRIVER, 0x07, IKE_SYSTEM, OBCUnitSet, 
+            (byte)0xF2, allUnits, consumptionUnits, 0x00, 0x00
+        };
+        
+        cmdMsg[cmdMsg.length - 1] = genMessageCRC(cmdMsg);
+        return cmdMsg;
     }
     
     public GFXNavigationSystem(){
