@@ -16,21 +16,6 @@ public class IBusCommand{
     * e.x. BoardMonitor == BoardMonitorSystemCommand
     */
     public enum Commands{
-        // BoardMonitor to IKE Commands
-        BMToIKEGetIgnitionStatus(IBusSystem.Devices.BoardMonitor, "getIgnitionStatus"),
-        BMToIKEGetTime(IBusSystem.Devices.BoardMonitor, "getTime"),
-        BMToIKEGetDate(IBusSystem.Devices.BoardMonitor, "getDate"),
-        BMToIKEGetOutdoorTemp(IBusSystem.Devices.BoardMonitor, "getOutdoorTemp"),
-        BMToIKEGetFuel1(IBusSystem.Devices.BoardMonitor, "getFuel1"),
-        BMToIKEGetFuel2(IBusSystem.Devices.BoardMonitor, "getFuel2"),
-        BMToIKEGetRange(IBusSystem.Devices.BoardMonitor, "getRange"),
-        BMToIKEGetAvgSpeed(IBusSystem.Devices.BoardMonitor, "getAvgSpeed"),
-        BMToIKEResetFuel1(IBusSystem.Devices.BoardMonitor, "resetFuel1"),
-        BMToIKEResetFuel2(IBusSystem.Devices.BoardMonitor, "resetFuel2"),
-        BMToIKEResetAvgSpeed(IBusSystem.Devices.BoardMonitor, "resetAvgSpeed"),
-        BMToIKESetTime(IBusSystem.Devices.BoardMonitor, "setTime"),
-        BMToIKESetDate(IBusSystem.Devices.BoardMonitor, "setDate"),
-        BMToIKESetUnits(IBusSystem.Devices.BoardMonitor, "setUnits"),
         // BoardMonitor to Radio Commands
         BMToRadioGetStatus(IBusSystem.Devices.BoardMonitor, "getRadioStatus"),
         BMToRadioCDStatus(IBusSystem.Devices.BoardMonitor, "sendCDPlayerMessage"),
@@ -58,6 +43,21 @@ public class IBusCommand{
         BMToGMGetDoorStatus(IBusSystem.Devices.BoardMonitor, "getDoorsRequest"),
         // BoardMonitor to Global Broadcast Address Commands
         BMToGlobalBroadcastAliveMessage(IBusSystem.Devices.BoardMonitor, "sendAliveMessage"),
+        // GFX Navigation Driver to IKE Commands
+        GFXToIKEGetIgnitionStatus(IBusSystem.Devices.GFXNavigationDriver, "getIgnitionStatus"),
+        GFXToIKEGetTime(IBusSystem.Devices.GFXNavigationDriver, "getTime"),
+        GFXToIKEGetDate(IBusSystem.Devices.GFXNavigationDriver, "getDate"),
+        GFXToIKEGetOutdoorTemp(IBusSystem.Devices.GFXNavigationDriver, "getOutdoorTemp"),
+        GFXToIKEGetFuel1(IBusSystem.Devices.GFXNavigationDriver, "getFuel1"),
+        GFXToIKEGetFuel2(IBusSystem.Devices.GFXNavigationDriver, "getFuel2"),
+        GFXToIKEGetRange(IBusSystem.Devices.GFXNavigationDriver, "getRange"),
+        GFXToIKEGetAvgSpeed(IBusSystem.Devices.GFXNavigationDriver, "getAvgSpeed"),
+        GFXToIKEResetFuel1(IBusSystem.Devices.GFXNavigationDriver, "resetFuel1"),
+        GFXToIKEResetFuel2(IBusSystem.Devices.GFXNavigationDriver, "resetFuel2"),
+        GFXToIKEResetAvgSpeed(IBusSystem.Devices.BoardMonitor, "resetAvgSpeed"),
+        GFXToIKESetTime(IBusSystem.Devices.GFXNavigationDriver, "setTime"),
+        GFXToIKESetDate(IBusSystem.Devices.GFXNavigationDriver, "setDate"),
+        GFXToIKESetUnits(IBusSystem.Devices.GFXNavigationDriver, "setUnits"),
         // Steering Wheel to Radio Commands
         SWToRadioVolumeUp(IBusSystem.Devices.MultiFunctionSteeringWheel, "sendVolumeUp"),
         SWToRadioVolumeDown(IBusSystem.Devices.MultiFunctionSteeringWheel, "sendVolumeDown"),

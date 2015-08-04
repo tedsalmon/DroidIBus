@@ -88,9 +88,9 @@
         <item>1</item>
     </string-array>
     <string-array name="settings_mflMediaButton_options_values">
-        <item>2</item>
-        <item>1</item>
-        <item>0</item>
+        <item>PRESS</item>
+        <item>HOLD</item>
+        <item>DISABLED</item>
     </string-array>
     <string name="settings_navAvailable">Display Nav Data</string>
     <string name="settings_navAvailable_summ">Enable only if your vehicle is equipped with the nav unit and it\'s DVD</string>
