@@ -93,7 +93,6 @@ public class DashboardMusicFragment extends BaseFragment{
 
     protected RadioModes mRadioMode = RadioModes.AUX;
     protected RadioTypes mRadioType = RadioTypes.BM53;
-    protected long mLastRadioStatus = 0;
     protected long mLastInfoRequest = 0;
     protected boolean mRadioModeSatisfied = true;
     protected boolean mCDPlayerPlaying = false;
@@ -344,7 +343,6 @@ public class DashboardMusicFragment extends BaseFragment{
     private Runnable mSendInfoButton = new Runnable(){
         @Override
         public void run(){
-            //long now = getTimeNow();
             sendPressReleaseCommand("BMToRadioInfo");
         }
     };
@@ -416,7 +414,6 @@ public class DashboardMusicFragment extends BaseFragment{
             }
             // If this is a BM53 unit, we should listen for
             // Updates to the station text
-            mLastRadioStatus = getTimeNow();
             switch(text){
                 case "NO CD":
                 case "CD 1-04":
