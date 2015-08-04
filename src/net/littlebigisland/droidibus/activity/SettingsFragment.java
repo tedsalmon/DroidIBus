@@ -120,8 +120,8 @@ public class SettingsFragment extends PreferenceFragment{
 		    "ERROR: Could not register callback with the IBus Service"
 		);
 	    }
-	    sendIBusCommand(IBusCommand.Commands.BMToIKEGetTime);
-	    sendIBusCommand(IBusCommand.Commands.BMToIKEGetDate);
+	    sendIBusCommand(IBusCommand.Commands.GFXToIKEGetTime);
+	    sendIBusCommand(IBusCommand.Commands.GFXToIKEGetDate);
         }
 
         @Override
@@ -138,13 +138,13 @@ public class SettingsFragment extends PreferenceFragment{
 	    public boolean onPreferenceClick(Preference preference){
 		Calendar tDate = Calendar.getInstance();
 		sendIBusCommand(
-		    IBusCommand.Commands.BMToIKESetDate,
+		    IBusCommand.Commands.GFXToIKESetDate,
 		    tDate.get(Calendar.DATE), 
 		    tDate.get(Calendar.MONTH) + 1,
 		    tDate.get(Calendar.YEAR) - 2000
 		);
 		sendIBusCommand(
-		    IBusCommand.Commands.BMToIKESetTime,
+		    IBusCommand.Commands.GFXToIKESetTime,
 		    tDate.get(Calendar.HOUR_OF_DAY), 
 		    tDate.get(Calendar.MINUTE)
 		);
@@ -167,7 +167,7 @@ public class SettingsFragment extends PreferenceFragment{
 		    int year = Integer.parseInt(dateParts[2]);
 		    prefVal = String.format("%s %s %s", day, month, year);
 		    sendIBusCommand(
-		        IBusCommand.Commands.BMToIKESetDate, day, month, year
+		        IBusCommand.Commands.GFXToIKESetDate, day, month, year
 		    );
 		    break;
 		case "obcTime":
@@ -177,7 +177,7 @@ public class SettingsFragment extends PreferenceFragment{
 		    int hour = Integer.parseInt(time[0]);
 		    int minute = Integer.parseInt(time[1]);
 		    sendIBusCommand(
-		        IBusCommand.Commands.BMToIKESetTime, hour, minute
+		        IBusCommand.Commands.GFXToIKESetTime, hour, minute
 		    );
 		    prefVal = sPrefs.getString(key, "");
 		    break;
@@ -197,7 +197,7 @@ public class SettingsFragment extends PreferenceFragment{
 		case "consumptionUnit":
 		    prefVal = sPrefs.getString(key, "");
 		    sendIBusCommand(
-		        IBusCommand.Commands.BMToIKESetUnits,
+		        IBusCommand.Commands.GFXToIKESetUnits,
 			Integer.parseInt(sPrefs.getString("speedUnit", "1")),
 			Integer.parseInt(sPrefs.getString("distanceUnit", "1")),
 			Integer.parseInt(sPrefs.getString("temperatureUnit", "1")),
