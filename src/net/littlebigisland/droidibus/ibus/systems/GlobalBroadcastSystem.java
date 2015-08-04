@@ -41,8 +41,8 @@ public class GlobalBroadcastSystem extends IBusSystem{
                     triggerCallback("onUpdateRPM", (int) msg.get(5) * 100);
                     break;
                 case MILEAGE:
-                    // Bytes 5-7 contain the Mileage
-                    // Bytes 8 and 9 hold the inspection interval
+                    // Bytes 5-7 contain the Mileage in KMs
+                    // Bytes 8 and 9 hold the inspection interval in KMs
                     // Byte 10 is the SIA Type (0x40 == Inspection)
                     // Byte 11 is the the days to inspection.
                     int mileage = (
