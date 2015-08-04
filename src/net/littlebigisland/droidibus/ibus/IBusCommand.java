@@ -58,6 +58,8 @@ public class IBusCommand{
         GFXToIKESetTime(IBusSystem.Devices.GFXNavigationDriver, "setTime"),
         GFXToIKESetDate(IBusSystem.Devices.GFXNavigationDriver, "setDate"),
         GFXToIKESetUnits(IBusSystem.Devices.GFXNavigationDriver, "setUnits"),
+        // GlobalBroadcast to IKE commands
+        GBCToIKEGetMilage(IBusSystem.Devices.GlobalBroadcast, "getMileage"),
         // Steering Wheel to Radio Commands
         SWToRadioVolumeUp(IBusSystem.Devices.MultiFunctionSteeringWheel, "sendVolumeUp"),
         SWToRadioVolumeDown(IBusSystem.Devices.MultiFunctionSteeringWheel, "sendVolumeDown"),

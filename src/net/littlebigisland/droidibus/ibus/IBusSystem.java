@@ -93,6 +93,14 @@ public class IBusSystem{
         
         public void onUpdateUnits(final String units){}
         
+        public void onUpdateMileage(final int mileage){}
+        
+        public void onUpdateServiceInterval(final int serviceInterval){}
+        
+        public void onUpdateServiceIntervalType(final int serviceIntervalType){}
+        
+        public void onUpdateDaysToInspection(final int daysToInspection){}        
+        
         // Navigation System
         public void onUpdateStreetLocation(final String streetName){}
         
