@@ -20,6 +20,7 @@ public class GlobalBroadcastSystem extends IBusSystem{
         private static final byte COOLANT_TEMP = 0x19;
         
         public void mapReceived(ArrayList<Byte> msg){
+            currentMessage = msg;
             switch(msg.get(3)){
                 case IGN_STATE:
                     int state = (msg.get(4) < 2) ? msg.get(4) : (0x02 & msg.get(4));
@@ -36,8 +37,8 @@ public class GlobalBroadcastSystem extends IBusSystem{
                     );
                     break;
                 case SPEED_RPM:
-                    triggerCallback("onUpdateSpeed", (int)msg.get(4));
-                    triggerCallback("onUpdateRPM", (int)msg.get(5) * 100);
+                    triggerCallback("onUpdateSpeed", (int) msg.get(4));
+                    triggerCallback("onUpdateRPM", (int) msg.get(5) * 100);
                     break;
                 case MILEAGE:
                     // Bytes 5-7 contain the Mileage
@@ -45,19 +46,16 @@ public class GlobalBroadcastSystem extends IBusSystem{
                     // Byte 10 is the SIA Type (0x40 == Inspection)
                     // Byte 11 is the the days to inspection.
                     int mileage = (
-                        (currentMessage.get(7) * 65535) +
-                        (currentMessage.get(6) * 256) +
-                        currentMessage.get(5)
+                        (msg.get(7) * 65535) + (msg.get(6) * 256) + msg.get(5)
                     );
-                    int serviceInterval = (
-                        (currentMessage.get(8) + currentMessage.get(9)) * 50
-                    );
-                    int serviceIntervalType = currentMessage.get(10);
-                    int daysToInspection = currentMessage.get(11);
+                    int serviceInterval = (msg.get(8) + msg.get(9)) * 50;
+                    int serviceIntervalType = msg.get(10);
+                    int daysToInspection = msg.get(11);
+                    
                     triggerCallback("onUpdateMileage", mileage);
                     triggerCallback("onUpdateServiceInterval", serviceInterval);
                     triggerCallback(
-                        "onUpdateDServiceIntervalType", serviceIntervalType
+                        "onUpdateServiceIntervalType", serviceIntervalType
                     );
                     triggerCallback("onUpdateDaysToInspection", daysToInspection);
                     break;
