@@ -14,7 +14,6 @@ import android.app.FragmentTransaction;
 import android.content.ComponentName;
 import android.content.SharedPreferences;
 import android.os.Bundle;
-import android.os.Handler;
 import android.os.IBinder;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -24,8 +23,6 @@ import android.view.Window;
 import android.view.WindowManager;
 
 public class DashboardFragment extends BaseFragment{
-    
-    protected Handler mHandler = new Handler();
     
     public static final int SCREEN_ON = 1;
     public static final int SCREEN_OFF = 0;

@@ -14,7 +14,6 @@ import net.littlebigisland.droidibus.ibus.IBusSystem;
 import android.content.ComponentName;
 import android.content.SharedPreferences;
 import android.os.Bundle;
-import android.os.Handler;
 import android.os.IBinder;
 import android.preference.PreferenceManager;
 import android.util.Log;
@@ -28,8 +27,6 @@ import android.widget.TextView;
 
 
 public class DashboardStatsFragment extends BaseFragment{
-    
-    protected Handler mHandler = new Handler();
     
     protected SharedPreferences mSettings = null;
     

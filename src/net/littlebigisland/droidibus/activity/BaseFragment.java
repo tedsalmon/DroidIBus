@@ -16,7 +16,6 @@ import net.littlebigisland.droidibus.ibus.IBusCommand;
 import net.littlebigisland.droidibus.ibus.IBusSystem;
 import net.littlebigisland.droidibus.ibus.IBusMessageService;
 import net.littlebigisland.droidibus.ibus.IBusMessageService.IOIOBinder;
-import android.app.Activity;
 import android.app.Fragment;
 import android.content.ComponentName;
 import android.content.Context;
@@ -34,6 +33,8 @@ public class BaseFragment extends Fragment{
     
     public String TAG = "DroidIBus";
     public String CTAG = "";
+    
+    public Handler mHandler = new Handler(); 
 
     // NEVER override these in a child class! The service won't connect
     public IBusMessageService mIBusService = null;
@@ -185,26 +186,24 @@ public class BaseFragment extends Fragment{
         }
     }
 
-    public void sendIBusCommand(
-        final IBusCommand.Commands cmd, final Object... args
-    ){
-        if(getIBusLinkState()){
+    public void sendIBusCommand(IBusCommand.Commands cmd, final Object... args){
+        if(mIBusConnected){
             mIBusService.sendCommand(new IBusCommand(cmd, args));
+        }else{
+            Log.e(
+               TAG, 
+               String.format("Discarding command %s because IBusService is unbound", cmd)
+            );
         }
     }
     
-    public void sendIBusCommandDelayed(
-        final IBusCommand.Commands cmd, 
-        final long delayMils, final Object... args
-    ){
-        Activity mainAct = getActivity();
-        if(mainAct != null){
-            new Handler(mainAct.getMainLooper()).postDelayed(new Runnable(){
-                public void run(){
-                    sendIBusCommand(cmd, args);
-                }
-            }, delayMils);
-        }
+    public void sendIBusCommandDelayed(final IBusCommand.Commands cmd, 
+            final long delayMils, final Object... args){
+        mHandler.postDelayed(new Runnable(){
+            public void run(){
+                sendIBusCommand(cmd, args);
+            }
+        }, delayMils);
     }
     
     public void showToast(String toastText){
