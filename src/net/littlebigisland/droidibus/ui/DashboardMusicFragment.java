@@ -1,4 +1,4 @@
-package net.littlebigisland.droidibus.activity;
+package net.littlebigisland.droidibus.ui;
 
 /**
  * Dashboard Music Fragment - Controls Music Player 
@@ -12,6 +12,10 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 
+import net.littlebigisland.droidibus.resources.enums.IgnitionStates;
+import net.littlebigisland.droidibus.resources.enums.MFLPlaybackModes;
+import net.littlebigisland.droidibus.resources.enums.RadioModes;
+import net.littlebigisland.droidibus.resources.enums.RadioTypes;
 import net.littlebigisland.droidibus.services.IBusMessageService;
 import net.littlebigisland.droidibus.services.MusicControllerService;
 
@@ -101,22 +105,10 @@ public class DashboardMusicFragment extends BaseFragment{
     protected MFLPlaybackModes mMFLPlaybackMode = null;
     
     protected IgnitionStates mIgnitionState = IgnitionStates.OFF;
+    
+    private final static int IC_PLAY = android.R.drawable.ic_media_play;
+    private final static int IC_PAUSE = android.R.drawable.ic_media_pause;
 
-    private enum IgnitionStates{
-        OFF, ON
-    }
-    
-    private enum RadioModes{
-        AUX, TAPE, CD, Radio
-    }
-    
-    private enum RadioTypes{
-        BM53, CD53, C43
-    }
-    
-    private enum MFLPlaybackModes{
-        PRESS, HOLD, DISABLED;
-    }
 
     // Service connection class for IBus
     private IBusServiceConnection mIBusConnection = new IBusServiceConnection(){
@@ -126,12 +118,6 @@ public class DashboardMusicFragment extends BaseFragment{
             super.onServiceConnected(name, service);
             registerIBusCallback(mIBusCallbacks, mHandler);
             Log.d(TAG, CTAG + "IBus Service Connected");
-
-            if(mRadioType == RadioTypes.BM53){
-                Log.d(TAG, CTAG + "Starting mRadioUpdater");
-                mThreadExecutor.execute(mRadioUpdater);
-                mHandler.postDelayed(mSendInfoButton, 2500);
-            }
         }
         
     };
@@ -170,21 +156,17 @@ public class DashboardMusicFragment extends BaseFragment{
         
         @Override
         public boolean onTouch(View v, MotionEvent event){
-            IBusCommand.Commands cmd = null;
             switch(event.getAction()){
                 case MotionEvent.ACTION_DOWN:
-                    cmd = IBusCommand.Commands.valueOf(
+                    sendIBusCommand(IBusCommand.Commands.valueOf(
                         v.getTag().toString() + "Press"
-                    );
+                    ));
                     break;
                 case MotionEvent.ACTION_UP:
-                    cmd = IBusCommand.Commands.valueOf(
+                    sendIBusCommand(IBusCommand.Commands.valueOf(
                         v.getTag().toString() + "Release"
-                    );
+                    ));
                     break;
-            }
-            if(cmd != null){
-                sendIBusCommand(cmd);
             }
             v.performClick();
             return false;
@@ -213,7 +195,7 @@ public class DashboardMusicFragment extends BaseFragment{
     private OnClickListener mPlaybackClickListener = new OnClickListener(){
         @Override
         public void onClick(View v){
-            switch(v.getId()) {
+            switch(v.getId()){
                 case R.id.playerPrevBtn:
                     mPlayerService.skipToPrevious();
                     break;
@@ -221,7 +203,7 @@ public class DashboardMusicFragment extends BaseFragment{
                     mPlayerService.skipToNext();
                     break;
                 case R.id.playerPlayPauseBtn:
-                    togglePlayback();
+                    mPlayerService.togglePlayback();
                     break;
             }
         }
@@ -240,7 +222,7 @@ public class DashboardMusicFragment extends BaseFragment{
             // Tablet Mode if checked, else Radio
             if(isChecked){
                 // Send IBus Message
-                changeRadioMode(RadioModes.AUX);
+                //changeRadioMode(RadioModes.AUX);
                 mRadioLayout.setVisibility(View.GONE);
                 mTabletLayout.setVisibility(View.VISIBLE);
                 mMediaSessionSelector.setVisibility(View.VISIBLE);
@@ -249,7 +231,7 @@ public class DashboardMusicFragment extends BaseFragment{
                     mPlayerService.pause();
                 }
                 // Send IBus Message
-                changeRadioMode(RadioModes.Radio);
+                //changeRadioMode(RadioModes.Radio);
                 mRadioLayout.setVisibility(View.VISIBLE);
                 mTabletLayout.setVisibility(View.GONE);
                 mMediaSessionSelector.setVisibility(View.GONE);
@@ -339,44 +321,7 @@ public class DashboardMusicFragment extends BaseFragment{
             return;
         }
         
-    };
-    
-    private Runnable mSendInfoButton = new Runnable(){
-        @Override
-        public void run(){
-            sendPressReleaseCommand("BMToRadioInfo");
-        }
-    };
-
-    /**
-     *  This thread should make sure to send out and request
-     *  any IBus messages that the BM usually would.
-     *  We should also keep the radio on "Info" mode at all times here.
-     */
-    private Runnable mRadioUpdater = new Runnable(){
-
-        private static final int mTimeout = 5000;
-        private long mLastUpdate = 0;
-        
-        @Override
-        public void run(){
-            Log.d(TAG, "mRadioUpdater is running");
-            while(!Thread.currentThread().isInterrupted()){
-                long timeNow = getTimeNow();
-                if(getIBusLinkState() && (timeNow - mLastUpdate) >= mTimeout){
-                    mLastUpdate = timeNow;
-                    sendIBusCommand(IBusCommand.Commands.BMToRadioGetStatus);
-                }
-                try{
-                    Thread.sleep(mTimeout);
-                }catch(InterruptedException e){
-                    Log.e(TAG, CTAG + "mRadioUpdater InterruptedException");
-                }
-            }
-            Log.d(TAG, "mRadioUpdater is returning");
-            return;
-        }
-    };   
+    }; 
     
     private MediaController.Callback mPlayerCallbacks = new MediaController.Callback(){
         
@@ -403,52 +348,8 @@ public class DashboardMusicFragment extends BaseFragment{
     private IBusSystem.Callbacks mIBusCallbacks = new IBusSystem.Callbacks(){
     	
     	private int mCurrentTextColor = R.color.dayColor;
-		
-        /**
-        * Callback to handle any updates to the station text when in Radio Mode
-        * @param text Text to set
-        */
+        
         @Override
-        public void onUpdateRadioStation(final String text){
-            if(mRadioType != RadioTypes.BM53){
-                return;
-            }
-            // If this is a BM53 unit, we should listen for
-            // Updates to the station text
-            switch(text){
-                case "NO CD":
-                case "CD 1-04":
-                case "TR 01":
-                    mRadioMode = RadioModes.CD;
-                    break;
-                case "TAPE A":
-                case "TAPE B":
-                    mRadioMode = RadioModes.TAPE;
-                    break;
-                case "AUX":
-                    mRadioMode = RadioModes.AUX;
-                    break;
-                default:
-                    mRadioMode = RadioModes.Radio;
-                    break;
-            }
-            // Sync modes with the car
-            // Make sure we're not changing modes
-            if(mRadioModeSatisfied){
-                int auxMode = mTabletLayout.getVisibility();
-                if(mRadioMode == RadioModes.AUX && auxMode == View.GONE){
-                    Log.d(TAG, CTAG + "Toggle to radio");
-                    mBtnMusicMode.toggle();
-                }
-                if(mRadioMode != RadioModes.AUX && auxMode == View.VISIBLE){
-                    Log.d(TAG, CTAG + "Toggle to AUX");
-                    mBtnMusicMode.toggle();
-                }
-            }
-            mStationText.setText(text);
-        }
-		
-    	@Override
         public void onUpdateRadioBrodcasts(String broadcastType){
             mBroadcastField.setText(broadcastType);
         }
@@ -469,99 +370,7 @@ public class DashboardMusicFragment extends BaseFragment{
         public void onUpdateRadioProgramIndicator(final String currentProgram){
             mProgramField.setText(currentProgram);
         }
-        
-        /** Callback to handle Ignition state updates
-        * @param int Current Ignition State
-        */
-        @Override
-        public void onUpdateIgnitionSate(final int state) {
-            boolean carIsOn = (state > 0) ? true : false; 
-            if(mMediaPlayerConnected && mRadioMode == RadioModes.AUX){
-                if(carIsOn){
-                    if(!mIsPlaying && mWasPlaying){
-                        // Post a runnable to play the last song in 5 seconds
-                        mHandler.postDelayed(new Runnable(){
-                            @Override
-                            public void run(){
-                                mPlayerService.play();
-                                mIsPlaying = true;
-                            }
-                        }, 5000);
-                        mWasPlaying = false;
-                    }
-                    // This if will only trigger if the car WAS previously off
-                    if(mIgnitionState == IgnitionStates.OFF){
-                        // Wait 5 seconds to send info request to make sure the 
-                        // BM53 is on the right screen, getting RDS updates
-                        mHandler.postDelayed(mSendInfoButton, 5000);
-                    }
-                }else{
-                    if(mIsPlaying){
-                        mPlayerService.pause();
-                        mIsPlaying = false;
-                        mWasPlaying = true;
-                    }
-                }
-            }
-            mIgnitionState = (carIsOn) ? IgnitionStates.ON : IgnitionStates.OFF;
-        }
-        
-        @Override
-        public void onTrackFwd(){
-            if(mMediaPlayerConnected){
-                mPlayerService.skipToNext();
-            }
-        }
-        
-        @Override
-        public void onTrackPrev(){
-            if(mMediaPlayerConnected){
-                mPlayerService.skipToPrevious();
-            }
-        }
-        
-        @Override
-        public void onVoiceBtnPress(){
-            // Re-purpose this button to pause/play music
-            if(mMFLPlaybackMode == MFLPlaybackModes.PRESS){
-                togglePlaybackInAux();
-            }
-        }
-        
-        @Override
-        public void onVoiceBtnHold(){
-            // Re-purpose this button to pause/play music
-            if(mMFLPlaybackMode == MFLPlaybackModes.HOLD){
-                togglePlaybackInAux();
-            }
-        }
-        
-        @Override
-        public void onUpdateRadioStatus(int status){
-            // Radio is off, turn it on
-            if(status == 0){
-                sendPressReleaseCommand("BMToRadioPwr");
-            }
-        }
-        
-        @Override
-        public void onRadioCDStatusRequest(){
-            // Tell the Radio we have a CD on track 1
-            byte trackAndCD = (byte) 0x01;
-            sendIBusCommand(
-                IBusCommand.Commands.BMToRadioCDStatus, 0, trackAndCD, trackAndCD
-            );
-            if(mCDPlayerPlaying){
-                sendIBusCommand(
-                    IBusCommand.Commands.BMToRadioCDStatus, 1, trackAndCD, trackAndCD
-                );
-            }else{
-                sendIBusCommand(
-                    IBusCommand.Commands.BMToRadioCDStatus, 0, trackAndCD, trackAndCD
-                );
-            }
-        }
-        
+    	
         @Override
         public void onLightStatus(int lightStatus){
             if(!mSettings.getBoolean("nightColorsWithInterior", false)){
@@ -574,51 +383,8 @@ public class DashboardMusicFragment extends BaseFragment{
                 changeTextColors(mRadioLayout, color);
             }
         }
-        
-        @Override
-        public void onUpdateScreenState(int state){
-            // Screen state 01 and 02
-            switch((byte) state){
-                case 0x01: // Gracefully went home menu
-                case 0x02: // Timed out to home menu
-                    mHandler.postDelayed(mSendInfoButton, 150);
-                    break;
-            }
-        }
 
     };
-    
-    private void changeRadioMode(final RadioModes desiredMode){
-        if(mRadioType == RadioTypes.BM53 && getIBusLinkState()){
-            mRadioModeSatisfied = false;
-            mThreadExecutor.execute(new Runnable(){
-                
-                @Override
-                public void run(){
-                    while(desiredMode != mRadioMode && !mRadioModeSatisfied){
-                        Log.d(TAG, 
-                            String.format(
-                                CTAG + "Radio Mode: %s -> %s", mRadioMode.toString(),
-                                desiredMode.toString()
-                            )
-                        );
-                        sendPressReleaseCommand("BMToRadioMode");
-                        try{
-                            Thread.sleep(1000);
-                        }catch (InterruptedException e){
-                            Log.e(TAG, CTAG + "mModeChanger InterruptedException");
-                        }
-                        if(desiredMode == mRadioMode){
-                            mRadioModeSatisfied = true;
-                        }
-                    }
-                    mRadioModeSatisfied = true;
-                    return;
-                }
-
-            });
-        }
-    }
     
     /**
      * Reset the elements of the music player view
@@ -644,20 +410,6 @@ public class DashboardMusicFragment extends BaseFragment{
         return appName;
     }
     
-    public void sendPressReleaseCommand(String cmdName){
-        IBusCommand.Commands cmdPress = IBusCommand.Commands.valueOf(
-            cmdName + "Press"
-        );
-        IBusCommand.Commands cmdRelease = IBusCommand.Commands.valueOf(
-            cmdName + "Release"
-        );
-        if(cmdPress != null && cmdRelease != null){
-            sendIBusCommand(cmdPress);
-            sendIBusCommandDelayed(cmdRelease, 250);
-        }else{
-            showToast("Error sending unknown IBus Command " + cmdName);
-        }
-    }
     
     /**
      * Update our spinner's list of remotes based on input String array
@@ -706,51 +458,32 @@ public class DashboardMusicFragment extends BaseFragment{
     }
     
     private void setMediaMetadata(MediaMetadata md){
-        if(md != null){
-            mSongDuration = md.getLong(
-                MediaMetadata.METADATA_KEY_DURATION
-            );
-            mPlayerTitleText.setText(
-                md.getString(MediaMetadata.METADATA_KEY_TITLE)
-            );
-            mPlayerAlbumText.setText(
-                md.getString(MediaMetadata.METADATA_KEY_ALBUM)
-            );
-            mPlayerArtistText.setText(
-                md.getString(MediaMetadata.METADATA_KEY_ARTIST)
-            );
-            Bitmap albumArt = md.getBitmap(
-                MediaMetadata.METADATA_KEY_ALBUM_ART
-            );
-            if(albumArt != null){
-                mPlayerArtwork.setImageBitmap(
-                    Bitmap.createScaledBitmap(
-                        albumArt, ARTWORK_HEIGHT, ARTWORK_WIDTH, false
-                    )
-                );
-            }else{
-                mPlayerArtwork.setImageResource(0);
-            }
-            mPlayerScrubBar.setMax((int) mSongDuration);
-        }else{
+        if(md == null){
             Log.e(TAG, CTAG + "MediaMetadata is null");
+            return;
         }
+        mSongDuration = md.getLong(MediaMetadata.METADATA_KEY_DURATION);
+        mPlayerTitleText.setText(md.getString(MediaMetadata.METADATA_KEY_TITLE));
+        mPlayerAlbumText.setText(md.getString(MediaMetadata.METADATA_KEY_ALBUM));
+        mPlayerArtistText.setText(md.getString(MediaMetadata.METADATA_KEY_ARTIST));
+        Bitmap albumArt = md.getBitmap(MediaMetadata.METADATA_KEY_ALBUM_ART);
+        if(albumArt != null){
+            mPlayerArtwork.setImageBitmap(
+                Bitmap.createScaledBitmap(
+                    albumArt, ARTWORK_HEIGHT, ARTWORK_WIDTH, false
+                )
+            );
+        }else{
+            mPlayerArtwork.setImageResource(0);
+        }
+        mPlayerScrubBar.setMax((int) mSongDuration);
     }
     
     private void setPlaybackState(int playbackState){
-        switch(playbackState){
-            case PlaybackState.STATE_PLAYING:
-                mIsPlaying = true;
-                mPlayerControlBtn.setImageResource(
-                    android.R.drawable.ic_media_pause
-                );
-                break;
-            default:
-                mIsPlaying = false;
-                mPlayerControlBtn.setImageResource(
-                    android.R.drawable.ic_media_play
-                );
-                break;
+        if(playbackState == PlaybackState.STATE_PLAYING){
+            mPlayerControlBtn.setImageResource(IC_PLAY);
+        }else{
+            mPlayerControlBtn.setImageResource(IC_PAUSE);
         }
     }
     
@@ -762,33 +495,12 @@ public class DashboardMusicFragment extends BaseFragment{
         }
     }
     
-    private void togglePlayback(){
-        if(mIsPlaying){
-            Log.d(TAG, CTAG + "mIsPlaying");
-            mPlayerService.pause();
-            mIsPlaying = false;
-            setPlaybackState(PlaybackState.STATE_PAUSED);
-        }else{
-            Log.d(TAG, CTAG + "!mIsPlaying");
-            mIsPlaying = true;
-            mPlayerService.play();
-            setPlaybackState(PlaybackState.STATE_PLAYING);
-        }
-    }
-    
-    private void togglePlaybackInAux(){
-        if(mRadioMode == RadioModes.AUX){
-            togglePlayback();
-        }
-    }
-    
     @Override
     public void onActivityCreated(Bundle savedInstanceState){
         super.onActivityCreated(savedInstanceState);
 	CTAG = "DashboardMusicFragment: ";
         Log.d(TAG, CTAG + "onActivityCreated Called");
-        mPackageManager = getActivity().getApplicationContext(
-	).getPackageManager();
+        mPackageManager = mContext.getPackageManager();
         if(!mIBusConnected){
             serviceStarter(IBusMessageService.class, mIBusConnection);
         }

@@ -1,4 +1,4 @@
-package net.littlebigisland.droidibus.activity;
+package net.littlebigisland.droidibus.ui;
 /**
  * Base Dashboard Fragment - Controls base functions
  * and drops in the child fragments 

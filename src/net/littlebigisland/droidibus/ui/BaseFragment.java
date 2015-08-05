@@ -1,17 +1,14 @@
-package net.littlebigisland.droidibus.activity;
+package net.littlebigisland.droidibus.ui;
 
 /**
  * Base Fragment - Implements universal functionality
  * @author Ted <tass2001@gmail.com>
  * @package net.littlebigisland.droidibus.activity
  */
-
-//import net.littlebigisland.droidibus.ibus.IBusCallbackReceiver;
-import java.util.ArrayList;
 import java.util.Calendar;
-import java.util.List;
-import java.util.concurrent.Executor;
 
+import net.littlebigisland.droidibus.resources.ServiceManager;
+import net.littlebigisland.droidibus.resources.ThreadExecutor;
 import net.littlebigisland.droidibus.services.IBusMessageService;
 import net.littlebigisland.droidibus.services.IBusMessageService.IOIOBinder;
 
@@ -20,8 +17,8 @@ import net.littlebigisland.droidibus.ibus.IBusSystem;
 import android.app.Fragment;
 import android.content.ComponentName;
 import android.content.Context;
-import android.content.Intent;
 import android.content.ServiceConnection;
+import android.os.Bundle;
 import android.os.Handler;
 import android.os.IBinder;
 import android.util.Log;
@@ -35,33 +32,14 @@ public class BaseFragment extends Fragment{
     public String TAG = "DroidIBus";
     public String CTAG = "";
     
-    public Handler mHandler = new Handler(); 
+    public Handler mHandler = new Handler();
+    public Context mContext = null;
 
     // NEVER override these in a child class! The service won't connect
     public IBusMessageService mIBusService = null;
     public boolean mIBusConnected = false;
     
     protected ThreadExecutor mThreadExecutor = new ThreadExecutor();
-    
-    protected class ThreadExecutor implements Executor{
-        
-        // Thread List
-        protected List<Thread> mThreadList = new ArrayList<Thread>();
-        
-        @Override
-        public void execute(Runnable command) {
-            Thread childThread = new Thread(command);
-            mThreadList.add(childThread);
-            childThread.start();
-        }
-        
-        public void terminateTasks(){
-            for(Thread childThread: mThreadList){
-                childThread.interrupt();
-            }
-        }
-        
-    }
     
     public class IBusServiceConnection implements ServiceConnection{
         
@@ -140,50 +118,21 @@ public class BaseFragment extends Fragment{
 
     @SuppressWarnings("rawtypes")
     public void serviceStarter(Class cls, ServiceConnection svcConn){
-        Context applicationContext = getActivity();
-        Intent svcIntent = new Intent(applicationContext, cls);
-        try{
-            Log.d(
-                TAG,
-                String.format("%sStarting %s service", CTAG, cls.toString())
-            );
-            applicationContext.bindService(
-                svcIntent, svcConn, Context.BIND_AUTO_CREATE
-            );
-            applicationContext.startService(svcIntent);
-        }
-        catch(Exception ex){
-            Log.d(
-                TAG,
-                String.format(
-                    "%sUnable to start %s service", CTAG, cls.toString()
-                )
-            );
+        boolean res = ServiceManager.startService(cls, svcConn, mContext);
+        if(res){
+            Log.d(TAG, CTAG + "Starting " + cls.toString());
+        }else{
+            Log.e(TAG, CTAG + "Unable to start " + cls.toString());
         }
     }
     
     @SuppressWarnings("rawtypes")
     public void serviceStopper(Class cls, ServiceConnection svcConn){
-        Context applicationContext = getActivity();
-        try{
-            Log.d(
-                TAG,
-                String.format(
-                    "%sUnbinding from %s service", CTAG, cls.toString()
-                )
-            );
-            applicationContext.unbindService(svcConn);
-        }
-        catch(Exception ex){
-            Log.e(
-                TAG,
-                String.format(
-                    "%sUnable to unbind %s - Exception '%s'!",
-                    CTAG,
-                    cls.toString(),
-                    ex.getMessage()
-                )
-            );
+        boolean res = ServiceManager.stopService(cls, svcConn, mContext);
+        if(res){
+            Log.d(TAG, CTAG + "Unbinding from " + cls.toString());
+        }else{
+            Log.e(TAG, CTAG + "Unable to unbind from " + cls.toString());
         }
     }
 
@@ -210,6 +159,12 @@ public class BaseFragment extends Fragment{
     public void showToast(String toastText){
         Context appContext = getActivity();
         Toast.makeText(appContext, toastText, Toast.LENGTH_LONG).show();
+    }
+    
+    @Override
+    public void onActivityCreated(Bundle savedInstanceState){
+        super.onActivityCreated(savedInstanceState);
+        mContext = getActivity();
     }
     
     @Override

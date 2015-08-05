@@ -1,4 +1,4 @@
-package net.littlebigisland.droidibus.activity;
+package net.littlebigisland.droidibus.ui;
 /**
  * Settings Fragment
  * @author Ted <tass2001@gmail.com>
@@ -6,6 +6,7 @@ package net.littlebigisland.droidibus.activity;
  */
 import java.util.Calendar;
 
+import net.littlebigisland.droidibus.resources.ServiceManager;
 import net.littlebigisland.droidibus.services.IBusMessageService;
 import net.littlebigisland.droidibus.services.IBusMessageService.IOIOBinder;
 
@@ -14,7 +15,6 @@ import net.littlebigisland.droidibus.ibus.IBusCommand;
 import net.littlebigisland.droidibus.ibus.IBusSystem;
 import android.content.ComponentName;
 import android.content.Context;
-import android.content.Intent;
 import android.content.ServiceConnection;
 import android.content.SharedPreferences;
 import android.content.SharedPreferences.OnSharedPreferenceChangeListener;
@@ -36,6 +36,8 @@ public class SettingsFragment extends PreferenceFragment{
     private Handler mHandler = new Handler();
     protected IBusMessageService mIBusService;
     protected boolean mIBusConnected = false;
+    
+    protected Context mContext = null;
     
     private Preference mOBCTime = null;
     private Preference mOBCDate = null;
@@ -238,51 +240,22 @@ public class SettingsFragment extends PreferenceFragment{
     }
 
     @SuppressWarnings("rawtypes")
-    private void serviceStarter(Class cls, ServiceConnection svcConn){
-        Context applicationContext = getActivity();
-        Intent svcIntent = new Intent(applicationContext, cls);
-        try{
-            Log.d(
-                TAG,
-                String.format("%sStarting %s service", CTAG, cls.toString())
-            );
-            applicationContext.bindService(
-                svcIntent, svcConn, Context.BIND_AUTO_CREATE
-            );
-            applicationContext.startService(svcIntent);
-        }
-        catch(Exception ex){
-            Log.d(
-                TAG,
-                String.format(
-                    "%sUnable to start %s service", CTAG, cls.toString()
-                )
-            );
+    public void serviceStarter(Class cls, ServiceConnection svcConn){
+        boolean res = ServiceManager.startService(cls, svcConn, mContext);
+        if(res){
+            Log.d(TAG, CTAG + "Starting " + cls.toString());
+        }else{
+            Log.e(TAG, CTAG + "Unable to start " + cls.toString());
         }
     }
     
     @SuppressWarnings("rawtypes")
-    private void serviceStopper(Class cls, ServiceConnection svcConn){
-        Context applicationContext = getActivity();
-        try{
-            Log.d(
-                TAG,
-                String.format(
-                    "%sUnbinding from %s service", CTAG, cls.toString()
-                )
-            );
-            applicationContext.unbindService(svcConn);
-        }
-        catch(Exception ex){
-            Log.e(
-                TAG,
-                String.format(
-                    "%sUnable to unbind %s - Exception '%s'!",
-                    CTAG,
-                    cls.toString(),
-                    ex.getMessage()
-                )
-            );
+    public void serviceStopper(Class cls, ServiceConnection svcConn){
+        boolean res = ServiceManager.stopService(cls, svcConn, mContext);
+        if(res){
+            Log.d(TAG, CTAG + "Unbinding from " + cls.toString());
+        }else{
+            Log.e(TAG, CTAG + "Unable to unbind from " + cls.toString());
         }
     }
 
@@ -303,8 +276,7 @@ public class SettingsFragment extends PreferenceFragment{
     public void onActivityCreated (Bundle savedInstanceState){
         super.onActivityCreated(savedInstanceState);
         Log.d(TAG, CTAG + "onActivityCreated()");
-        // Bind required background services last since the callback
-        // functions depend on the view items being initialized
+        mContext = getActivity();
         if(!mIBusConnected){
             serviceStarter(IBusMessageService.class, mIBusConnection);
         }

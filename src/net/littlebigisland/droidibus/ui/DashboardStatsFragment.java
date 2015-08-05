@@ -1,4 +1,4 @@
-package net.littlebigisland.droidibus.activity;
+package net.littlebigisland.droidibus.ui;
 /**
  * Base Dashboard Fragment - Controls base functions
  * and drops in the child fragments 
@@ -45,7 +45,6 @@ public class DashboardStatsFragment extends BaseFragment{
         mGeoCoordinatesField, mGeoStreetField, mGeoLocaleField,
         mGeoAltitudeField, mIKEDisplayField, mDateField, mTimeField;
 
-    // Service connection class for IBus
     private IBusServiceConnection mIBusConnection = new IBusServiceConnection(){
         
         @Override

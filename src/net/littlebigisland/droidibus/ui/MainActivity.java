@@ -1,4 +1,4 @@
-package net.littlebigisland.droidibus.activity;
+package net.littlebigisland.droidibus.ui;
 /**
  * 
  * @author Ted <tass2001@gmail.com>

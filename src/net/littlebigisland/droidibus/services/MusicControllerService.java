@@ -18,9 +18,12 @@ import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.media.MediaMetadata;
+import android.media.session.MediaController.Callback;
+import android.media.session.MediaSession;
 import android.media.session.MediaSessionManager;
 import android.media.session.MediaController;
 import android.media.session.PlaybackState;
+import android.media.session.PlaybackState.Builder;
 import android.os.Binder;
 import android.os.Handler;
 import android.os.IBinder;
@@ -45,6 +48,9 @@ public class MusicControllerService extends NotificationListenerService implemen
     // Callback provided by user 
     private Map<Handler, MediaController.Callback> mClientCallbacks = new HashMap<Handler, MediaController.Callback>();
     
+    // Application state variables
+    private int mPlaybackState = 0;
+    
     /**
      * Return the MusicControllerService on bind
      * @return MusicControllerService instance
@@ -53,6 +59,19 @@ public class MusicControllerService extends NotificationListenerService implemen
         public MusicControllerService getService(){
             return MusicControllerService.this;
         }
+    }
+    
+    public class Test extends MediaSession.Callback{
+        
+    }
+    
+    /**
+     * Returns a simple boolean letting you know if a player is active
+     * @return Boolean true if playing, false if not
+     */
+    public boolean getIsPlaying(){
+        PlaybackState state = getMediaPlaybackState();
+        return (state.getState() == PlaybackState.STATE_PLAYING);
     }
     
     /**
@@ -97,12 +116,15 @@ public class MusicControllerService extends NotificationListenerService implemen
     
     /**
      * Returns the Playback state of the active media controller
+     * @return PlaybackState object
      */
     public PlaybackState getMediaPlaybackState(){
         if(mActiveMediaController != null){
             return mActiveMediaController.getPlaybackState();
         }
-        return null;
+        Builder mState = new PlaybackState.Builder();
+        mState.setState(mPlaybackState, 0, 0);
+        return mState.build();
     }
     
     /**
@@ -201,6 +223,8 @@ public class MusicControllerService extends NotificationListenerService implemen
             sendKeyEvent(KeyEvent.KEYCODE_MEDIA_PAUSE);
         }else{
             mActiveMediaTransport.pause();
+            mPlaybackState = PlaybackState.STATE_PAUSED;
+            triggerPlaybackStateCallbacks();
         }
     }
     
@@ -214,6 +238,8 @@ public class MusicControllerService extends NotificationListenerService implemen
             sendKeyEvent(KeyEvent.KEYCODE_MEDIA_PLAY);
         }else{
             mActiveMediaTransport.play();
+            mPlaybackState = PlaybackState.STATE_PLAYING;
+            triggerPlaybackStateCallbacks();
         }
     }
     
@@ -346,6 +372,34 @@ public class MusicControllerService extends NotificationListenerService implemen
             sendKeyEvent(KeyEvent.KEYCODE_MEDIA_PREVIOUS);
         }else{
             mActiveMediaTransport.skipToPrevious();
+        }
+    }
+    
+    /**
+     * Toggle the music Playback state
+     */
+    public void togglePlayback(){
+        if(getIsPlaying()){
+            pause();
+        }else{
+            play();
+        }
+    }
+    
+    /**
+     * Because some media players are still back about this,
+     * manually trigger the calls to onPlaybackStateChanged()
+     */
+    private void triggerPlaybackStateCallbacks(){
+        final PlaybackState mState = getMediaPlaybackState();
+        for(Handler handler: mClientCallbacks.keySet()){
+            final Callback mc = mClientCallbacks.get(handler);
+            handler.post(new Runnable(){
+                @Override
+                public void run(){
+                    mc.onPlaybackStateChanged(mState);
+                }
+            });
         }
     }
     

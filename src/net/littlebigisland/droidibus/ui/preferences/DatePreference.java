@@ -1,4 +1,4 @@
-package net.littlebigisland.droidibus.activity.preferences;
+package net.littlebigisland.droidibus.ui.preferences;
 
 import java.util.Calendar;
 
