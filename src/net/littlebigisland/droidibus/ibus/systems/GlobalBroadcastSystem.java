@@ -45,14 +45,12 @@ public class GlobalBroadcastSystem extends IBusSystem{
                     // Bytes 8 and 9 hold the inspection interval in KMs
                     // Byte 10 is the SIA Type (0x40 == Inspection)
                     // Byte 11 is the the days to inspection.
-                    int mileage = (
-                        (msg.get(7) * 65535) + (msg.get(6) * 256) + msg.get(5)
-                    );
-                    int serviceInterval = (msg.get(8) + msg.get(9)) * 50;
-                    int serviceIntervalType = msg.get(10);
-                    int daysToInspection = msg.get(11);
+                    int mls = (msg.get(6) * 65536) + (msg.get(5) * 256) + msg.get(4);
+                    int serviceInterval = (msg.get(7) + msg.get(8)) * 50;
+                    int serviceIntervalType = msg.get(9);
+                    int daysToInspection = msg.get(10);
                     
-                    triggerCallback("onUpdateMileage", mileage);
+                    triggerCallback("onUpdateMileage", mls);
                     triggerCallback("onUpdateServiceInterval", serviceInterval);
                     triggerCallback(
                         "onUpdateServiceIntervalType", serviceIntervalType

@@ -37,14 +37,15 @@ public class IBusCommand{
         BMToRadioAMRelease(IBusSystem.Devices.BoardMonitor, "sendAMRelease"),
         BMToRadioInfoPress(IBusSystem.Devices.BoardMonitor, "sendInfoPress"),
         BMToRadioInfoRelease(IBusSystem.Devices.BoardMonitor, "sendInfoRelease"),
-        // BoardMonitor to Light Control Module Commands
-        BMToLCMGetDimmerStatus(IBusSystem.Devices.BoardMonitor, "getLightDimmerStatus"),
         // BoardMonitor to General Module Commands
         BMToGMGetDoorStatus(IBusSystem.Devices.BoardMonitor, "getDoorsRequest"),
         // BoardMonitor to Global Broadcast Address Commands
         BMToGlobalBroadcastAliveMessage(IBusSystem.Devices.BoardMonitor, "sendAliveMessage"),
+        // BoardMonitor to IKE commands
+        GFXToIKEGetIgnitionStatus(IBusSystem.Devices.BoardMonitor, "getIgnitionStatus"),
+        // BoardMonitor to Light Control Module Commands
+        BMToLCMGetDimmerStatus(IBusSystem.Devices.BoardMonitor, "getLightDimmerStatus"),
         // GFX Navigation Driver to IKE Commands
-        GFXToIKEGetIgnitionStatus(IBusSystem.Devices.GFXNavigationDriver, "getIgnitionStatus"),
         GFXToIKEGetTime(IBusSystem.Devices.GFXNavigationDriver, "getTime"),
         GFXToIKEGetDate(IBusSystem.Devices.GFXNavigationDriver, "getDate"),
         GFXToIKEGetOutdoorTemp(IBusSystem.Devices.GFXNavigationDriver, "getOutdoorTemp"),
