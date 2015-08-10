@@ -5,16 +5,11 @@ package net.littlebigisland.droidibus.ui;
  * @author Ted <tass2001@gmail.com>
  * @package net.littlebigisland.droidibus.activity
  */
-
-import net.littlebigisland.droidibus.services.IBusMessageService;
 import net.littlebigisland.droidibus.R;
-import net.littlebigisland.droidibus.ibus.IBusCommand;
 import net.littlebigisland.droidibus.ibus.IBusSystem;
 import android.app.FragmentTransaction;
-import android.content.ComponentName;
 import android.content.SharedPreferences;
 import android.os.Bundle;
-import android.os.IBinder;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -33,9 +28,9 @@ public class DashboardFragment extends BaseFragment{
     
     protected boolean mPopulatedFragments = false;
     
-    private IBusSystem.Callbacks mIBusCallbacks = new IBusSystem.Callbacks(){
+    IBusSystem.Callbacks mIBusCallbacks = new IBusSystem.Callbacks(){
 
-        /** Callback to handle Ignition State Updates
+        /* Callback to handle Ignition State Updates
          * @param int State of Ignition (0, 1, 2)
          */
         @Override
@@ -45,23 +40,6 @@ public class DashboardFragment extends BaseFragment{
         }
 
     };
-
-    // Service connection class for IBus
-    private IBusServiceConnection mIBusConnection = new IBusServiceConnection(){
-        
-        @Override
-        public void onServiceConnected(ComponentName name, IBinder service){
-            super.onServiceConnected(name, service);
-            registerIBusCallback(mIBusCallbacks, mHandler);
-            // Emulate BoardMonitor Bootup on connect
-            Log.d(TAG, CTAG + "BoardMonitor Bootup Performed");
-            sendIBusCommand(IBusCommand.Commands.GFXToIKEGetIgnitionStatus);
-            sendIBusCommand(IBusCommand.Commands.BMToLCMGetDimmerStatus);
-            sendIBusCommand(IBusCommand.Commands.BMToGMGetDoorStatus);
-        }
-        
-    };
-    
 
     /**
      * Acquire a screen wake lock to either turn the screen on or off
@@ -109,15 +87,12 @@ public class DashboardFragment extends BaseFragment{
         setScreenState(SCREEN_ON);
         return v;
     }
-    
+
     @Override
     public void onActivityCreated (Bundle savedInstanceState){
         super.onActivityCreated(savedInstanceState);
-        CTAG = "DashboardFragment: ";
         Log.d(TAG, CTAG + "onActivityCreated()");
-        if(!mIBusConnected){
-            serviceStarter(IBusMessageService.class, mIBusConnection);
-        }
+        startIBusMessageService();
     }
     
     @Override
@@ -125,9 +100,6 @@ public class DashboardFragment extends BaseFragment{
         super.onDestroy();
         Log.d(TAG, CTAG + "onDestroy()");
         setScreenState(SCREEN_OFF);
-        if(mIBusConnected){
-            mIBusService.unregisterCallback(mIBusCallbacks);
-            serviceStopper(IBusMessageService.class, mIBusConnection);
-        }
+        stopIBusMessageService();
     }
 }

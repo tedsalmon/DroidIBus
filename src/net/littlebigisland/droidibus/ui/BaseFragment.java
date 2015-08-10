@@ -5,12 +5,11 @@ package net.littlebigisland.droidibus.ui;
  * @author Ted <tass2001@gmail.com>
  * @package net.littlebigisland.droidibus.activity
  */
-import java.util.Calendar;
 
+import net.littlebigisland.droidibus.resources.IBusMessageServiceConnection;
 import net.littlebigisland.droidibus.resources.ServiceManager;
 import net.littlebigisland.droidibus.resources.ThreadExecutor;
 import net.littlebigisland.droidibus.services.IBusMessageService;
-import net.littlebigisland.droidibus.services.IBusMessageService.IOIOBinder;
 
 import net.littlebigisland.droidibus.ibus.IBusCommand;
 import net.littlebigisland.droidibus.ibus.IBusSystem;
@@ -30,33 +29,34 @@ import android.widget.Toast;
 public class BaseFragment extends Fragment{
     
     public String TAG = "DroidIBus";
-    public String CTAG = "";
+    public String CTAG = getClass().getSimpleName() + ": ";
     
     public Handler mHandler = new Handler();
     public Context mContext = null;
 
     // NEVER override these in a child class! The service won't connect
     public IBusMessageService mIBusService = null;
-    public boolean mIBusConnected = false;
+    public IBusSystem.Callbacks mIBusCallbacks = null;
     
     protected ThreadExecutor mThreadExecutor = new ThreadExecutor();
     
-    public class IBusServiceConnection implements ServiceConnection{
+    public IBusMessageServiceConnection mIBusConnection = new IBusMessageServiceConnection(){
         
         @Override
         public void onServiceConnected(ComponentName name, IBinder service){
-            mIBusService = ((IOIOBinder) service).getService();
-            Log.d(TAG, CTAG + "IBus service connected");
-            mIBusConnected = true;
+            super.onServiceConnected(name, service);
+            mIBusService = getService();
+            Log.d(TAG, "IBus onServiceConnected");
+            if(mIBusCallbacks != null){
+                Log.d(TAG, "IBusCallback is not null");
+                mIBusService.registerCallback(mIBusCallbacks, mHandler);
+            }else{
+                Log.e(TAG, CTAG + "IBusCallback is null");
+            }
         }
-
-        @Override
-        public void onServiceDisconnected(ComponentName name){
-            Log.d(TAG, CTAG + "IBus service disconnected");
-            mIBusConnected = false;
-        }
-
+        
     };
+    
     
     /**
      * Change TextView colors recursively; Used to support night colors
@@ -80,7 +80,7 @@ public class BaseFragment extends Fragment{
      * @return boolean IBus link state
      */
     public boolean getIBusLinkState(){
-        if(mIBusConnected){
+        if(mIBusConnection.isConnected()){
             if(mIBusService != null){
                 return mIBusService.getLinkState();
             }else{
@@ -94,33 +94,12 @@ public class BaseFragment extends Fragment{
         }
         return false;
     }
-    
-    /**
-     * Wrapper that returns the time in milliseconds
-     * @return Time in Miliseconds from Calendar Module
-     */
-    public long getTimeNow(){
-        return Calendar.getInstance().getTimeInMillis();
-    }
-    
-    /**
-     * Register a callback with the IBus Service
-     */
-    public void registerIBusCallback(IBusSystem.Callbacks cb, Handler handle){
-        try{
-            mIBusService.registerCallback(cb, handle);
-        }catch (Exception e) {
-            showToast(
-                "ERROR: Could not register callback with the IBus Service"
-            );
-        }
-    }
 
     @SuppressWarnings("rawtypes")
     public void serviceStarter(Class cls, ServiceConnection svcConn){
         boolean res = ServiceManager.startService(cls, svcConn, mContext);
         if(res){
-            Log.d(TAG, CTAG + "Starting " + cls.toString());
+            Log.d(TAG, CTAG + "Started " + cls.toString());
         }else{
             Log.e(TAG, CTAG + "Unable to start " + cls.toString());
         }
@@ -137,7 +116,7 @@ public class BaseFragment extends Fragment{
     }
 
     public void sendIBusCommand(IBusCommand.Commands cmd, final Object... args){
-        if(mIBusConnected){
+        if(mIBusConnection.isConnected()){
             mIBusService.sendCommand(new IBusCommand(cmd, args));
         }else{
             Log.e(
@@ -157,8 +136,22 @@ public class BaseFragment extends Fragment{
     }
     
     public void showToast(String toastText){
-        Context appContext = getActivity();
-        Toast.makeText(appContext, toastText, Toast.LENGTH_LONG).show();
+        Toast.makeText(mContext, toastText, Toast.LENGTH_LONG).show();
+    }
+    
+    public void startIBusMessageService(){
+        if(mIBusConnection != null){
+            serviceStarter(IBusMessageService.class, mIBusConnection);
+        }
+    }
+    
+    public void stopIBusMessageService(){
+        if(mIBusConnection != null && mIBusService != null){
+            if(mIBusCallbacks != null){
+                mIBusService.unregisterCallback(mIBusCallbacks);
+            }
+            serviceStopper(IBusMessageService.class, mIBusConnection);
+        }
     }
     
     @Override
@@ -172,4 +165,5 @@ public class BaseFragment extends Fragment{
         super.onDestroy();
         mThreadExecutor.terminateTasks();
     }
+    
 }

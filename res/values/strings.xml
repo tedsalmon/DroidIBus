@@ -1,5 +1,6 @@
 <resources>
     <string name="app_name">Droid IBus</string>
+    <string name="notificationAccessError">Error: Please allow DroidIBus access to notifications under Settings > Sound &amp; Notification > Notification Accesss</string>
     <string name="drawer_open">Open</string>
     <string name="drawer_close">Close</string>
     <string name="stationTextLbl">Station</string>

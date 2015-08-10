@@ -1,16 +1,16 @@
 package net.littlebigisland.droidibus.services;
 
-import java.util.Calendar;
-
 import net.littlebigisland.droidibus.ibus.IBusCommand;
 import net.littlebigisland.droidibus.ibus.IBusSystem;
+import net.littlebigisland.droidibus.resources.IBusMessageServiceConnection;
+import net.littlebigisland.droidibus.resources.MusicControllerServiceConnection;
 import net.littlebigisland.droidibus.resources.ServiceManager;
 import net.littlebigisland.droidibus.resources.ThreadExecutor;
+import net.littlebigisland.droidibus.resources.TimeHelper;
 import net.littlebigisland.droidibus.resources.enums.IgnitionStates;
 import net.littlebigisland.droidibus.resources.enums.MFLPlaybackModes;
 import net.littlebigisland.droidibus.resources.enums.RadioModes;
 import net.littlebigisland.droidibus.resources.enums.RadioTypes;
-import net.littlebigisland.droidibus.services.IBusMessageService.IOIOBinder;
 
 import android.app.Service;
 import android.content.ComponentName;
@@ -39,7 +39,6 @@ public class IBusControllerService extends Service{
     protected boolean mIBusConnected = false;
     
     protected MusicControllerService mPlayerService;
-    protected boolean mMediaPlayerConnected = false;
     
     // Application State Variables
     protected RadioTypes mRadioType = RadioTypes.BM53;
@@ -61,48 +60,30 @@ public class IBusControllerService extends Service{
         
     }
     
-    // Service connection class for IBus
-    private ServiceConnection mIBusConnection = new ServiceConnection(){
+    private IBusMessageServiceConnection mIBusConnection = 
+            new IBusMessageServiceConnection(){
+        
         @Override
         public void onServiceConnected(ComponentName name, IBinder service){
-            mIBusService = ((IOIOBinder) service).getService();
-            Log.d(TAG, CTAG + "IBus service connected");
-            mIBusConnected = true;
+            super.onServiceConnected(name, service);
             mIBusService.registerCallback(mIBusCallbacks, mHandler);
             if(mRadioType == RadioTypes.BM53){
-                Log.d(TAG, CTAG + "Starting mRadioUpdater");
-                //mThreadExecutor.execute(mRadioUpdater);
+                mThreadExecutor.execute(mRadioUpdater);
                 mHandler.postDelayed(mSendInfoButton, 2500);
             }
-        }
-
-        @Override
-        public void onServiceDisconnected(ComponentName name){
-            Log.d(TAG, CTAG + "IBus service disconnected");
-            mIBusConnected = false;
+            sendBoardMonitorBootup();
         }
         
     };
     
-    private ServiceConnection mPlayerConnection = new ServiceConnection(){
+    private MusicControllerServiceConnection mPlayerConnection = 
+            new MusicControllerServiceConnection(){
         
         @Override
-        public void onServiceConnected(ComponentName className, IBinder service){
-            Log.d(TAG, CTAG + "MusicControllerService Connected");
-            // Getting the binder and activating RemoteController instantly
-            MusicControllerService.MusicControllerBinder serviceBinder = (
-                MusicControllerService.MusicControllerBinder
-            ) service;
-            mPlayerService = serviceBinder.getService();
-            mMediaPlayerConnected = true;
+        public void onServiceConnected(ComponentName name, IBinder service){
+            super.onServiceConnected(name, service);
+            mPlayerService = getService();
         }
-
-        @Override
-        public void onServiceDisconnected(ComponentName name){
-            Log.d(TAG, CTAG + "MusicControllerService Disconnected");
-            mMediaPlayerConnected = false;
-        }
-
     };
     
     private IBusSystem.Callbacks mIBusCallbacks = new IBusSystem.Callbacks(){
@@ -163,7 +144,7 @@ public class IBusControllerService extends Service{
                     // Send info request to verify the BM53 is on the RDS screen
                     mHandler.postDelayed(mSendInfoButton, 5000);
                 }
-                if(mMediaPlayerConnected && mRadioMode == RadioModes.AUX){
+                if(mPlayerConnection.isConnected() && mRadioMode == RadioModes.AUX){
                     if(!mPlayerService.getIsPlaying() && mWasMediaPlaying){
                         mHandler.postDelayed(new Runnable(){
                             @Override
@@ -175,7 +156,7 @@ public class IBusControllerService extends Service{
                     }
                 }
             }else{
-                if(mMediaPlayerConnected){
+                if(mPlayerConnection.isConnected()){
                     if(mPlayerService.getIsPlaying()){
                         mPlayerService.pause();
                         mWasMediaPlaying = false;
@@ -187,14 +168,14 @@ public class IBusControllerService extends Service{
         
         @Override
         public void onTrackFwd(){
-            if(mMediaPlayerConnected){
+            if(mPlayerConnection.isConnected()){
                 mPlayerService.skipToNext();
             }
         }
         
         @Override
         public void onTrackPrev(){
-            if(mMediaPlayerConnected){
+            if(mPlayerConnection.isConnected()){
                 mPlayerService.skipToPrevious();
             }
         }
@@ -202,7 +183,7 @@ public class IBusControllerService extends Service{
         @Override
         public void onVoiceBtnPress(){
             // Re-purpose this button to pause/play music
-            if(mMFLPlaybackMode == MFLPlaybackModes.PRESS && mMediaPlayerConnected){
+            if(mMFLPlaybackMode == MFLPlaybackModes.PRESS && mPlayerConnection.isConnected()){
                 mPlayerService.togglePlayback();
             }
         }
@@ -210,7 +191,7 @@ public class IBusControllerService extends Service{
         @Override
         public void onVoiceBtnHold(){
             // Re-purpose this button to pause/play music
-            if(mMFLPlaybackMode == MFLPlaybackModes.HOLD && mMediaPlayerConnected){
+            if(mMFLPlaybackMode == MFLPlaybackModes.HOLD && mPlayerConnection.isConnected()){
                 mPlayerService.togglePlayback();
             }
         }
@@ -259,7 +240,6 @@ public class IBusControllerService extends Service{
      *  any IBus messages that the BM usually would.
      *  We should also keep the radio on "Info" mode at all times here.
      */
-    @SuppressWarnings("unused")
     private Runnable mRadioUpdater = new Runnable(){
 
         private static final int mTimeout = 5000;
@@ -269,7 +249,7 @@ public class IBusControllerService extends Service{
         public void run(){
             Log.d(TAG, "mRadioUpdater is running");
             while(!Thread.currentThread().isInterrupted()){
-                long timeNow = getTimeNow();
+                long timeNow = TimeHelper.getTimeNow();
                 if(getIBusLinkState() && (timeNow - mLastUpdate) >= mTimeout){
                     mLastUpdate = timeNow;
                     sendIBusCommand(IBusCommand.Commands.BMToRadioGetStatus);
@@ -339,8 +319,18 @@ public class IBusControllerService extends Service{
         return false;
     }
     
-    private long getTimeNow(){
-        return Calendar.getInstance().getTimeInMillis();
+    public void sendBoardMonitorBootup(){
+        sendIBusCommand(IBusCommand.Commands.BMToGlobalBroadcastAliveMessage);
+        sendIBusCommand(IBusCommand.Commands.GFXToIKEGetIgnitionStatus);
+        sendIBusCommand(IBusCommand.Commands.BMToLCMGetDimmerStatus);
+        sendIBusCommand(IBusCommand.Commands.BMToGMGetDoorStatus);
+        sendIBusCommand(IBusCommand.Commands.GFXToIKEGetTime);
+        sendIBusCommand(IBusCommand.Commands.GFXToIKEGetDate);
+        sendIBusCommand(IBusCommand.Commands.GFXToIKEGetFuel1);
+        sendIBusCommand(IBusCommand.Commands.GFXToIKEGetFuel2);
+        sendIBusCommand(IBusCommand.Commands.GFXToIKEGetOutdoorTemp);
+        sendIBusCommand(IBusCommand.Commands.GFXToIKEGetRange);
+        sendIBusCommand(IBusCommand.Commands.GFXToIKEGetAvgSpeed);
     }
     
     private void sendIBusCommand(IBusCommand.Commands cmd, final Object... args){
@@ -380,22 +370,12 @@ public class IBusControllerService extends Service{
     
     @SuppressWarnings("rawtypes")
     protected void serviceStarter(Class cls, ServiceConnection svcConn){
-        boolean res = ServiceManager.startService(cls, svcConn, mContext);
-        if(res){
-            Log.d(TAG, CTAG + "Starting " + cls.toString());
-        }else{
-            Log.e(TAG, CTAG + "Unable to start " + cls.toString());
-        }
+        ServiceManager.startService(cls, svcConn, mContext);
     }
     
     @SuppressWarnings("rawtypes")
     protected void serviceStopper(Class cls, ServiceConnection svcConn){
-        boolean res = ServiceManager.stopService(cls, svcConn, mContext);
-        if(res){
-            Log.d(TAG, CTAG + "Unbinding from " + cls.toString());
-        }else{
-            Log.e(TAG, CTAG + "Unable to unbind from " + cls.toString());
-        }
+        ServiceManager.stopService(cls, svcConn, mContext);
     }
 
     @Override
@@ -412,7 +392,7 @@ public class IBusControllerService extends Service{
         if(!mIBusConnected){
             serviceStarter(IBusMessageService.class, mIBusConnection);
         }
-        if(!mMediaPlayerConnected){
+        if(!mPlayerConnection.isConnected()){
             serviceStarter(MusicControllerService.class, mPlayerConnection);
         }
     }
@@ -425,7 +405,7 @@ public class IBusControllerService extends Service{
             mIBusService.unregisterCallback(mIBusCallbacks);
             serviceStopper(IBusMessageService.class, mIBusConnection);
         }
-        if(mMediaPlayerConnected){
+        if(mPlayerConnection.isConnected()){
             serviceStopper(MusicControllerService.class, mPlayerConnection);
         }
     }

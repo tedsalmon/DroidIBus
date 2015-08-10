@@ -12,18 +12,17 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 
+import net.littlebigisland.droidibus.resources.MusicControllerServiceConnection;
 import net.littlebigisland.droidibus.resources.enums.IgnitionStates;
 import net.littlebigisland.droidibus.resources.enums.MFLPlaybackModes;
 import net.littlebigisland.droidibus.resources.enums.RadioModes;
 import net.littlebigisland.droidibus.resources.enums.RadioTypes;
-import net.littlebigisland.droidibus.services.IBusMessageService;
 import net.littlebigisland.droidibus.services.MusicControllerService;
 
 import net.littlebigisland.droidibus.R;
 import net.littlebigisland.droidibus.ibus.IBusCommand;
 import net.littlebigisland.droidibus.ibus.IBusSystem;
 import android.content.ComponentName;
-import android.content.ServiceConnection;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.content.pm.PackageManager.NameNotFoundException;
@@ -89,7 +88,6 @@ public class DashboardMusicFragment extends BaseFragment{
     HashMap<String,String> mMediaControllerNames = new HashMap<String,String>();
     
     protected MusicControllerService mPlayerService;
-    protected boolean mMediaPlayerConnected = false;
 
     protected boolean mIsPlaying = false;
     protected boolean mWasPlaying = false;
@@ -108,31 +106,14 @@ public class DashboardMusicFragment extends BaseFragment{
     
     private final static int IC_PLAY = android.R.drawable.ic_media_play;
     private final static int IC_PAUSE = android.R.drawable.ic_media_pause;
-
-
-    // Service connection class for IBus
-    private IBusServiceConnection mIBusConnection = new IBusServiceConnection(){
+    
+    private MusicControllerServiceConnection mPlayerConnection = 
+            new MusicControllerServiceConnection(){
         
         @Override
         public void onServiceConnected(ComponentName name, IBinder service){
             super.onServiceConnected(name, service);
-            registerIBusCallback(mIBusCallbacks, mHandler);
-            Log.d(TAG, CTAG + "IBus Service Connected");
-        }
-        
-    };
-    
-    private ServiceConnection mPlayerConnection = new ServiceConnection(){
-        
-        @Override
-        public void onServiceConnected(ComponentName className, IBinder service){
-            Log.d(TAG, CTAG + "MusicControllerService Connected");
-            // Getting the binder and activating RemoteController instantly
-            MusicControllerService.MusicControllerBinder serviceBinder = (
-                MusicControllerService.MusicControllerBinder
-            ) service;
-            mPlayerService = serviceBinder.getService();
-            mMediaPlayerConnected = true;
+            mPlayerService = getService();
             mPlayerService.registerCallback(mPlayerCallbacks, mHandler);
             
             setMediaMetadata(mPlayerService.getMediaMetadata());
@@ -142,14 +123,13 @@ public class DashboardMusicFragment extends BaseFragment{
 
             mHandler.post(mUpdateAvailableControllers);
         }
-
+        
         @Override
         public void onServiceDisconnected(ComponentName name){
-            Log.d(TAG, CTAG + "MusicControllerService Disconnected");
+            super.onServiceDisconnected(name);
             mHandler.removeCallbacks(mUpdateAvailableControllers);
-            mMediaPlayerConnected = false;
         }
-
+        
     };
     
     private OnTouchListener mCommandTouchListener = new OnTouchListener(){
@@ -243,7 +223,7 @@ public class DashboardMusicFragment extends BaseFragment{
         private float mSeekPosition = 0; 
         @Override
         public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser){
-            if(mMediaPlayerConnected && fromUser){
+            if(mPlayerConnection.isConnected() && fromUser){
                 mSeekPosition = mSongDuration * ((float)progress / (float)seekBar.getMax());
             }
         }
@@ -285,7 +265,7 @@ public class DashboardMusicFragment extends BaseFragment{
     private Runnable mUpdateAvailableControllers = new Runnable(){
         @Override
         public void run(){
-            if(mMediaPlayerConnected){
+            if(mPlayerConnection.isConnected()){
                 setMediaControllerSelection(mPlayerService.getMediaSessions());
             }
             mHandler.postDelayed(this, CONTROLLER_UPDATE_RATE);
@@ -314,7 +294,6 @@ public class DashboardMusicFragment extends BaseFragment{
                 try{
                     Thread.sleep(SEEKBAR_UPDATE_RATE);
                 }catch(InterruptedException e){
-                    Log.e(TAG, CTAG + "mUpdateSeekBar InterruptedException");
                     mShouldRun = false;
                 }
             }
@@ -345,7 +324,7 @@ public class DashboardMusicFragment extends BaseFragment{
 
     };
     
-    private IBusSystem.Callbacks mIBusCallbacks = new IBusSystem.Callbacks(){
+    IBusSystem.Callbacks mIBusCallbacks = new IBusSystem.Callbacks(){
     	
     	private int mCurrentTextColor = R.color.dayColor;
         
@@ -481,9 +460,9 @@ public class DashboardMusicFragment extends BaseFragment{
     
     private void setPlaybackState(int playbackState){
         if(playbackState == PlaybackState.STATE_PLAYING){
-            mPlayerControlBtn.setImageResource(IC_PLAY);
-        }else{
             mPlayerControlBtn.setImageResource(IC_PAUSE);
+        }else{
+            mPlayerControlBtn.setImageResource(IC_PLAY);
         }
     }
     
@@ -498,24 +477,18 @@ public class DashboardMusicFragment extends BaseFragment{
     @Override
     public void onActivityCreated(Bundle savedInstanceState){
         super.onActivityCreated(savedInstanceState);
-	CTAG = "DashboardMusicFragment: ";
-        Log.d(TAG, CTAG + "onActivityCreated Called");
+        Log.d(TAG, CTAG + "onActivityCreated()");
         mPackageManager = mContext.getPackageManager();
-        if(!mIBusConnected){
-            serviceStarter(IBusMessageService.class, mIBusConnection);
-        }
-        if(!mMediaPlayerConnected){
+        startIBusMessageService();
+        if(!mPlayerConnection.isConnected()){
             serviceStarter(MusicControllerService.class, mPlayerConnection);
         }
     }
     
     @Override
-    public View onCreateView(
-	LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState
-    ){
-        final View v = inflater.inflate(
-	    R.layout.dashboard_music, container, false
-	);
+    public View onCreateView(LayoutInflater inflater, ViewGroup container, 
+            Bundle savedInstanceState){
+        View v = inflater.inflate(R.layout.dashboard_music, container, false);
         Log.d(TAG, CTAG + "onCreateView()");
         
         // Load Activity Settings
@@ -626,7 +599,7 @@ public class DashboardMusicFragment extends BaseFragment{
     public void onResume(){
         super.onResume();
         Log.d(TAG, CTAG + "onResume()");
-        if(mMediaPlayerConnected){
+        if(mPlayerConnection.isConnected()){
             if(mPlayerService.getMediaController() == null){
                 clearMusicPlayerView();
             }
@@ -637,11 +610,8 @@ public class DashboardMusicFragment extends BaseFragment{
     public void onDestroy(){
         super.onDestroy();
         Log.d(TAG, CTAG + "onDestroy()");
-        if(mIBusConnected){
-            mIBusService.unregisterCallback(mIBusCallbacks);
-            serviceStopper(IBusMessageService.class, mIBusConnection);
-        }
-        if(mMediaPlayerConnected){
+        stopIBusMessageService();
+        if(mPlayerConnection.isConnected()){
             mPlayerService.unregisterCallback(mPlayerCallbacks);
             serviceStopper(MusicControllerService.class, mPlayerConnection);
         }

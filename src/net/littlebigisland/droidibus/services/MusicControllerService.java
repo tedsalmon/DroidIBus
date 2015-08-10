@@ -29,6 +29,7 @@ import android.os.IBinder;
 import android.service.notification.NotificationListenerService;
 import android.util.Log;
 import android.view.KeyEvent;
+import android.widget.Toast;
 
 
 public class MusicControllerService extends NotificationListenerService implements MediaSessionManager.OnActiveSessionsChangedListener{
@@ -409,12 +410,20 @@ public class MusicControllerService extends NotificationListenerService implemen
         Log.d(TAG, CTAG + "onCreate()");
         // Saving the context for further reuse
         mContext = getApplicationContext();
-        // Get the session manager and register
-        // us to listen for new sessions
-        getMediaSessionManager().addOnActiveSessionsChangedListener(
-            this, 
-            new ComponentName(mContext, MusicControllerService.class)
-        );
+        // Get the session manager and register us to listen for new sessions
+        try{
+            getMediaSessionManager().addOnActiveSessionsChangedListener(
+                this, 
+                new ComponentName(mContext, MusicControllerService.class)
+            );
+        }catch(SecurityException e){
+            String err = mContext.getResources().getString(
+                 net.littlebigisland.droidibus.R.string.notificationAccessError
+            );
+            Toast.makeText(mContext, err, Toast.LENGTH_LONG).show();
+            stopSelf();
+            return;
+        }
         // Get the current active media sessions
         refreshMediaControllers();
     }

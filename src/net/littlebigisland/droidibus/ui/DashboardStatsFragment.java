@@ -7,15 +7,11 @@ package net.littlebigisland.droidibus.ui;
  */
 import java.util.HashMap;
 
-import net.littlebigisland.droidibus.services.IBusMessageService;
-
 import net.littlebigisland.droidibus.R;
 import net.littlebigisland.droidibus.ibus.IBusCommand;
 import net.littlebigisland.droidibus.ibus.IBusSystem;
-import android.content.ComponentName;
 import android.content.SharedPreferences;
 import android.os.Bundle;
-import android.os.IBinder;
 import android.preference.PreferenceManager;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -44,24 +40,11 @@ public class DashboardStatsFragment extends BaseFragment{
         mCoolantTempField, mFuel1Field, mFuel2Field, mAvgSpeedField,
         mGeoCoordinatesField, mGeoStreetField, mGeoLocaleField,
         mGeoAltitudeField, mIKEDisplayField, mDateField, mTimeField;
-
-    private IBusServiceConnection mIBusConnection = new IBusServiceConnection(){
-        
-        @Override
-        public void onServiceConnected(ComponentName name, IBinder service){
-            super.onServiceConnected(name, service);
-            registerIBusCallback(mIBusCallbacks, mHandler);
-            // Emulate BoardMonitor boot up on connect
-            boardMonitorBootup();
-            Log.d(TAG, CTAG + "BoardMonitor Bootup Performed");
-        }
-        
-    };
 	
     /**
      * IBus Callback Functions
      */
-    private IBusSystem.Callbacks mIBusCallbacks = new IBusSystem.Callbacks(){
+    IBusSystem.Callbacks mIBusCallbacks = new IBusSystem.Callbacks(){
         private int mCurrentTextColor = R.color.dayColor;
         
         /** Callback to handle any vehicle speed updates
@@ -241,26 +224,6 @@ public class DashboardStatsFragment extends BaseFragment{
 
     };
 	
-    // Helper Methods
-    /**
-     * Emulate the messages the BoardMonitor sends when it boots up
-     */
-    private void boardMonitorBootup(){
-        sendIBusCommand(IBusCommand.Commands.BMToGlobalBroadcastAliveMessage);
-        sendIBusCommand(IBusCommand.Commands.GFXToIKEGetIgnitionStatus);
-        sendIBusCommand(IBusCommand.Commands.BMToLCMGetDimmerStatus);
-        sendIBusCommand(IBusCommand.Commands.BMToGMGetDoorStatus);
-        // Send a "get" request to populate the values on screen
-        // Do it here because this is when the service methods come into scope
-        sendIBusCommand(IBusCommand.Commands.GFXToIKEGetTime);
-        sendIBusCommand(IBusCommand.Commands.GFXToIKEGetDate);
-        sendIBusCommand(IBusCommand.Commands.GFXToIKEGetFuel1);
-        sendIBusCommand(IBusCommand.Commands.GFXToIKEGetFuel2);
-        sendIBusCommand(IBusCommand.Commands.GFXToIKEGetOutdoorTemp);
-        sendIBusCommand(IBusCommand.Commands.GFXToIKEGetRange);
-        sendIBusCommand(IBusCommand.Commands.GFXToIKEGetAvgSpeed);
-    }
-	
     public void updateDisplayedUnits(){		
         // Consumption
         switch(mSettings.getString("consumptionUnit", "10")){
@@ -308,13 +271,8 @@ public class DashboardStatsFragment extends BaseFragment{
     @Override
     public void onActivityCreated (Bundle savedInstanceState){
         super.onActivityCreated(savedInstanceState);
-	CTAG = "DashboardStatsFragment: ";
-        Log.d(TAG, CTAG + "onActivityCreated Called");
-        // Bind required background services last since the callback
-        // functions depend on the view items being initialized
-        if(!mIBusConnected){
-            serviceStarter(IBusMessageService.class, mIBusConnection);
-        }
+        Log.d(TAG, CTAG + "onActivityCreated()");
+        startIBusMessageService();
     }
     
     @Override
@@ -434,16 +392,13 @@ public class DashboardStatsFragment extends BaseFragment{
     public void onResume(){
     	super.onResume();
     	Log.d(TAG, CTAG + "onResume()");
-        boardMonitorBootup();
+        // CALL THE SERVICE: boardMonitorBootup();
     }
     
     @Override
     public void onDestroy(){
     	super.onDestroy();
 	Log.d(TAG, CTAG + "onDestroy()");
-    	if(mIBusConnected){
-    	    mIBusService.unregisterCallback(mIBusCallbacks);
-    	    serviceStopper(IBusMessageService.class, mIBusConnection);
-    	}
+	stopIBusMessageService();
     }
 }
