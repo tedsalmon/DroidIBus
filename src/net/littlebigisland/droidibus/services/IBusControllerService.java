@@ -23,7 +23,7 @@ import android.os.IBinder;
 import android.preference.PreferenceManager;
 import android.util.Log;
 
-public class BoardMonitorControllerService extends Service{
+public class IBusControllerService extends Service{
     
     protected static final String TAG = "DroidIBus: ";
     protected static final String CTAG = "RadioControllerService: ";

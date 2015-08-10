@@ -19,7 +19,6 @@ import android.content.Context;
 import android.content.Intent;
 import android.media.MediaMetadata;
 import android.media.session.MediaController.Callback;
-import android.media.session.MediaSession;
 import android.media.session.MediaSessionManager;
 import android.media.session.MediaController;
 import android.media.session.PlaybackState;
@@ -59,10 +58,6 @@ public class MusicControllerService extends NotificationListenerService implemen
         public MusicControllerService getService(){
             return MusicControllerService.this;
         }
-    }
-    
-    public class Test extends MediaSession.Callback{
-        
     }
     
     /**
