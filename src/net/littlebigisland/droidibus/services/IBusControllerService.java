@@ -18,6 +18,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.ServiceConnection;
 import android.content.SharedPreferences;
+import android.os.Binder;
 import android.os.Handler;
 import android.os.IBinder;
 import android.preference.PreferenceManager;
@@ -30,6 +31,7 @@ public class IBusControllerService extends Service{
     
     protected Handler mHandler = new Handler();
     protected Context mContext = null;
+    private IBinder mBinder = new IBusControllerBinder();
     
     protected SharedPreferences mSettings = null;
     
@@ -49,6 +51,18 @@ public class IBusControllerService extends Service{
     protected boolean mRadioModeSynced = true;
     protected boolean mWasMediaPlaying = false;
     protected boolean mCompactDiscPlaying = false;
+    
+    protected long mLastRDSMessage = 0;
+    
+    /**
+     * Return the IBusControllerService on bind
+     * @return MusicControllerService instance
+     */
+    public class IBusControllerBinder extends Binder{
+        public IBusControllerService getService(){
+            return IBusControllerService.this;
+        }
+    }
     
     public abstract class RadioControllerCallbacks{
         
@@ -94,43 +108,34 @@ public class IBusControllerService extends Service{
         */
         @Override
         public void onUpdateRadioStation(final String text){
+            mLastRDSMessage = TimeHelper.getTimeNow();
             if(mRadioType != RadioTypes.BM53){
                 return;
             }
+            RadioModes currMode = null;
             // If this is a BM53 unit, we should listen for
             // Updates to the station text
             if(text.contains("CD") || text.contains("TR")){
-                mRadioMode = RadioModes.CD;
+                currMode = RadioModes.CD;
             }else{
                 switch(text){
                     case "TAPE A":
                     case "TAPE B":
-                        mRadioMode = RadioModes.TAPE;
+                        currMode = RadioModes.TAPE;
                         break;
                     case "AUX":
-                        mRadioMode = RadioModes.AUX;
+                        currMode = RadioModes.AUX;
                         break;
                     default:
-                        mRadioMode = RadioModes.Radio;
+                        currMode = RadioModes.Radio;
                         break;
                 }
             }
-            // Sync modes with the car
-            // Make sure we're not changing modes
-            /*
-            if(mRadioModeSynced){
-                int auxMode = mTabletLayout.getVisibility();
-                if(mRadioMode == RadioModes.AUX && auxMode == View.GONE){
-                    Log.d(TAG, CTAG + "Toggle to radio");
-                    mBtnMusicMode.toggle();
-                }
-                if(mRadioMode != RadioModes.AUX && auxMode == View.VISIBLE){
-                    Log.d(TAG, CTAG + "Toggle to AUX");
-                    mBtnMusicMode.toggle();
-                }
+            if(currMode != mRadioMode){
+                mRadioMode = currMode;
+                // Send Update callback
             }
-            mStationText.setText(text);
-            */
+            // Send Text Update Callback
         }
         
         /** Callback to handle Ignition state updates
@@ -208,15 +213,15 @@ public class IBusControllerService extends Service{
         public void onRadioCDStatusRequest(){
             // Tell the Radio we have a CD on track 1
             byte trackAndCD = (byte) 0x01;
-            sendIBusCommand(
+            mIBusConnection.sendCommand(
                 IBusCommand.Commands.BMToRadioCDStatus, 0, trackAndCD, trackAndCD
             );
             if(mCompactDiscPlaying){
-                sendIBusCommand(
+                mIBusConnection.sendCommand(
                     IBusCommand.Commands.BMToRadioCDStatus, 1, trackAndCD, trackAndCD
                 );
             }else{
-                sendIBusCommand(
+                mIBusConnection.sendCommand(
                     IBusCommand.Commands.BMToRadioCDStatus, 0, trackAndCD, trackAndCD
                 );
             }
@@ -250,9 +255,9 @@ public class IBusControllerService extends Service{
             Log.d(TAG, "mRadioUpdater is running");
             while(!Thread.currentThread().isInterrupted()){
                 long timeNow = TimeHelper.getTimeNow();
-                if(getIBusLinkState() && (timeNow - mLastUpdate) >= mTimeout){
+                if(mIBusConnection.getLinkState() && (timeNow - mLastUpdate) >= mTimeout){
                     mLastUpdate = timeNow;
-                    sendIBusCommand(IBusCommand.Commands.BMToRadioGetStatus);
+                    mIBusConnection.sendCommand(IBusCommand.Commands.BMToRadioGetStatus);
                 }
                 try{
                     Thread.sleep(mTimeout);
@@ -266,14 +271,23 @@ public class IBusControllerService extends Service{
     };
     
     private Runnable mSendInfoButton = new Runnable(){
+        private static final int TIMEOUT = 1000;
+        private boolean mFirstRun = true;
         @Override
         public void run(){
             sendPressReleaseCommand("BMToRadioInfo");
+            if((TimeHelper.getTimeNow() - mLastRDSMessage) > TIMEOUT || mFirstRun){
+                mHandler.postDelayed(this, TIMEOUT);
+                mFirstRun = false;
+            }else{
+                mFirstRun = true;
+                mHandler.removeCallbacks(this);
+            }
         }
     };
     
     public void setRadioMode(final RadioModes desiredMode){
-        if(mRadioType == RadioTypes.BM53 && getIBusLinkState()){
+        if(mRadioType == RadioTypes.BM53 && mIBusConnection.getLinkState()){
             mRadioModeSynced = false;
             mThreadExecutor.execute(new Runnable(){
                 
@@ -304,53 +318,18 @@ public class IBusControllerService extends Service{
         }
     }
     
-    /**
-     * Get the IBus link state - Useful to check if we can write to the bus
-     * @return boolean IBus link state
-     */
-    public boolean getIBusLinkState(){
-        if(mIBusConnected){
-            if(mIBusService != null){
-                return mIBusService.getLinkState();
-            }else{
-                Log.e(TAG, CTAG + "mIBusService is null!");
-            }
-        }
-        return false;
-    }
-    
     public void sendBoardMonitorBootup(){
-        sendIBusCommand(IBusCommand.Commands.BMToGlobalBroadcastAliveMessage);
-        sendIBusCommand(IBusCommand.Commands.GFXToIKEGetIgnitionStatus);
-        sendIBusCommand(IBusCommand.Commands.BMToLCMGetDimmerStatus);
-        sendIBusCommand(IBusCommand.Commands.BMToGMGetDoorStatus);
-        sendIBusCommand(IBusCommand.Commands.GFXToIKEGetTime);
-        sendIBusCommand(IBusCommand.Commands.GFXToIKEGetDate);
-        sendIBusCommand(IBusCommand.Commands.GFXToIKEGetFuel1);
-        sendIBusCommand(IBusCommand.Commands.GFXToIKEGetFuel2);
-        sendIBusCommand(IBusCommand.Commands.GFXToIKEGetOutdoorTemp);
-        sendIBusCommand(IBusCommand.Commands.GFXToIKEGetRange);
-        sendIBusCommand(IBusCommand.Commands.GFXToIKEGetAvgSpeed);
-    }
-    
-    private void sendIBusCommand(IBusCommand.Commands cmd, final Object... args){
-        if(mIBusConnected){
-            mIBusService.sendCommand(new IBusCommand(cmd, args));
-        }else{
-            Log.e(
-               TAG, 
-               String.format("IBusService unbound: Discarding command %s", cmd)
-            );
-        }
-    }
-    
-    private void sendIBusCommandDelayed(final IBusCommand.Commands cmd, 
-            final long delayMils, final Object... args){
-        mHandler.postDelayed(new Runnable(){
-            public void run(){
-                sendIBusCommand(cmd, args);
-            }
-        }, delayMils);
+        mIBusConnection.sendCommand(IBusCommand.Commands.BMToGlobalBroadcastAliveMessage);
+        mIBusConnection.sendCommand(IBusCommand.Commands.GFXToIKEGetIgnitionStatus);
+        mIBusConnection.sendCommand(IBusCommand.Commands.BMToLCMGetDimmerStatus);
+        mIBusConnection.sendCommand(IBusCommand.Commands.BMToGMGetDoorStatus);
+        mIBusConnection.sendCommand(IBusCommand.Commands.GFXToIKEGetTime);
+        mIBusConnection.sendCommand(IBusCommand.Commands.GFXToIKEGetDate);
+        mIBusConnection.sendCommand(IBusCommand.Commands.GFXToIKEGetFuel1);
+        mIBusConnection.sendCommand(IBusCommand.Commands.GFXToIKEGetFuel2);
+        mIBusConnection.sendCommand(IBusCommand.Commands.GFXToIKEGetOutdoorTemp);
+        mIBusConnection.sendCommand(IBusCommand.Commands.GFXToIKEGetRange);
+        mIBusConnection.sendCommand(IBusCommand.Commands.GFXToIKEGetAvgSpeed);
     }
     
     private void sendPressReleaseCommand(String cmdName){
@@ -361,8 +340,8 @@ public class IBusControllerService extends Service{
             cmdName + "Release"
         );
         if(cmdPress != null && cmdRelease != null){
-            sendIBusCommand(cmdPress);
-            sendIBusCommandDelayed(cmdRelease, 250);
+            mIBusConnection.sendCommand(cmdPress);
+            mIBusConnection.sendCommandDelayed(cmdRelease, 250);
         }else{
             Log.e(TAG, CTAG + "Error sending unknown IBus Command " + cmdName);
         }
@@ -380,7 +359,7 @@ public class IBusControllerService extends Service{
 
     @Override
     public IBinder onBind(Intent intent){
-        return null;
+        return mBinder;
     }
     
     @Override
@@ -408,5 +387,12 @@ public class IBusControllerService extends Service{
         if(mPlayerConnection.isConnected()){
             serviceStopper(MusicControllerService.class, mPlayerConnection);
         }
+    }
+    
+    @Override
+    public int onStartCommand(Intent intent, int flags, int startId){
+        super.onStartCommand(intent, flags, startId);
+        Log.d(TAG, "onStartCommand()");
+        return START_STICKY;
     }
 }

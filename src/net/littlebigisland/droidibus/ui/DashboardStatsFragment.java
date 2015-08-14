@@ -341,7 +341,7 @@ public class DashboardStatsFragment extends BaseFragment{
 		IBusCommand.Commands cmd = (IBusCommand.Commands) v.getTag();
 		String cmdType = mIKEIdentifiers.get(cmd.toString());
 		showToast(String.format("Resetting %s Value", cmdType));
-                sendIBusCommand(cmd);
+		mIBusConnection.sendCommand(cmd);
                 return true;
             }
             

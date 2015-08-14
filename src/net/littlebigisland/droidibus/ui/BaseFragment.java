@@ -11,7 +11,6 @@ import net.littlebigisland.droidibus.resources.ServiceManager;
 import net.littlebigisland.droidibus.resources.ThreadExecutor;
 import net.littlebigisland.droidibus.services.IBusMessageService;
 
-import net.littlebigisland.droidibus.ibus.IBusCommand;
 import net.littlebigisland.droidibus.ibus.IBusSystem;
 import android.app.Fragment;
 import android.content.ComponentName;
@@ -74,26 +73,6 @@ public class BaseFragment extends Fragment{
             }
         }
     }
-    
-    /**
-     * Get the IBus link state - Useful to check if we can write to the bus
-     * @return boolean IBus link state
-     */
-    public boolean getIBusLinkState(){
-        if(mIBusConnection.isConnected()){
-            if(mIBusService != null){
-                return mIBusService.getLinkState();
-            }else{
-                // This shouldn't happen!
-                Log.e(TAG, CTAG + "mIBusService is null!");
-                showToast(
-                    "DroidIBus has encountered an IBus connection error and must stop"
-                );
-                getActivity().finish();
-            }
-        }
-        return false;
-    }
 
     @SuppressWarnings("rawtypes")
     public void serviceStarter(Class cls, ServiceConnection svcConn){
@@ -113,26 +92,6 @@ public class BaseFragment extends Fragment{
         }else{
             Log.e(TAG, CTAG + "Unable to unbind from " + cls.toString());
         }
-    }
-
-    public void sendIBusCommand(IBusCommand.Commands cmd, final Object... args){
-        if(mIBusConnection.isConnected()){
-            mIBusService.sendCommand(new IBusCommand(cmd, args));
-        }else{
-            Log.e(
-               TAG, 
-               String.format("Discarding command %s because IBusService is unbound", cmd)
-            );
-        }
-    }
-    
-    public void sendIBusCommandDelayed(final IBusCommand.Commands cmd, 
-            final long delayMils, final Object... args){
-        mHandler.postDelayed(new Runnable(){
-            public void run(){
-                sendIBusCommand(cmd, args);
-            }
-        }, delayMils);
     }
     
     public void showToast(String toastText){

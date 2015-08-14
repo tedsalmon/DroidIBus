@@ -138,12 +138,12 @@ public class DashboardMusicFragment extends BaseFragment{
         public boolean onTouch(View v, MotionEvent event){
             switch(event.getAction()){
                 case MotionEvent.ACTION_DOWN:
-                    sendIBusCommand(IBusCommand.Commands.valueOf(
+                    mIBusConnection.sendCommand(IBusCommand.Commands.valueOf(
                         v.getTag().toString() + "Press"
                     ));
                     break;
                 case MotionEvent.ACTION_UP:
-                    sendIBusCommand(IBusCommand.Commands.valueOf(
+                    mIBusConnection.sendCommand(IBusCommand.Commands.valueOf(
                         v.getTag().toString() + "Release"
                     ));
                     break;
@@ -192,7 +192,7 @@ public class DashboardMusicFragment extends BaseFragment{
     private OnClickListener mCommandClickListener = new OnClickListener(){
         @Override
         public void onClick(View v){
-            sendIBusCommand((IBusCommand.Commands) v.getTag());
+            mIBusConnection.sendCommand((IBusCommand.Commands) v.getTag());
         }
     };
     

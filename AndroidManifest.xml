@@ -38,7 +38,7 @@
                 android:name="android.hardware.usb.action.USB_ACCESSORY_ATTACHED"
                 android:resource="@xml/accessory_filter" />
         </activity>
-        
+        <service android:name=".services.IBusControllerService" android:exported="false" />
         <service android:name=".services.IBusMessageService" android:exported="false">
             <intent-filter>
                 <action

@@ -50,6 +50,7 @@ public class IBusMessageService extends IOIOService{
     private final static String TAG = "DroidIBus::IBusMessageService";
     
     private final IBinder mBinder = new IOIOBinder();
+    private Handler mHandler = new Handler();
     private ArrayList<IBusCommand> mCommandQueue = new ArrayList<IBusCommand>();
     
     private Map<Byte, IBusSystem> IBusSysMap = new HashMap<Byte, IBusSystem>();
@@ -363,6 +364,15 @@ public class IBusMessageService extends IOIOService{
         mCommandQueue.add(cmd);
     }
     
+    public void sendCommandDelayed(final IBusCommand cmd, long delayMillis){
+        mHandler.postDelayed(new Runnable(){
+            @Override
+            public void run(){
+                sendCommand(cmd);
+            }
+        }, delayMillis);
+    }
+    
     public void unregisterCallback(IBusSystem.Callbacks cb){
         if(!IBusSysMap.isEmpty()){
             for (IBusSystem sys: IBusSysMap.values()){
@@ -378,15 +388,8 @@ public class IBusMessageService extends IOIOService{
     }
     
     @Override
-    public void onDestroy(){
-        super.onDestroy();
-        Log.d(TAG, "onDestroy()");
-    }
-    
-    @Override
-    public int onStartCommand(Intent intent, int flags, int startId){
-        super.onStartCommand(intent, flags, startId);
-        Log.d(TAG, "onStartCommand()");
+    public void onCreate(){
+        super.onCreate();
         if(mDeviceLookup.isEmpty()){
             for(IBusSystem.Devices d : IBusSystem.Devices.values()){
                 mDeviceLookup.put(d.toByte(), d.name());
@@ -394,7 +397,6 @@ public class IBusMessageService extends IOIOService{
         }
         // Initiate values for IBus System handlers
         if(IBusSysMap.isEmpty()){
-            Log.d(TAG, "Filling IBus System Map");
             IBusSysMap.put(
                 IBusSystem.Devices.BoardMonitor.toByte(),
                 new BoardMonitorSystem()
@@ -432,6 +434,18 @@ public class IBusMessageService extends IOIOService{
                 new TelephoneSystem()
             );
         }
+    }
+    
+    @Override
+    public void onDestroy(){
+        super.onDestroy();
+        Log.d(TAG, "onDestroy()");
+    }
+    
+    @Override
+    public int onStartCommand(Intent intent, int flags, int startId){
+        super.onStartCommand(intent, flags, startId);
+        Log.d(TAG, "onStartCommand()");
         return START_STICKY;
     }
     
