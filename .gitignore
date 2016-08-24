@@ -26,6 +26,7 @@ local.properties
 .idea
 #.idea/workspace.xml - uncomment this and comment/delete .idea if it better suit your needs
 .gradle
+/app/build
 /*/local.properties
 /*/out
 /*/*/build
