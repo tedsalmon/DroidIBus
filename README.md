@@ -15,7 +15,7 @@ Android App that uses an MCP2004 and a IOIO board to interface with the BMW IBus
 
 * Ability to decode any IBus message (Provided you know what it does)
 * IKE Metrics Integration (Fuel Consumption, Speed, Coolant/Outdoor Temperatures)
-* BM53 (Remove Radio) Control
+* BM53 (Remote Radio) Control
 * Integrated Android Music Player
 * Nav Integration (Nav Data, not Maps)
 * Steering wheel next/previous media control
@@ -31,7 +31,7 @@ Android App that uses an MCP2004 and a IOIO board to interface with the BMW IBus
 # Requirements
 
 * Android Device with IOIO support
-* Android 5.0 - Required due to the Music Player interface 
+* Android 5.0+ - Required due to the Music Player interface 
 * IOIO Board w/ IOIO App-IOIO0503
 
 # About the Hardware
